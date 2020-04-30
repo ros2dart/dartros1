@@ -1,0 +1,20 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/tim/sawyer_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/tim/sawyer_ws/src/iai_kinect2/kinect2_bridge/include/**",
+        "/home/tim/sawyer_ws/src/iai_kinect2/kinect2_calibration/include/**",
+        "/home/tim/sawyer_ws/src/iai_kinect2/kinect2_registration/include/**",
+        "/home/tim/sawyer_ws/src/snowboy/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ]
+}

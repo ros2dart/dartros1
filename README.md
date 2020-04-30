@@ -1,4 +1,22 @@
-# dartros
-A ROS1 client library for dart
+A library for Dart developers.
 
-If you love dart as much as me, and you like working with ROS, please feel free to contribute and work on a pull request.
+Created from templates made available by Stagehand under a BSD-style
+[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+
+## Usage
+
+A simple usage example:
+
+```dart
+import 'package:dartros/dartros.dart';
+
+main() {
+  var awesome = new Awesome();
+}
+```
+
+## Features and bugs
+
+Please file feature requests and bugs at the [issue tracker][tracker].
+
+[tracker]: http://example.com/issues/replaceme
