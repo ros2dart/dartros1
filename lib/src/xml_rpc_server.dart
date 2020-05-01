@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:xml_rpc/client.dart' as rpc;
+import 'package:xml_rpc/server.dart' as rpc_server;
 
-class ROSXMLRPCServer {
+class ROSXMLRPCServer extends rpc_server.FunctionClass {
   final String rosMasterURI = Platform.environment['ROS_MASTER_URI'];
 
   Future<XMLRPCResponse<T>> _call<T>(
@@ -78,6 +79,22 @@ class ROSXMLRPCServer {
 
   /// The following section is an implementation of the Slave API from here: http://wiki.ros.org/ROS/Slave_API
   /// 1
+
+  /// This is required for xml_rpc to map to the functions that handle these responses
+  @override
+  Map<String, Function> get methods => {
+        'getBusStats': getBusStats,
+        'getBusInfo': getBusInfo,
+        'getMasterUri': getMasterUri,
+        'shutdown': shutdown,
+        'getPid': getPid,
+        'getSubscriptions': getSubscriptions,
+        'getPublications': getPublications,
+        'paramUpdate': paramUpdate,
+        'publisherUpdate': publisherUpdate,
+        'requestTopic': requestTopic,
+      };
+
   ///
   /// Retrieve transport/topic statistics
   /// Returns (int, str, [XMLRPCLegalValue*]) (code, statusMessage, stats)
@@ -144,7 +161,9 @@ class ROSXMLRPCServer {
   /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
   XMLRPCResponse<List<List<String>>> getSubscriptions(String callerID) {
     return XMLRPCResponse<List<List<String>>>(
-        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, []);
+        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
+      ['hello', 'hello']
+    ]);
   }
 
   /// Retrieve a list of topics that this node publishes

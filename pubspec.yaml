@@ -10,7 +10,7 @@ dependencies:
   path: ^1.6.0
   xml_rpc:
     git:
-      url: git@github.com:TimWhiting/xml_rpc.git
+      url: git@github.com:TimWhiting/dart-xmlrpc.git
 
 dev_dependencies:
   pedantic: ^1.8.0
