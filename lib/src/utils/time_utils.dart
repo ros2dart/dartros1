@@ -16,3 +16,19 @@ Map<String, num> dateToRosTime(DateTime date) {
     'nsecs': date.microsecondsSinceEpoch % 1000000 * 1000
   };
 }
+
+Map<String, num> now() {
+  return dateToRosTime(DateTime.now());
+}
+
+Map<String, num> epoch() {
+  return {'secs': 0, 'nsecs': 0};
+}
+
+bool isZeroTime(Map<String, num> t) {
+  return t['secs'] == 0 && t['nsecs'] == 0;
+}
+
+int toSeconds(Map<String, num> t) {
+  return t['secs'] + t['nsecs'] * NSEC_TO_SEC;
+}
