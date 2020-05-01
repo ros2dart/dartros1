@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   path: ^1.6.0
+  logger: ^0.9.1
+  dartx: any
   xml_rpc:
     git:
       url: git@github.com:TimWhiting/dart-xmlrpc.git

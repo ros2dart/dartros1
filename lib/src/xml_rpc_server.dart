@@ -6,6 +6,9 @@ import 'package:xml_rpc/server.dart' as rpc_server;
 
 class ROSXMLRPCServer extends rpc_server.FunctionClass {
   final String rosMasterURI = Platform.environment['ROS_MASTER_URI'];
+  final String name;
+  // final TCPROSHandler handler = TCPRosHandler();
+  ROSXMLRPCServer(this.name);
 
   Future<XMLRPCResponse<T>> _call<T>(
     String methodName,
@@ -141,7 +144,14 @@ class ROSXMLRPCServer extends rpc_server.FunctionClass {
   /// Stop this server.
   ///
   /// [message] A message describing why the node is being shutdown
-  XMLRPCResponse<int> shutdown(String callerID, String message) {
+  XMLRPCResponse<int> shutdown(String callerID, [String message = '']) {
+    if (message != null && message.isNotEmpty) {
+      print('shutdown request: $message');
+    } else {
+      print('shutdown request');
+    }
+    // TODO: Shutdown handlers
+    // handler.shutdown();
     return XMLRPCResponse<int>(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, 0);
   }
