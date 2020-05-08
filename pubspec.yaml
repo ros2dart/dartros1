@@ -11,7 +11,6 @@ dependencies:
   logger: ^0.9.1
   dartx: any
   meta: any
-  path:any
   xml_rpc:
     git:
       url: git@github.com:TimWhiting/dart-xmlrpc.git
