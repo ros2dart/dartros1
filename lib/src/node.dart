@@ -43,7 +43,7 @@ class Node extends RosXmlRpcServer
   }
 
   @override
-  void shutdown() {
+  Future<void> shutdown() async {
     logger.debug('Shutting node down');
     _ok = false;
     logger.debug('Shutdown subscribers');
@@ -62,8 +62,7 @@ class Node extends RosXmlRpcServer
     }
     logger.debug('Shutdown servers...done');
     logger.debug('Shutdown XMLRPC server');
-    // TODO: implement shutdown
-    // shutdownXmlRpcServer();
+    await stopXmlRpcServer();
     logger.debug('Shutdown XMLRPC server...done');
     logger.debug('Shutting node done completed');
     exit(0);

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'ros_xmlrpc_common.dart';
-import 'package:xml_rpc/server.dart' as rpc_server;
+import 'package:xml_rpc/simple_server.dart' as rpc_server;
 import 'package:dartx/dartx.dart';
 
 dynamic listenRandomPort(int limit, Function(int) create) {
@@ -42,13 +42,17 @@ abstract class RosXmlRpcServer extends rpc_server.XmlRpcHandler {
       (port) => rpc_server.SimpleXmlRpcServer(
         host: onlyLocalhost ? '0.0.0.0' : '127.0.0.1',
         port: port,
-        requestHandler: this,
+        handler: this,
       ),
     );
   }
 
   Future<void> startXmlRpcServer() async {
-    await _server.serveForever();
+    await _server.start();
+  }
+
+  Future<void> stopXmlRpcServer() async {
+    await _server.stop(force: true);
   }
 
   /// The following section is an implementation of the Slave API from here: http://wiki.ros.org/ROS/Slave_API
