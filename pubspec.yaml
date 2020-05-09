@@ -10,6 +10,7 @@ dependencies:
   path: ^1.6.0
   logger: ^0.9.1
   dartx: any
+  buffer: any
   meta: any
   xml_rpc:
     git:

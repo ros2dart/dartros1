@@ -5,30 +5,33 @@ const NSEC_TO_SEC = 1e-9;
 const USEC_TO_SEC = 1e-6;
 const MSEC_TO_SEC = 1e-3;
 
-DateTime rosTimeToDate(Map<String, int> rosTime) {
-  return DateTime.fromMillisecondsSinceEpoch(
-      rosTime['secs'] * 1000 + (rosTime['nsecs'] * USEC_TO_SEC).floor());
-}
+class RosTime {
+  final int secs;
+  final int nsecs;
+  const RosTime({this.secs = 0, this.nsecs = 0});
 
-Map<String, num> dateToRosTime(DateTime date) {
-  return {
-    'secs': date.millisecondsSinceEpoch * MSEC_TO_SEC,
-    'nsecs': date.microsecondsSinceEpoch % 1000000 * 1000
-  };
-}
+  factory RosTime.epoch() {
+    return RosTime();
+  }
+  factory RosTime.now() {
+    return RosTime.fromDateTime(DateTime.now());
+  }
+  factory RosTime.fromDateTime(DateTime dateTime) {
+    return RosTime(
+        secs: (dateTime.millisecondsSinceEpoch * MSEC_TO_SEC).toInt(),
+        nsecs: dateTime.microsecondsSinceEpoch % 1000000 * 1000);
+  }
 
-Map<String, num> now() {
-  return dateToRosTime(DateTime.now());
-}
+  DateTime toDateTime() {
+    return DateTime.fromMillisecondsSinceEpoch(
+        secs * 1000 + (nsecs * USEC_TO_SEC).floor());
+  }
 
-Map<String, num> epoch() {
-  return {'secs': 0, 'nsecs': 0};
-}
+  bool isZeroTime() {
+    return secs == 0 && nsecs == 0;
+  }
 
-bool isZeroTime(Map<String, num> t) {
-  return t['secs'] == 0 && t['nsecs'] == 0;
-}
-
-int toSeconds(Map<String, num> t) {
-  return t['secs'] + t['nsecs'] * NSEC_TO_SEC;
+  int toSeconds() {
+    return secs + (nsecs * NSEC_TO_SEC).toInt();
+  }
 }
