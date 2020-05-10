@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:buffer/buffer.dart';
 import 'src/utils/time_utils.dart';
+export 'src/utils/time_utils.dart';
 
 extension ByteDataReaderRosDeserializers on ByteDataReader {
   String readString() {
