@@ -12,10 +12,7 @@ dependencies:
   dartx: any
   buffer: any
   meta: any
-  xml_rpc:
-    git:
-      url: git@github.com:TimWhiting/dart-xmlrpc.git
-      ref: server
+  xml_rpc: ^0.3.0
 
 dev_dependencies:
   pedantic: ^1.8.0

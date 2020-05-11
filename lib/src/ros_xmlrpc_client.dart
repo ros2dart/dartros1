@@ -20,7 +20,7 @@ mixin XmlRpcClient {
       params,
       headers: headers,
       encoding: utf8,
-      client: client,
+      httpPost: client.post,
       encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
       decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
     ) as List<dynamic>;
