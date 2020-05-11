@@ -155,6 +155,9 @@ Uint8List serializeMessage(dynamic message, {prependMessageLength = true}) {
   return writer.toBytes();
 }
 
+Uint8List serializeResponse(dynamic response, success,
+    {prependResponseInfo = true}) {}
+
 class TCPRosHeader<T> {
   final String topic;
   final String type;
