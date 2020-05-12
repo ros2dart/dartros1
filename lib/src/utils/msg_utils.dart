@@ -5,10 +5,9 @@ import 'package:reflectable/reflectable.dart';
 import 'time_utils.dart';
 export 'time_utils.dart';
 
-const rosDeserializeCapability = NewInstanceCapability('deserialize');
-
 class RosDeserializeable extends Reflectable {
-  const RosDeserializeable() : super(rosDeserializeCapability);
+  const RosDeserializeable()
+      : super(const NewInstanceCapability('deserialize'));
 }
 
 const rosDeserializeable = RosDeserializeable();
