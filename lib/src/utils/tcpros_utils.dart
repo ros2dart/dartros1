@@ -88,7 +88,7 @@ Map<String, String> parseTcpRosHeader(header) {
       return;
     }
     final match = regex.allMatches(field).toList()[0];
-    info[match.group(0)] = match.group(1);
+    info[match.group(1)] = match.group(2);
   });
   return info;
 }
