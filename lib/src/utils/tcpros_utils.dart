@@ -2,7 +2,16 @@ import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:dartx/dartx.dart';
+import 'package:reflectable/reflectable.dart';
 import 'msg_utils.dart';
+
+const rosDeserializeCapability = NewInstanceCapability('deserialize');
+
+class RosDeserializeable extends Reflectable {
+  const RosDeserializeable() : super(rosDeserializeCapability);
+}
+
+const rosDeserializeable = RosDeserializeable();
 
 const callerIdPrefix = 'callerid=';
 const md5Prefix = 'md5sum=';
@@ -155,8 +164,37 @@ Uint8List serializeMessage(dynamic message, {prependMessageLength = true}) {
   return writer.toBytes();
 }
 
-Uint8List serializeResponse(dynamic response, success,
-    {prependResponseInfo = true}) {}
+T deserializeMessage<T>(Uint8List message) {
+  final reader = ByteDataReader();
+  reader.add(message);
+  ClassMirror messageClass = rosDeserializeable.reflectType(T);
+  return messageClass.newInstance('deserialize', [reader]);
+}
+
+Uint8List serializeResponse(
+  dynamic response,
+  success, {
+  prependResponseInfo = true,
+}) {
+  final writer = ByteDataWriter();
+  if (prependResponseInfo) {
+    if (success) {
+      final size = response.getMessageSize();
+      writer.writeUint8(1);
+      writer.writeUint32(size);
+      response.serialize(writer);
+    } else {
+      const errorMessage = 'Unable to handle service call';
+      writer.writeUint8(0);
+      writer.writeString(errorMessage);
+    }
+  }
+  return writer.toBytes();
+}
+
+void createTcpRosError(ByteDataWriter writer, String str) {
+  writer.writeString(str);
+}
 
 class TCPRosHeader<T> {
   final String topic;
