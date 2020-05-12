@@ -78,7 +78,7 @@ void createServiceServerHeader(
 
 Map<String, String> parseTcpRosHeader(header) {
   final info = <String, String>{};
-  final regex = RegExp('(\w+)=([\s\S]+)');
+  final regex = RegExp(r'(\w+)=([\s\S]+)');
   final fields = deserializeStringFields(header);
   print(fields);
   fields.forEach((field) {
