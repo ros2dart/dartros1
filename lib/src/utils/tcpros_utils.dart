@@ -82,8 +82,8 @@ Map<String, String> parseTcpRosHeader(header) {
   final fields = deserializeStringFields(header);
   print(fields);
   fields.forEach((field) {
-    final hasMatch = regex.firstMatch(field);
-    if (hasMatch == null) {
+    final hasMatch = regex.hasMatch(field);
+    if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
       return;
     }
