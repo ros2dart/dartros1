@@ -5,7 +5,7 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/ros_xmlrpc_server.dart';
 import 'package:dartx/dartx.dart';
 import 'package:path/path.dart' as path;
-
+import 'node.reflectable.dart';
 import 'utils/log/logger.dart';
 
 class Node extends RosXmlRpcServer
@@ -26,6 +26,7 @@ class Node extends RosXmlRpcServer
 
   // final TCPROSHandler handler = TCPRosHandler();
   Node(this.name) : super() {
+    initializeReflectable();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
     logDir = path.join(homeDir, 'log');
     qualifiedName = namespace + name;
