@@ -26,6 +26,7 @@ class Node extends RosXmlRpcServer
 
   // final TCPROSHandler handler = TCPRosHandler();
   Node(this.name) : super() {
+    initializeReflectable();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
     logDir = path.join(homeDir, 'log');
     qualifiedName = namespace + name;
