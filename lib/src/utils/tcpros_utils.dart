@@ -26,7 +26,7 @@ void serializeStringFields(ByteDataWriter writer, List<String> fields) {
 List<String> deserializeStringFields(ByteDataReader reader) {
   final totalLength = reader.readUint32(Endian.little);
   final stringList = <String>[];
-  int length = 0;
+  var length = 0;
   while (length < totalLength) {
     final string = reader.readString();
     length += string.lenInBytes;

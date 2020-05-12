@@ -16,7 +16,7 @@ class Subscriber<T> {
   String get type => _type;
   int get numPublishers => impl?.numPublishers ?? 0;
   void shutdown() {
-    impl.registerSubscriber();
+    impl.unregisterSubscriber();
     impl = null;
   }
 
