@@ -49,11 +49,11 @@ void createSubHeader(ByteDataWriter writer, String callerId, String md5sum,
 void createPubHeader(ByteDataWriter writer, String callerId, String md5sum,
     String type, bool latching, String messageDefinition) {
   return serializeStringFields(writer, [
+    messageDefinitionPrefix + messageDefinition,
     callerIdPrefix + callerId,
+    if (latching) latchingField,
     md5Prefix + md5sum,
     typePrefix + type,
-    messageDefinitionPrefix + messageDefinition,
-    if (latching) latchingField
   ]);
 }
 
