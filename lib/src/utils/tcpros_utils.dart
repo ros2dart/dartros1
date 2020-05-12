@@ -78,16 +78,17 @@ void createServiceServerHeader(
 
 Map<String, String> parseTcpRosHeader(header) {
   final info = <String, String>{};
-  final regex = RegExp('^(\w+)=([\s\S\w]+)');
+  final regex = RegExp('(\w+)=([\s\S\w]+)');
   final fields = deserializeStringFields(header);
+  print(fields);
   fields.forEach((field) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
       return;
     }
-    final matches = regex.allMatches(field).toList();
-    info[matches[0].group(0)] = matches[0].group(1);
+    final match = regex.allMatches(field).toList()[0];
+    info[match.group(0)] = match.group(1);
   });
   return info;
 }
