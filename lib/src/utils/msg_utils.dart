@@ -1,8 +1,17 @@
 import 'dart:convert';
 
 import 'package:buffer/buffer.dart';
+import 'package:reflectable/reflectable.dart';
 import 'time_utils.dart';
 export 'time_utils.dart';
+
+const rosDeserializeCapability = NewInstanceCapability('deserialize');
+
+class RosDeserializeable extends Reflectable {
+  const RosDeserializeable() : super(rosDeserializeCapability);
+}
+
+const rosDeserializeable = RosDeserializeable();
 
 extension LenInBytes on String {
   int get lenInBytes => utf8.encode(this).length;
