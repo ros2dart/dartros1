@@ -14,6 +14,7 @@ dependencies:
   meta: any
   xml_rpc: ^0.3.0
   reflectable: any
+  string_validator: ^0.1.4
 
 dev_dependencies:
   pedantic: ^1.8.0
