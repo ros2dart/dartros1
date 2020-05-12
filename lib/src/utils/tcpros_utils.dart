@@ -5,14 +5,6 @@ import 'package:dartx/dartx.dart';
 import 'package:reflectable/reflectable.dart';
 import 'msg_utils.dart';
 
-const rosDeserializeCapability = NewInstanceCapability('deserialize');
-
-class RosDeserializeable extends Reflectable {
-  const RosDeserializeable() : super(rosDeserializeCapability);
-}
-
-const rosDeserializeable = RosDeserializeable();
-
 const callerIdPrefix = 'callerid=';
 const md5Prefix = 'md5sum=';
 const topicPrefix = 'topic=';
@@ -154,9 +146,9 @@ bool validatePubHeader(
   return true;
 }
 
-Uint8List serializeMessage(dynamic message, {prependMessageLength = true}) {
+Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
+    {prependMessageLength = true}) {
   final msgSize = message.getMessageSize();
-  final writer = ByteDataWriter();
   if (prependMessageLength) {
     writer.writeUint32(msgSize);
   }
@@ -164,9 +156,7 @@ Uint8List serializeMessage(dynamic message, {prependMessageLength = true}) {
   return writer.toBytes();
 }
 
-T deserializeMessage<T>(Uint8List message) {
-  final reader = ByteDataReader();
-  reader.add(message);
+T deserializeMessage<T>(ByteDataReader reader) {
   ClassMirror messageClass = rosDeserializeable.reflectType(T);
   return messageClass.newInstance('deserialize', [reader]);
 }
