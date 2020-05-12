@@ -77,8 +77,8 @@ void createServiceServerHeader(
 }
 
 Map<String, String> parseTcpRosHeader(header) {
-  final info = {};
-  final regex = RegExp('^(\w+)=([\s\S]+)');
+  final info = <String, String>{};
+  final regex = RegExp('^(\w+)=([\s\S\w]+)');
   final fields = deserializeStringFields(header);
   fields.forEach((field) {
     final hasMatch = regex.hasMatch(field);
@@ -87,7 +87,7 @@ Map<String, String> parseTcpRosHeader(header) {
       return;
     }
     final matches = regex.allMatches(field).toList();
-    info[matches[0]] = matches[1];
+    info[matches[0].group(0)] = matches[0].group(1);
   });
   return info;
 }
