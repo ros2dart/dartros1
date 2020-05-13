@@ -5,10 +5,11 @@ import 'package:reflectable/reflectable.dart';
 import 'time_utils.dart';
 export 'time_utils.dart';
 
-abstract class RosMessage implements Function {
+abstract class RosMessage<T> implements Function {
   String get fullType;
   String get messageDefinition;
   String get md5sum;
+  T deserialize(ByteDataReader reader);
 }
 
 class RosDeserializeable extends Reflectable {
