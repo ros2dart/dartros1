@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:buffer/buffer.dart';
+import 'package:dartros/src/utils/tcpros_utils.dart';
+
 import '../../msg_utils.dart';
 import '../node.dart';
 import '../utils/client_states.dart';
@@ -28,7 +31,9 @@ class PublisherImpl<T extends RosMessage> {
     this.queueSize = 1,
     this.throttleMs = 0,
     this.messageClass,
-  });
+  }) {
+    _register();
+  }
 
   String get type => messageClass.fullType;
   String get spinnerId => 'Publisher://$topic';
@@ -50,10 +55,10 @@ class PublisherImpl<T extends RosMessage> {
     if (isShutdown) {
       return;
     }
-    final delay = ms ?? throttleMs;
-    if (throttleMs < 0) {
-      _handleMsgQueue([message]);
-    }
+    // final delay = ms ?? throttleMs;
+    // if (throttleMs < 0) {
+    _handleMsgQueue([message]);
+    // }
   }
 
   void _handleMsgQueue(List<T> messages) {
@@ -66,7 +71,14 @@ class PublisherImpl<T extends RosMessage> {
     }
     try {
       messages.forEach((msg) {
-        // TODO: Publish message
+        final writer = ByteDataWriter();
+        serializeMessage(writer, msg);
+        for (final client in subClients.values) {
+          client.write(writer.toString());
+        }
+        if (latching) {
+          lastSentMsg = msg;
+        }
       });
     } catch (e) {
       // TODO: log
