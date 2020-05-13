@@ -158,9 +158,9 @@ Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
   return writer.toBytes();
 }
 
-T deserializeMessage<T>(ByteDataReader reader) {
-  ClassMirror messageClass = rosDeserializeable.reflectType(T);
-  return messageClass.newInstance('deserialize', [reader]);
+T deserializeMessage<T extends RosMessage>(
+    ByteDataReader reader, T messageClass) {
+  return messageClass.deserialize(reader);
 }
 
 Uint8List serializeResponse(

@@ -1,13 +1,15 @@
+import '../../msg_utils.dart';
 import '../node.dart';
 
-class SubscriberImpl<T> {
+class SubscriberImpl<T extends RosMessage> {
   final Node node;
   int _count = 0;
+  final T messageClass;
 
-  SubscriberImpl(this.node);
+  SubscriberImpl(this.node, this.messageClass);
   Stream<T> get stream => null;
 
-  String get type => null;
+  String get type => messageClass.fullType;
 
   String get topic => null;
 

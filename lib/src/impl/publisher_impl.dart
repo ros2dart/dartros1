@@ -1,22 +1,24 @@
+import 'dart:io';
+
 import '../../msg_utils.dart';
 import '../node.dart';
 import '../utils/client_states.dart';
 
-class PublisherImpl<T> {
+class PublisherImpl<T extends RosMessage> {
   final Node node;
   final String topic;
-  String _type;
   final bool latching;
   final int queueSize;
   final bool tcpNoDelay;
   final int throttleMs;
   int count = 0;
   T lastSentMsg;
+  final T messageClass;
   State _state = State.REGISTERING;
   //TODO:
   // logger
   // spinner?
-  final Map<String, Object> subClients = {};
+  final Map<String, Socket> subClients = {};
 
   PublisherImpl(
     this.node,
@@ -25,11 +27,10 @@ class PublisherImpl<T> {
     this.tcpNoDelay = false,
     this.queueSize = 1,
     this.throttleMs = 0,
-  }) {
-    _type = rosDeserializeable.reflect(T).invoke('datatype', []) as String;
-  }
+    this.messageClass,
+  });
 
-  String get type => _type;
+  String get type => messageClass.fullType;
   String get spinnerId => 'Publisher://$topic';
   int get numSubscribers => subClients.keys.length;
   List<String> get clientUris => subClients.keys;
@@ -76,7 +77,7 @@ class PublisherImpl<T> {
   void shutdown() {
     _state = State.SHUTDOWN;
     //TODO: Log
-    subClients.values.forEach((c) => c.end());
+    subClients.values.forEach((c) => c.close());
   }
 
   Future<void> _register() async {
@@ -89,7 +90,7 @@ class PublisherImpl<T> {
       }
 
       print('Registered $topic as a publisher: $resp');
-      final code = resp.statusCode;
+      // final code = resp.statusCode;
       // final msg = resp.value;
       // final subs = resp.statusMessage;
       if (resp.success) {
@@ -98,7 +99,7 @@ class PublisherImpl<T> {
         // this.emit('registered');
       }
     } catch (err) {
-      print('Error while registering publisher $topic: $e');
+      print('Error while registering publisher $topic: $err');
     }
   }
 

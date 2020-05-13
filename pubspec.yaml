@@ -13,7 +13,7 @@ dependencies:
   buffer: any
   meta: any
   xml_rpc: ^0.3.0
-  reflectable: any
+  # reflectable: any
   string_validator: ^0.1.4
 
 dev_dependencies:
