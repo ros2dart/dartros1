@@ -5,6 +5,12 @@ import 'package:reflectable/reflectable.dart';
 import 'time_utils.dart';
 export 'time_utils.dart';
 
+abstract class RosMessage implements Function {
+  String get fullType;
+  String get messageDefinition;
+  String get md5sum;
+}
+
 class RosDeserializeable extends Reflectable {
   const RosDeserializeable()
       : super(const NewInstanceCapability('deserialize'));
