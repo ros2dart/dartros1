@@ -82,4 +82,6 @@ class Node extends RosXmlRpcServer
   void processJobs() {}
 
   void unadvertise<T>(String topic) {}
+
+  void unsubscribe(String topic) {}
 }
