@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml_rpc/client.dart' as rpc;
 
 import 'ros_xmlrpc_common.dart';
 import 'utils/network_utils.dart';
 part 'ros_paramserver_client.dart';
+part 'ros_xmlrpc_client.freezed.dart';
 
 Future<XMLRPCResponse<T>> _rpcCall<T>(
   String methodName,
@@ -205,11 +207,14 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerID] is the ROS caller ID
   /// [subgraph] is for restricting topic names to match within the specified subgraph.
   /// Subgraph namespace is resolved relative to the caller's namespace.
-  /// Use emptry string to specify all names.
-  Future<XMLRPCResponse<List<List<String>>>> getPublishedTopics(
+  /// Use empty string to specify all names.
+  Future<List<TopicInfo>> getPublishedTopics(
     String subgraph,
-  ) {
-    return _call('getPublishedTopics', [qualifiedName, subgraph]);
+  ) async {
+    return (await _callRpc<List<List<String>>>(
+            'getPublishedTopics', [qualifiedName, subgraph]))
+        .map((t) => TopicInfo(t[0], t[1]))
+        .toList();
   }
 
   /// Retrieve list topic names and their types.
@@ -217,8 +222,11 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerID] is the ROS caller ID
   ///
   /// Returns a list of (topicName, topicType) pairs (lists)
-  Future<XMLRPCResponse<List<List<String>>>> getTopicTypes() {
-    return _call('getTopicTypes', [qualifiedName]);
+  Future<List<TopicInfo>> getTopicTypes() async {
+    return (await _callRpc<List<List<String>>>(
+            'getTopicTypes', [qualifiedName]))
+        .map((t) => TopicInfo(t[0], t[1]))
+        .toList();
   }
 
   /// Retrieve list representation of system state (i.e. publishers, subscribers, and services).
@@ -241,6 +249,39 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// [callerID] is the ROS caller ID
   Future<String> getMasterUri() {
-    return _callRpc('getUri', [qualifiedName]);
+    return _callRpc('getUri', [qualifiedName],
+        onError: () =>
+            throw Exception('Error occurred while getting master uri'));
   }
+}
+
+@freezed
+abstract class TopicInfo with _$TopicInfo {
+  factory TopicInfo(String name, String type) = _TopicInfo;
+}
+
+@freezed
+abstract class SystemState with _$SystemState {
+  factory SystemState(
+    List<PublisherInfo> publishers,
+    List<SubscriberInfo> subscribers,
+    List<ServiceInfo> services,
+  ) = _SystemState;
+}
+
+@freezed
+abstract class PublisherInfo with _$PublisherInfo {
+  factory PublisherInfo(String topic, List<String> publishers) = _PublisherInfo;
+}
+
+@freezed
+abstract class SubscriberInfo with _$SubscriberInfo {
+  factory SubscriberInfo(String topic, List<String> subscibers) =
+      _SubscriberInfo;
+}
+
+@freezed
+abstract class ServiceInfo with _$ServiceInfo {
+  factory ServiceInfo(String service, List<String> serviceProviders) =
+      _ServiceInfo;
 }
