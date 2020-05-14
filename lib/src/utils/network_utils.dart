@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'remapping.dart';
 
-class NetworkUtils {
+final NetworkUtils = _NetworkUtils();
+
+class _NetworkUtils {
   String _ip;
   String _hostname;
   String _ros_ip;
@@ -10,7 +12,8 @@ class NetworkUtils {
   String _host;
   String get host => _host;
 
-  NetworkUtils(Map<String, String> remappings) {
+  _NetworkUtils();
+  void init(Map<String, String> remappings) {
     _ip = remappings[SPECIAL_KEYS.ip];
     _hostname = remappings[SPECIAL_KEYS.hostname];
     _ros_ip = Platform.environment['ROS_HOME'];

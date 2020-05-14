@@ -1,4 +1,21 @@
+import 'dart:math';
+import 'package:dartx/dartx.dart';
+
 enum StatusCode { SUCCESS, FAILURE, ERROR }
+
+dynamic listenRandomPort(int limit, Function(int) create) {
+  final random = Random();
+  for (final _ in 0.rangeTo(limit)) {
+    try {
+      final port = random.nextInt(65535 - 1024) + 1024;
+      final result = create(port);
+      return result;
+    } catch (e) {
+      // Do nothing
+    }
+  }
+  throw Exception("Couldn't find a port to listen on");
+}
 
 class XMLRPCResponse<T> {
   final StatusCode statusCode;
