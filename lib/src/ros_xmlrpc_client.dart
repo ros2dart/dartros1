@@ -8,12 +8,13 @@ import 'utils/network_utils.dart';
 part 'ros_paramserver_client.dart';
 part 'ros_xmlrpc_client.freezed.dart';
 
-Future<XMLRPCResponse<T>> _rpcCall<T>(
+Future<T> _rpcCall<T>(
   String methodName,
   List<dynamic> params,
   String rosMasterUri,
   rpc.HttpPost post, {
   Map<String, String> headers,
+  T Function() onError,
 }) async {
   final result = await rpc.call(
     rosMasterUri,
@@ -25,7 +26,42 @@ Future<XMLRPCResponse<T>> _rpcCall<T>(
     encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
     decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
   ) as List<dynamic>;
-  return XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
+  final resp =
+      XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
+
+  if (resp.success) {
+    return resp.value;
+  } else {
+    if (onError == null) {
+      throw Exception(
+          'Failed to execute RPC call $methodName, args: $params, result: $result');
+    }
+    return onError();
+  }
+}
+
+Future<StatusCode> _rpcCallStatus<T>(
+  String methodName,
+  List<dynamic> params,
+  String rosMasterUri,
+  rpc.HttpPost post, {
+  Map<String, String> headers,
+  T Function() onError,
+}) async {
+  final result = await rpc.call(
+    rosMasterUri,
+    methodName,
+    params,
+    headers: headers,
+    encoding: utf8,
+    httpPost: post,
+    encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
+    decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
+  ) as List<dynamic>;
+  final resp =
+      XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
+
+  return resp.statusCode;
 }
 
 mixin XmlRpcClient {
@@ -35,24 +71,20 @@ mixin XmlRpcClient {
   int get tcpRosPort;
   String get xmlRpcUri;
 
-  Future<XMLRPCResponse<T>> _call<T>(
+  Future<T> _call<T>(
     String methodName,
     List<dynamic> params, {
     Map<String, String> headers,
   }) =>
-      _rpcCall(methodName, params, rosMasterUri, client.post, headers: headers);
-  Future<T> _callRpc<T>(String methodName, List<dynamic> params,
-      {T Function() onError}) async {
-    final resp = await _call(methodName, params);
-    if (resp.success) {
-      return resp.value;
-    } else {
-      if (onError == null) {
-        throw Exception('Failed to execute RPC call $methodName');
-      }
-      return onError();
-    }
-  }
+      _rpcCall<T>(methodName, params, rosMasterUri, client.post,
+          headers: headers);
+  Future<StatusCode> _callRpc<T>(
+    String methodName,
+    List<dynamic> params, {
+    Map<String, String> headers,
+  }) =>
+      _rpcCallStatus(methodName, params, rosMasterUri, client.post,
+          headers: headers);
 }
 
 class SlaveApiClient {
@@ -63,10 +95,15 @@ class SlaveApiClient {
 
   SlaveApiClient(this.qualifiedName, this.host, this.port);
 
-  Future<XMLRPCResponse<List<dynamic>>> requestTopic(
-      String topic, List<List<dynamic>> protocols) {
-    return _rpcCall('requestTopic', [qualifiedName, topic, protocols],
-        host + ':' + port.toString(), client.post);
+  Future<List<TopicInfo>> requestTopic(
+      String topic, List<List<dynamic>> protocols) async {
+    return (await _rpcCall<List<List<String>>>(
+            'requestTopic',
+            [qualifiedName, topic, protocols],
+            host + ':' + port.toString(),
+            client.post))
+        .map((t) => TopicInfo(t[0], t[1]))
+        .toList();
   }
 }
 
@@ -83,10 +120,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerAPI] is the XML-RPC URI of the caller node
   ///
   /// Returns an int that can be ignored
-  Future<XMLRPCResponse<int>> registerService(
+  Future<void> registerService(
     String service,
-  ) {
-    return _call('registerService', [
+  ) async {
+    await _call<int>('registerService', [
       qualifiedName,
       service,
       NetworkUtils.formatServiceUri(tcpRosPort),
@@ -103,10 +140,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Returns number of unregistrations (either 0 or 1).
   /// If this is zero it means that the caller was not registered as a service provider.
   /// The call still succeeds as the intended final state is reached.
-  Future<XMLRPCResponse<int>> unregisterService(
+  Future<void> unregisterService(
     String service,
-  ) {
-    return _call('unregisterService',
+  ) async {
+    await _call<int>('unregisterService',
         [qualifiedName, service, NetworkUtils.formatServiceUri(tcpRosPort)]);
   }
 
@@ -121,11 +158,11 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerAPI] is the XML-RPC URI of the caller node
   ///
   /// Returns a list of XMLRPC API URIs for nodes currently publishing the specified topic.
-  Future<XMLRPCResponse<List<String>>> registerSubscriber(
+  Future<List<String>> registerSubscriber(
     String topic,
     String topicType,
   ) {
-    return _call(
+    return _call<List<String>>(
         'registerSubscriber', [qualifiedName, topic, topicType, xmlRpcUri]);
   }
 
@@ -137,10 +174,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// Return of zero means that the caller was not registered as a subscriber.
   /// The call still succeeds as the intended final state is reached.
-  Future<XMLRPCResponse<int>> unregisterSubscriber(
+  Future<void> unregisterSubscriber(
     String topic,
-  ) {
-    return _call('unregisterSubscriber', [qualifiedName, topic, xmlRpcUri]);
+  ) async {
+    await _call<int>('unregisterSubscriber', [qualifiedName, topic, xmlRpcUri]);
   }
 
   /// Register the [callerID] as a publisher of the specified [topic].
@@ -151,11 +188,11 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerAPI] is the XML-RPC URI of the caller node
   ///
   /// Returns a list of XMLRPC API URIs for nodes currently subscribing the specified topic.
-  Future<XMLRPCResponse<List<String>>> registerPublisher(
+  Future<List<String>> registerPublisher(
     String topic,
     String topicType,
   ) {
-    return _call(
+    return _call<List<String>>(
         'registerPublisher', [qualifiedName, topic, topicType, xmlRpcUri]);
   }
 
@@ -167,10 +204,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// Return of zero means that the caller was not registered as a publisher.
   /// The call still succeeds as the intended final state is reached.
-  Future<XMLRPCResponse<int>> unregisterPublisher(
+  Future<void> unregisterPublisher(
     String topic,
-  ) {
-    return _call('unregisterPublisher', [qualifiedName, topic, xmlRpcUri]);
+  ) async {
+    await _call<int>('unregisterPublisher', [qualifiedName, topic, xmlRpcUri]);
   }
 
   /// 2.2 Name service and system state
@@ -184,10 +221,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerID] is the ROS caller ID
   ///
   /// Returns the URI of the node
-  Future<XMLRPCResponse<String>> lookupNode(
+  Future<String> lookupNode(
     String nodeName,
   ) {
-    return _call('lookupNode', [qualifiedName, nodeName]);
+    return _call<String>('lookupNode', [qualifiedName, nodeName]);
   }
 
   /// Gets the URI of the master
@@ -196,10 +233,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [callerID] is the ROS caller ID
   ///
   /// Return service URL (address and port). Fails if there is no provider.
-  Future<XMLRPCResponse<String>> lookupService(
+  Future<String> lookupService(
     String service,
   ) {
-    return _call('lookupService', [qualifiedName, service]);
+    return _call<String>('lookupService', [qualifiedName, service]);
   }
 
   /// Get list of topics that can be subscribed to.
@@ -214,7 +251,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<List<TopicInfo>> getPublishedTopics(
     String subgraph,
   ) async {
-    return (await _callRpc<List<List<String>>>(
+    return (await _call<List<List<String>>>(
             'getPublishedTopics', [qualifiedName, subgraph]))
         .map((t) => TopicInfo(t[0], t[1]))
         .toList();
@@ -226,8 +263,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// Returns a list of (topicName, topicType) pairs (lists)
   Future<List<TopicInfo>> getTopicTypes() async {
-    return (await _callRpc<List<List<String>>>(
-            'getTopicTypes', [qualifiedName]))
+    return (await _call<List<List<String>>>('getTopicTypes', [qualifiedName]))
         .map((t) => TopicInfo(t[0], t[1]))
         .toList();
   }
@@ -245,8 +281,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// services is of the form
   /// [ [service1, [service1Provider1...service1ProviderN]] ... ]
   Future<SystemState> getSystemState() async {
-    final resp =
-        await _callRpc<List<dynamic>>('getSystemState', [qualifiedName]);
+    final resp = await _call<List<dynamic>>('getSystemState', [qualifiedName]);
     return SystemState(
       [
         for (final pubInfo in resp[0])
@@ -267,7 +302,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// [callerID] is the ROS caller ID
   Future<String> getMasterUri() {
-    return _callRpc('getUri', [qualifiedName]);
+    return _call<String>('getUri', [qualifiedName]);
   }
 }
 

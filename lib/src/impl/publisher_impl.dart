@@ -102,14 +102,10 @@ class PublisherImpl<T extends RosMessage> {
       }
 
       print('Registered $topic as a publisher: $resp');
-      // final code = resp.statusCode;
-      // final msg = resp.value;
-      // final subs = resp.statusMessage;
-      if (resp.success) {
-        // registration worked
-        _state = State.REGISTERED;
-        // this.emit('registered');
-      }
+      // registration worked
+      _state = State.REGISTERED;
+      // this.emit('registered');
+
     } catch (err) {
       print('Error while registering publisher $topic: $err');
     }
