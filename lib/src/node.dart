@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dartros/src/ros_xmlrpc_client.dart';
-import 'package:dartros/src/ros_xmlrpc_server.dart';
 import 'package:dartx/dartx.dart';
 import 'package:path/path.dart' as path;
 import 'utils/log/logger.dart';
