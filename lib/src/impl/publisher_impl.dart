@@ -25,13 +25,13 @@ class PublisherImpl<T extends RosMessage> {
 
   PublisherImpl(
     this.node,
-    this.topic, {
-    this.latching = false,
-    this.tcpNoDelay = false,
-    this.queueSize = 1,
-    this.throttleMs = 0,
+    this.topic,
     this.messageClass,
-  }) {
+    this.latching,
+    this.tcpNoDelay,
+    this.queueSize,
+    this.throttleMs,
+  ) {
     _register();
   }
 

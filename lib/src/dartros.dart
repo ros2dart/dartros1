@@ -15,11 +15,11 @@ Node initNode(String name, List<String> args,
   final nodeName = _resolveNodeName(name, remappings, anonymize);
   names.init(remappings, nodeName.namespace);
   if (Node.singleton != null) {
-    if (nodeName.name == Node.singleton.qualifiedName) {
+    if (nodeName.name == Node.singleton.nodeName) {
       return Node.singleton;
     } else {
       throw Exception(
-          'Unable to initialize ${nodeName.name} - node ${Node.singleton.qualifiedName} already exists');
+          'Unable to initialize ${nodeName.name} - node ${Node.singleton.nodeName} already exists');
     }
   } // TODO: Initialize logger
   final masterUri = rosMasterUri ??

@@ -3,7 +3,7 @@ import 'dart:async';
 import '../msg_utils.dart';
 import 'impl/subscriber_impl.dart';
 
-class Subscriber<T extends RosMessage> {
+class Subscriber<T extends RosMessage<T>> {
   SubscriberImpl<T> impl;
   String _topic;
   String _type;

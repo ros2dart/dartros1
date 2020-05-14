@@ -19,20 +19,43 @@ class NodeHandle {
     _namespace = _resolveName(namespace, remap: true);
   }
 
-  String get nodeName => node.name;
+  bool get isShutdown => node.isShutdown;
+  String get nodeName => node.nodeName;
+
+  // Server API stuff
   Future<String> getMasterUri() => node.getMasterUri();
   Future<List<TopicInfo>> getPublishedTopics(String subgraph) =>
       node.getPublishedTopics(subgraph);
   Future<List<TopicInfo>> getTopicTypes() => node.getTopicTypes();
   Future<SystemState> getSystemState() => node.getSystemState();
 
-  bool get isShutdown => node.isShutdown;
-  Publisher advertise<T extends RosMessage<T>>(String topic, T typeClass) {
-    return node.advertise(_resolveName(topic), typeClass);
+  // Param stuff
+  Future<bool> hasParam(String param) => node.hasParam(param);
+  Future<Object> getParam(String param) => node.getParam(param);
+  Future<bool> setParam(String param, Object value) =>
+      node.setParam(param, value);
+  Future<bool> deleteParam(String param) => node.deleteParam(param);
+  Future<String> searchParam(String param) => node.searchParam(param);
+
+  // Client API stuff
+
+  /// Advertises [topic] with message type [typeClass]
+  ///
+  /// [typeClass] must be a [RosMessage]
+  Publisher advertise<T extends RosMessage<T>>(String topic, T typeClass,
+      {latching = false, tcpNoDelay = false, queueSize = 1, throttleMs = 0}) {
+    return node.advertise<T>(_resolveName(topic), typeClass, latching,
+        tcpNoDelay, queueSize, throttleMs);
   }
 
-  Subscriber subscribe<T extends RosMessage<T>>(String topic, T typeClass) {
-    return node.subscribe(_resolveName(topic), typeClass);
+  /// Subscribes to [topic] with message type [typeClass]
+  ///
+  /// [typeClass] must be a [RosMessage]
+  Subscriber subscribe<T extends RosMessage<T>>(
+      String topic, T typeClass, void Function(T) callback,
+      {queueSize = 1, throttleMs = 1, tcpNoDelay = false}) {
+    return node.subscribe<T>(_resolveName(topic), typeClass, callback,
+        queueSize, throttleMs, tcpNoDelay);
   }
 
   void unadvertise(String topic) {
@@ -45,6 +68,7 @@ class NodeHandle {
 
   // TODO: Service and action clients
 
+  /// A helper function to resolve the name within the handle's namespace
   String _resolveName(String name,
       {bool remap = true, bool noValidate = false}) {
     if (!noValidate) {
@@ -67,10 +91,14 @@ class NodeHandle {
     }
   }
 
+  /// A helper function to remap a name to the node handle's namespace
+  ///
+  /// Should not be needed by users' code probably
   String remapName(String name) {
     return _remapName(_resolveName(name));
   }
 
+  // A helper function to remap the name
   String _remapName(String name) {
     return names.remap(name);
   }

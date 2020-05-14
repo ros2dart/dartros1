@@ -19,11 +19,11 @@ class SubscriberImpl<T extends RosMessage> {
   SubscriberImpl(
     this.node,
     this.topic,
-    this.messageClass, {
-    this.queueSize = 1,
-    this.throttleMs = 0,
-    this.tcpNoDelay = false,
-  }) {
+    this.messageClass,
+    this.queueSize,
+    this.throttleMs,
+    this.tcpNoDelay,
+  ) {
     _register();
   }
 

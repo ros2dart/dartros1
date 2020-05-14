@@ -4,28 +4,28 @@ mixin RosParamServerClient on XmlRpcClient {
   // TODO: Handle remapping keys
 
   Future<Object> getParam(String key) async {
-    return (await _call('getParam', [qualifiedName, key]));
+    return (await _call('getParam', [nodeName, key]));
   }
 
   Future<List<String>> getParamNames() async {
-    return (await _call('getParamNames', [qualifiedName]));
+    return (await _call('getParamNames', [nodeName]));
   }
 
   Future<String> searchParam(String key) async {
-    return (await _call('searchParam', [qualifiedName, key]));
+    return (await _call('searchParam', [nodeName, key]));
   }
 
   Future<bool> hasParam(String key) async {
-    return (await _call<int>('hasParam', [qualifiedName, key])) == 1;
+    return (await _call<int>('hasParam', [nodeName, key])) == 1;
   }
 
   Future<bool> deleteParam(String key) async {
-    return (await _callRpc('deleteParam', [qualifiedName, key])) ==
+    return (await _callRpc('deleteParam', [nodeName, key])) ==
         StatusCode.SUCCESS;
   }
 
   Future<bool> setParam(String key, String value) async {
-    return (await _callRpc('setParam', [qualifiedName, key, value])) ==
+    return (await _callRpc('setParam', [nodeName, key, value])) ==
         StatusCode.SUCCESS;
   }
 
