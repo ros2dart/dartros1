@@ -39,6 +39,15 @@ mixin XmlRpcClient {
     Map<String, String> headers,
   }) =>
       _rpcCall(methodName, params, rosMasterUri, client.post, headers: headers);
+  Future<T> _callRpc<T>(String methodName, List<dynamic> params,
+      {T Function() onError}) async {
+    final resp = await _call(methodName, params);
+    if (resp.success) {
+      return resp.value;
+    } else {
+      return onError();
+    }
+  }
 }
 
 class SlaveApiClient {
@@ -231,7 +240,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Gets the URI of the master.
   ///
   /// [callerID] is the ROS caller ID
-  Future<XMLRPCResponse<String>> getMasterUri() {
-    return _call('getUri', [qualifiedName]);
+  Future<String> getMasterUri() {
+    return _callRpc('getUri', [qualifiedName]);
   }
 }

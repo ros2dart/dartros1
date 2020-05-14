@@ -94,7 +94,7 @@ class PublisherImpl<T extends RosMessage> {
 
   Future<void> _register() async {
     try {
-      final resp = await node.registerPublisher(topic, type, '');
+      final resp = await node.registerPublisher(topic, type);
 
       // if we were shutdown between the starting the registration and now, bail
       if (isShutdown) {

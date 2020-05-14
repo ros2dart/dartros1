@@ -1,7 +1,7 @@
 import '../msg_utils.dart';
 import 'impl/publisher_impl.dart';
 
-class Publisher<T extends RosMessage> {
+class Publisher<T extends RosMessage<T>> {
   PublisherImpl<T> impl;
   String _topic;
   String _type;

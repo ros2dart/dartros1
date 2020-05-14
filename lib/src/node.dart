@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dartros/src/publisher.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
+import 'package:dartros/src/subscriber.dart';
+import 'package:dartros/src/utils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import 'package:path/path.dart' as path;
 import 'utils/log/logger.dart';
@@ -9,11 +12,29 @@ import 'utils/log/logger.dart';
 import 'ros_xmlrpc_common.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
 
-import 'utils/network_utils.dart';
-import 'utils/remapping.dart';
-
-class Node extends rpc_server.XmlRpcHandler
+abstract class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
+  static Node _node;
+  static Node get singleton => _node;
+  factory Node(String name, String rosMasterURI) {
+    return _node ?? Node(name, rosMasterURI);
+  }
+  @override
+  String get xmlRpcUri => '${_server.host}:${_server.port}';
+  @override
+  int get tcpRosPort => _tcpRosPort;
+  @override
+  String qualifiedName;
+  Node._(this.name, this.rosMasterURI) : super(methods: {}) {
+    ProcessSignal.sigint.watch().listen((sig) => shutdown());
+    logDir = path.join(homeDir, 'log');
+    Logger.logLevel = Level.warning;
+    logger = Logger('');
+    logger.error('Logging');
+    logger.warn('Logging');
+    print('here');
+    startXmlRpcServer();
+  }
   String name;
   bool _ok = true;
   bool get ok => _ok;
@@ -26,28 +47,10 @@ class Node extends rpc_server.XmlRpcHandler
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
   String logDir;
   final int _tcpRosPort = 0;
-  final String rosMasterURI = Platform.environment['ROS_MASTER_URI'];
+  final String rosMasterURI;
   rpc_server.SimpleXmlRpcServer _server;
-  @override
-  String get xmlRpcUri => '${_server.host}:${_server.port}';
-  @override
-  int get tcpRosPort => _tcpRosPort;
-  @override
-  String qualifiedName;
 
-  Node(this.name, List<String> args) : super(methods: {}) {
-    final remappings = processRemapping(args);
-    NetworkUtils.init(remappings);
-    ProcessSignal.sigint.watch().listen((sig) => shutdown());
-    logDir = path.join(homeDir, 'log');
-    qualifiedName = namespace + name;
-    Logger.logLevel = Level.warning;
-    logger = Logger('');
-    logger.error('Logging');
-    logger.warn('Logging');
-    print('here');
-    startXmlRpcServer();
-  }
+  get isShutdown => !ok;
 
   Future<void> printRosServerInfo() async {
     final response = await getSystemState();
@@ -254,4 +257,8 @@ class Node extends rpc_server.XmlRpcHandler
     return XMLRPCResponse<List<dynamic>>(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, 0);
   }
+
+  Publisher<RosMessage> advertise(resolvedTopic, typeClass) {}
+
+  Subscriber<RosMessage> subscribe(String resolveName, typeClass) {}
 }

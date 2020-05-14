@@ -1,9 +1,13 @@
 import 'package:string_validator/string_validator.dart';
 
+final names = Names();
+
 class Names {
-  final remappings = <String, String>{};
-  final String namespace;
-  Names({Map<String, String> remaps, this.namespace = ''}) {
+  var remappings = <String, String>{};
+  String namespace = '';
+  Names();
+  void init(Map<String, String> remaps, String namespace) {
+    this.namespace = namespace;
     for (final left in remaps.keys) {
       if (!left.startsWith('_')) {
         final right = remaps[left];
@@ -13,7 +17,8 @@ class Names {
       }
     }
   }
-  static bool validate(String name, {bool throwError = false}) {
+
+  bool validate(String name, {bool throwError = false}) {
     if (name.isEmpty) {
       return true;
     }
@@ -38,7 +43,7 @@ class Names {
     return true;
   }
 
-  static String clean(name) {
+  String clean(name) {
     name = name.replace('//', '/');
 
     if (name.endsWith('/')) {
@@ -48,7 +53,7 @@ class Names {
     return name;
   }
 
-  static String append(left, right) {
+  String append(left, right) {
     return clean(left + '/' + right);
   }
 
