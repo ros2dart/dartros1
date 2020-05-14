@@ -21,9 +21,9 @@ class NodeHandle {
 
   String get nodeName => node.name;
   Future<String> getMasterUri() => node.getMasterUri();
-  Future<List<Topic>> getPublishedTopics(String subgraph) =>
+  Future<List<TopicInfo>> getPublishedTopics(String subgraph) =>
       node.getPublishedTopics(subgraph);
-  Future<List<Topic>> getTopicTypes() => node.getTopicTypes();
+  Future<List<TopicInfo>> getTopicTypes() => node.getTopicTypes();
   Future<SystemState> getSystemState() => node.getSystemState();
 
   bool get isShutdown => node.isShutdown;

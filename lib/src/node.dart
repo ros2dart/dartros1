@@ -12,12 +12,12 @@ import 'utils/log/logger.dart';
 import 'ros_xmlrpc_common.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
 
-abstract class Node extends rpc_server.XmlRpcHandler
+class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
   static Node _node;
   static Node get singleton => _node;
   factory Node(String name, String rosMasterURI) {
-    return _node ?? Node(name, rosMasterURI);
+    return _node ?? Node._(name, rosMasterURI);
   }
   @override
   String get xmlRpcUri => '${_server.host}:${_server.port}';
@@ -54,7 +54,7 @@ abstract class Node extends rpc_server.XmlRpcHandler
 
   Future<void> printRosServerInfo() async {
     final response = await getSystemState();
-    print(response.value);
+    print(response);
   }
 
   Future<void> shutdown() async {

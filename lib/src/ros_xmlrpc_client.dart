@@ -47,6 +47,9 @@ mixin XmlRpcClient {
     if (resp.success) {
       return resp.value;
     } else {
+      if (onError == null) {
+        throw Exception('Failed to execute RPC call $methodName');
+      }
       return onError();
     }
   }
@@ -241,17 +244,30 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [ [topic1, [topic1Subscriber1...topic1SubscriberN]] ... ]
   /// services is of the form
   /// [ [service1, [service1Provider1...service1ProviderN]] ... ]
-  Future<XMLRPCResponse<List<dynamic>>> getSystemState() {
-    return _call('getSystemState', [qualifiedName]);
+  Future<SystemState> getSystemState() async {
+    final resp =
+        await _callRpc<List<dynamic>>('getSystemState', [qualifiedName]);
+    return SystemState(
+      [
+        for (final pubInfo in resp[0])
+          PublisherInfo(pubInfo[0] as String, pubInfo[1] as List<String>)
+      ],
+      [
+        for (final subInfo in resp[1])
+          SubscriberInfo(subInfo[0] as String, subInfo[1] as List<String>)
+      ],
+      [
+        for (final servInfo in resp[2])
+          ServiceInfo(servInfo[0] as String, servInfo[1] as List<String>)
+      ],
+    );
   }
 
   /// Gets the URI of the master.
   ///
   /// [callerID] is the ROS caller ID
   Future<String> getMasterUri() {
-    return _callRpc('getUri', [qualifiedName],
-        onError: () =>
-            throw Exception('Error occurred while getting master uri'));
+    return _callRpc('getUri', [qualifiedName]);
   }
 }
 

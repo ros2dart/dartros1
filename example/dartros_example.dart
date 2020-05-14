@@ -1,7 +1,7 @@
 import 'package:dartros/dartros.dart';
 
-void main() async {
-  final server = Node('ros_node_1');
+void main(List<String> args) async {
+  final server = initNode('ros_node_1', args);
   await server.printRosServerInfo();
   print(await server.getParam('/foo'));
   print(await server.setParam('/foo', 'value'));
