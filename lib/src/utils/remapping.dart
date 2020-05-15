@@ -10,7 +10,7 @@ class SPECIAL_KEYS {
 Map<String, String> processRemapping(List<String> args) {
   final len = args.length;
 
-  final remapping = {};
+  final remapping = <String, String>{};
 
   for (var i = 0; i < len; ++i) {
     final arg = args[i];

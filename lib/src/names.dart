@@ -23,7 +23,7 @@ class Names {
       return true;
     }
     final c = name[0];
-    if (!isAlpha(c) || c != '/' || c != '~') {
+    if (!isAlpha(c) && c != '/' && c != '~') {
       if (throwError) {
         throw Exception(
             'Character [$c] is not valid as the first character in Graph Resource Name [$name].  Valid characters are a-z, A-Z, / and in some cases ~.');
@@ -43,21 +43,21 @@ class Names {
     return true;
   }
 
-  String clean(name) {
-    name = name.replace('//', '/');
+  String clean(String name) {
+    name = name.replaceAll('//', '/');
 
     if (name.endsWith('/')) {
-      return name.substr(0, -1);
+      return name.substring(0, name.length - 1);
     }
     // else
     return name;
   }
 
-  String append(left, right) {
+  String append(String left, String right) {
     return clean(left + '/' + right);
   }
 
-  String remap(name) {
+  String remap(String name) {
     return resolve([name, true]);
   }
 
@@ -65,7 +65,7 @@ class Names {
     final a = _parseResolveArgs(args);
     final ns = a[0] as String;
     var name = a[1] as String;
-    final remap = a[3] as bool;
+    final remap = a[2] as bool;
 
     validate(name, throwError: true);
 
