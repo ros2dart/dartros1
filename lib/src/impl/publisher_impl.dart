@@ -106,9 +106,8 @@ class PublisherImpl<T extends RosMessage> {
       _state = State.REGISTERED;
       // this.emit('registered');
 
-    } catch (err) {
-      print('Error while registering publisher $topic: $err');
-      print(StackTrace.current);
+    } catch (err, trace) {
+      print('Error while registering publisher $topic: $err\n$trace');
     }
   }
 
