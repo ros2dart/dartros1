@@ -16,7 +16,7 @@ mixin RosParamServerClient on XmlRpcClient {
   }
 
   Future<bool> hasParam(String key) async {
-    return (await _call<int>('hasParam', [nodeName, key])) == 1;
+    return (await _call('hasParam', [nodeName, key])) == 1;
   }
 
   Future<bool> deleteParam(String key) async {

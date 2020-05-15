@@ -6,6 +6,7 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
 import 'package:dartros/src/utils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
+import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml_rpc/client.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
@@ -25,9 +26,9 @@ class Node extends rpc_server.XmlRpcHandler
     return _node ?? Node._(name, rosMasterURI);
   }
   @override
-  String get xmlRpcUri => '${_xmlRpcServer.host}:${_xmlRpcServer.port}';
+  String get xmlRpcUri => 'http://${_xmlRpcServer.host}:${_xmlRpcServer.port}';
   @override
-  int get tcpRosPort => _tcpRosPort;
+  int get tcpRosPort => _tcpRosServer.port;
   @override
   String nodeName;
   Completer<bool> nodeReady = Completer();
@@ -51,17 +52,17 @@ class Node extends rpc_server.XmlRpcHandler
 
   final Map<String, PublisherImpl> _publishers = {};
   final Map<String, SubscriberImpl> _subscribers = {};
+  StreamSubscription<Socket> _tcpStream;
   bool _ok = true;
   bool get ok => _ok;
-  Map<String, dynamic> publishers = {};
-  Map<String, dynamic> subscribers = {};
+  Map<String, PublisherImpl> publishers = {};
+  Map<String, SubscriberImpl> subscribers = {};
   Map<String, dynamic> servers = {};
   Logger logger;
   String homeDir = Platform.environment['ROS_HOME'] ??
       path.join(Platform.environment['HOME'], '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
   String logDir;
-  final int _tcpRosPort = 0;
   final String rosMasterURI;
   rpc_server.SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
@@ -191,6 +192,7 @@ class Node extends rpc_server.XmlRpcHandler
       ),
     );
     await _xmlRpcServer.start();
+    print('Started xmlRPCServer');
   }
 
   /// Stops the server for the slave api
@@ -202,28 +204,35 @@ class Node extends rpc_server.XmlRpcHandler
     _tcpRosServer = await listenRandomPort(
       10,
       (port) async => await ServerSocket.bind(
-        '0.0.0.0',
+        InternetAddress('127.0.0.1', type: InternetAddressType.IPv4),
         0,
       ),
     );
-    await _tcpRosServer.listen((connection) async {
-      //TODO: logging
-      await connection
-          .transform(TCPRosChunkTransformer().transformer)
-          .firstWhere((message) {
+    print('Start listening');
+    _tcpStream = await _tcpRosServer.listen(
+      (connection) async {
+        print('Got tcp ros connection');
+        //TODO: logging
+
+        final listener = connection.asBroadcastStream();
+        final message = await listener
+            .transform(TCPRosChunkTransformer().transformer)
+            .first;
+
         final header = parseTcpRosHeader(message);
         if (header == null) {
           // TODO: Log error
           connection.add(
               serializeString('Unable to validate connection header $message'));
-          connection.close();
-          return true;
+          await connection.close();
+          return;
         }
         print('Got connection header $header');
         if (header.topic != null) {
           final topic = header.topic;
           if (_publishers.containsKey(topic)) {
-            _publishers[topic].handleSubscriberConnection(connection, header);
+            _publishers[topic]
+                .handleSubscriberConnection(connection, listener, header);
           } else {
             // TODO: Log error
           }
@@ -232,11 +241,13 @@ class Node extends rpc_server.XmlRpcHandler
         } else {
           connection.add(serializeString(
               'Connection header $message has neither topic nor service'));
-          connection.close();
+          await connection.close();
         }
-        return true;
-      });
-    });
+      },
+      onError: (e) => print('Socket error for tcp ros $e'),
+      onDone: () => print('Closing tcp ros server'),
+    );
+    print('listening on $tcpRosPort');
   }
 
   _stopTcpRosServer() {}
@@ -252,9 +263,8 @@ class Node extends rpc_server.XmlRpcHandler
   /// pubConnectionData: [connectionId, bytesSent, numSent, connected]*
   /// subConnectionData: [connectionId, bytesReceived, dropEstimate, connected]*
   /// dropEstimate: -1 if no estimate.
-  XMLRPCResponse<dynamic> _handleGetBusStats(String callerID) {
-    return XMLRPCResponse<dynamic>(
-        StatusCode.FAILURE.asInt, 'Not Implemented', 0);
+  XMLRPCResponse _handleGetBusStats(String callerID) {
+    return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', 0);
   }
 
   /// Retrieve transport/topic connection information.
@@ -268,36 +278,46 @@ class Node extends rpc_server.XmlRpcHandler
   /// transport is the transport type (e.g. 'TCPROS').
   /// topic is the topic name.
   /// connected1 indicates connection status. Note that this field is only provided by slaves written in Python at the moment (cf. rospy/masterslave.py in _TopicImpl.get_stats_info() vs. roscpp/publication.cpp in Publication::getInfo()).
-  XMLRPCResponse<dynamic> _handleGetBusInfo(String callerID) {
-    return XMLRPCResponse<dynamic>(
-        StatusCode.FAILURE.asInt, 'Not Implemented', 0);
+  XMLRPCResponse _handleGetBusInfo(String callerID) {
+    print('get bus info');
+    var count = 0;
+    return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', [
+      for (final sub in subscribers.values)
+        for (final client in sub.clientUris)
+          [++count, client, 'o', 'TCPROS', sub.topic, true],
+      for (final pub in publishers.values)
+        for (final client in pub.clientUris)
+          [++count, client, 'o', 'TCPROS', pub.topic, true]
+    ]);
   }
 
   /// Gets the URI of the master node
-  XMLRPCResponse<String> _handleGetMasterUri(String callerID) {
-    return XMLRPCResponse<String>(
+  XMLRPCResponse _handleGetMasterUri(String callerID) {
+    print('get master uri');
+    return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, rosMasterURI);
   }
 
   /// Stop this server.
   ///
   /// [message] A message describing why the node is being shutdown
-  XMLRPCResponse<int> _handleShutdown(String callerID, [String message = '']) {
+  XMLRPCResponse _handleShutdown(String callerID, [String message = '']) {
     if (message != null && message.isNotEmpty) {
       print('shutdown request: $message');
     } else {
       print('shutdown request');
     }
     shutdown();
-    return XMLRPCResponse<int>(
+    return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, 0);
   }
 
   /// Get the PID of this server.
   ///
   /// returns the PID
-  XMLRPCResponse<String> _handleGetPid(String callerID) {
-    return XMLRPCResponse<String>(
+  XMLRPCResponse _handleGetPid(String callerID) {
+    print('get pid');
+    return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, pid);
   }
 
@@ -306,10 +326,11 @@ class Node extends rpc_server.XmlRpcHandler
   /// returns the topicList
   /// topicList is a list of topics this node subscribes to and is of the form
   /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
-  XMLRPCResponse<List<List<String>>> _handleGetSubscriptions(String callerID) {
-    return XMLRPCResponse<List<List<String>>>(
+  XMLRPCResponse _handleGetSubscriptions(String callerID) {
+    print('get subscriptions');
+    return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
-      ['hello', 'hello']
+      for (final sub in subscribers.entries) [sub.key, sub.value.type]
     ]);
   }
 
@@ -318,27 +339,32 @@ class Node extends rpc_server.XmlRpcHandler
   /// returns the topicList
   /// topicList is a list of topics this node subscribes to and is of the form
   /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
-  XMLRPCResponse<List<List<String>>> _handleGetPublications(String callerID) {
-    return XMLRPCResponse<List<List<String>>>(
-        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, []);
+  XMLRPCResponse _handleGetPublications(String callerID) {
+    print('get publications');
+    return XMLRPCResponse(
+        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
+      for (final pub in publishers.entries) [pub.key, pub.value.type]
+    ]);
   }
 
   /// Callback from master with updated value of subscribed parameter.
   ///
   /// [parameterKey] parameter name, globally resolved
   /// [parameterValue] new parameter value
-  XMLRPCResponse<int> _handleParamUpdate(
+  XMLRPCResponse _handleParamUpdate(
       String callerID, String parameterKey, dynamic parameterValue) {
-    return XMLRPCResponse<int>(StatusCode.FAILURE.asInt, 'Not Implemented', 0);
+    print('param update');
+    return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', 0);
   }
 
   /// Callback from master of current publisher list for specified topic
   ///
   /// [topic] Topic name
   /// [publishers] List of current publishers for topic in form of XMLRPC URIs
-  XMLRPCResponse<int> _handlePublisherUpdate(
+  XMLRPCResponse _handlePublisherUpdate(
       String callerID, String topic, List<String> publishers) {
-    return XMLRPCResponse<int>(
+    print('Publisher update');
+    return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, 0);
   }
 
@@ -356,20 +382,21 @@ class Node extends rpc_server.XmlRpcHandler
   ///
   /// Returns (int, str, [str, !XMLRPCLegalValue*] ) (code, statusMessage, protocolParams)
   /// protocolParams may be an empty list if there are no compatible protocols.
-  XMLRPCResponse<List<dynamic>> _handleRequestTopic(
-      String callerID, String topic, List<List<dynamic>> protocols) {
+  XMLRPCResponse _handleRequestTopic(
+      String callerID, String topic, List<dynamic> protocols) {
+    print('Handling request topic');
     List resp;
     if (_publishers.containsKey(topic)) {
       resp = [
         1,
         'Allocated topic connection on port ' + tcpRosPort.toString(),
-        ['TCPROS', NetworkUtils.host, tcpRosPort]
+        ['TCPROS', _tcpRosServer.address.address, tcpRosPort]
       ];
     } else {
       resp = [0, 'Unable to allocate topic connection for ' + topic, []];
     }
-    return XMLRPCResponse<List<dynamic>>(
-        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, resp);
+    print(resp);
+    return XMLRPCResponse(resp[0], resp[1], resp[2]);
   }
 
   /// Our client's api to request a topic from another node
@@ -377,5 +404,11 @@ class Node extends rpc_server.XmlRpcHandler
       String topic, List<List<String>> protocols) {
     final slave = SlaveApiClient(nodeName, remoteAddress, remotePort);
     return slave.requestTopic(topic, protocols);
+  }
+
+  @override
+  XmlDocument handleFault(Fault fault, {List<Codec> codecs}) {
+    print('Error in xmlRPC server $fault');
+    return super.handleFault(fault);
   }
 }

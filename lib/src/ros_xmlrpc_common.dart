@@ -18,13 +18,13 @@ Future<dynamic> listenRandomPort(
   throw Exception("Couldn't find a port to listen on");
 }
 
-class XMLRPCResponse<T> {
+class XMLRPCResponse {
   final StatusCode statusCode;
   final String statusMessage;
-  final T value;
+  final dynamic value;
   XMLRPCResponse(int status, this.statusMessage, dynamic invalue)
       : statusCode = status.asStatusCode,
-        value = invalue as T;
+        value = invalue;
 
   bool get success => statusCode == StatusCode.SUCCESS;
   bool get failure => statusCode == StatusCode.FAILURE;

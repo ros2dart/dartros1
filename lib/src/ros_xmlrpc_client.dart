@@ -13,14 +13,21 @@ final xmlRpcResponseCodec = XmlRpcResponseCodec();
 class XmlRpcResponseCodec implements rpc.Codec<XMLRPCResponse> {
   @override
   XmlNode encode(value, XmlNode Function(dynamic) encode) {
-    if (value is! XMLRPCResponse) throw ArgumentError();
+    // print('trying xmlrpc response codec');
+    if (value is XMLRPCResponse) {
+      // print('encoding');
+      final values = <XmlNode>[];
 
-    final values = <XmlNode>[];
-    [value.statusCode, value.statusMessage, value.value].forEach((e) {
-      values.add(XmlElement(XmlName('value'), [], [encode(e)]));
-    });
-    final data = XmlElement(XmlName('data'), [], values);
-    return XmlElement(XmlName('array'), [], [data]);
+      [value.statusCode.asInt, value.statusMessage, value.value].forEach((e) {
+        // print('$e');
+        values.add(XmlElement(XmlName('value'), [], [encode(e)]));
+      });
+      final data = XmlElement(XmlName('data'), [], values);
+      // print(data);
+      return XmlElement(XmlName('array'), [], [data]);
+    } else {
+      throw ArgumentError();
+    }
   }
 
   @override
@@ -43,13 +50,13 @@ class XmlRpcResponseCodec implements rpc.Codec<XMLRPCResponse> {
 XmlNode getValueContent(XmlElement valueElt) => valueElt.children
     .firstWhere((e) => e is XmlElement, orElse: () => valueElt.firstChild);
 
-Future<T> _rpcCall<T>(
+Future _rpcCall(
   String methodName,
   List<dynamic> params,
   String rosMasterUri,
   rpc.HttpPost post, {
   Map<String, String> headers,
-  T Function() onError,
+  dynamic Function() onError,
 }) async {
   final result = await rpc.call(
     rosMasterUri,
@@ -61,10 +68,7 @@ Future<T> _rpcCall<T>(
     encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
     decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
   );
-  print(result);
-
-  final resp =
-      XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
+  final resp = XMLRPCResponse(result[0] as int, result[1] as String, result[2]);
 
   if (resp.success) {
     return resp.value;
@@ -77,13 +81,13 @@ Future<T> _rpcCall<T>(
   }
 }
 
-Future<StatusCode> _rpcCallStatus<T>(
+Future<StatusCode> _rpcCallStatus(
   String methodName,
   List<dynamic> params,
   String rosMasterUri,
   rpc.HttpPost post, {
   Map<String, String> headers,
-  T Function() onError,
+  dynamic Function() onError,
 }) async {
   final result = await rpc.call(
     rosMasterUri,
@@ -95,8 +99,7 @@ Future<StatusCode> _rpcCallStatus<T>(
     encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
     decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
   ) as List;
-  final resp =
-      XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
+  final resp = XMLRPCResponse(result[0] as int, result[1] as String, result[2]);
 
   return resp.statusCode;
 }
@@ -108,19 +111,18 @@ mixin XmlRpcClient {
   int get tcpRosPort;
   String get xmlRpcUri;
 
-  Future<T> _call<T>(
+  Future<dynamic> _call(
     String methodName,
     List<dynamic> params, {
     Map<String, String> headers,
   }) =>
-      _rpcCall<T>(methodName, params, rosMasterUri, client.post,
-          headers: headers);
-  Future<StatusCode> _callRpc<T>(
+      _rpcCall(methodName, params, rosMasterUri, client.post, headers: headers);
+  Future<StatusCode> _callRpc(
     String methodName,
     List<dynamic> params, {
     Map<String, String> headers,
   }) =>
-      _rpcCallStatus<T>(methodName, params, rosMasterUri, client.post,
+      _rpcCallStatus(methodName, params, rosMasterUri, client.post,
           headers: headers);
 }
 
@@ -134,11 +136,8 @@ class SlaveApiClient {
 
   Future<ProtocolParams> requestTopic(
       String topic, List<List<dynamic>> protocols) async {
-    final p = await _rpcCall<List<dynamic>>(
-        'requestTopic',
-        [nodeName, topic, protocols],
-        host + ':' + port.toString(),
-        client.post);
+    final p = await _rpcCall('requestTopic', [nodeName, topic, protocols],
+        host + ':' + port.toString(), client.post);
     return ProtocolParams(p[0], p[1], p[2] as int);
   }
 }
@@ -159,7 +158,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<void> registerService(
     String service,
   ) async {
-    await _call<int>('registerService', [
+    await _call('registerService', [
       nodeName,
       service,
       NetworkUtils.formatServiceUri(tcpRosPort),
@@ -179,7 +178,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<void> unregisterService(
     String service,
   ) async {
-    await _call<int>('unregisterService',
+    await _call('unregisterService',
         [nodeName, service, NetworkUtils.formatServiceUri(tcpRosPort)]);
   }
 
@@ -198,8 +197,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
     String topic,
     String topicType,
   ) {
-    return _call<List<String>>(
-        'registerSubscriber', [nodeName, topic, topicType, xmlRpcUri]);
+    return _call('registerSubscriber', [nodeName, topic, topicType, xmlRpcUri]);
   }
 
   /// Unsubscribes the [callerID] from the specified [topic].
@@ -213,7 +211,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<void> unregisterSubscriber(
     String topic,
   ) async {
-    await _call<int>('unregisterSubscriber', [nodeName, topic, xmlRpcUri]);
+    await _call('unregisterSubscriber', [nodeName, topic, xmlRpcUri]);
   }
 
   /// Register the [callerID] as a publisher of the specified [topic].
@@ -227,11 +225,13 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<List<String>> registerPublisher(
     String topic,
     String topicType,
-  ) {
+  ) async {
     print(nodeName);
     print(xmlRpcUri);
-    return _call<List<String>>(
-        'registerPublisher', [nodeName, topic, topicType, xmlRpcUri]);
+    return (await _call(
+                'registerPublisher', [nodeName, topic, topicType, xmlRpcUri])
+            as List)
+        .cast<String>();
   }
 
   /// Unregisters the [callerID] as a publisher of the specified [topic].
@@ -245,7 +245,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<void> unregisterPublisher(
     String topic,
   ) async {
-    await _call<int>('unregisterPublisher', [nodeName, topic, xmlRpcUri]);
+    await _call('unregisterPublisher', [nodeName, topic, xmlRpcUri]);
   }
 
   /// 2.2 Name service and system state
@@ -262,7 +262,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<String> lookupNode(
     String nodeName,
   ) {
-    return _call<String>('lookupNode', [nodeName, nodeName]);
+    return _call('lookupNode', [nodeName, nodeName]);
   }
 
   /// Gets the URI of the master
@@ -274,7 +274,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<String> lookupService(
     String service,
   ) {
-    return _call<String>('lookupService', [nodeName, service]);
+    return _call('lookupService', [nodeName, service]);
   }
 
   /// Get list of topics that can be subscribed to.
@@ -289,8 +289,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<List<TopicInfo>> getPublishedTopics(
     String subgraph,
   ) async {
-    return (await _call<List<List<String>>>(
-            'getPublishedTopics', [nodeName, subgraph]))
+    return (await _call('getPublishedTopics', [nodeName, subgraph]))
         .map((t) => TopicInfo(t[0], t[1]))
         .toList();
   }
@@ -301,7 +300,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// Returns a list of (topicName, topicType) pairs (lists)
   Future<List<TopicInfo>> getTopicTypes() async {
-    return (await _call<List<List<String>>>('getTopicTypes', [nodeName]))
+    return (await _call('getTopicTypes', [nodeName]))
         .map((t) => TopicInfo(t[0], t[1]))
         .toList();
   }
@@ -319,7 +318,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// services is of the form
   /// [ [service1, [service1Provider1...service1ProviderN]] ... ]
   Future<SystemState> getSystemState() async {
-    final resp = await _call<List<dynamic>>('getSystemState', [nodeName]);
+    final resp = await _call('getSystemState', [nodeName]);
     return SystemState(
       [
         for (final pubInfo in resp[0])
@@ -340,7 +339,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   ///
   /// [callerID] is the ROS caller ID
   Future<String> getMasterUri() {
-    return _call<String>('getUri', [nodeName]);
+    return _call('getUri', [nodeName]);
   }
 }
 

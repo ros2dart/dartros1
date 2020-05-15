@@ -21,18 +21,21 @@ const persistentField = 'persistent=1';
 const tcpNoDelayField = 'tcp_nodelay=1';
 
 void serializeStringFields(ByteDataWriter writer, List<String> fields) {
-  final totalLength = fields.map((f) => f.lenInBytes).sum();
+  final totalLength = fields.map((f) => f.lenInBytes + 4).sum();
   writer.writeUint32(totalLength, Endian.little);
   fields.forEach((f) => writer.writeString(f));
 }
 
 List<String> deserializeStringFields(ByteDataReader reader) {
-  final totalLength = reader.readUint32(Endian.little);
+  // final totalLength = reader.readUint32(Endian.little);
+  final totalLength = reader.remainingLength;
+  print('Total length of string fields $totalLength');
   final stringList = <String>[];
   var length = 0;
   while (length < totalLength) {
     final string = reader.readString();
-    length += string.lenInBytes;
+    length += string.lenInBytes + 4;
+    print('Read string $string, length $length');
     stringList.add(string);
   }
   return stringList;
@@ -52,13 +55,16 @@ void createSubHeader(ByteDataWriter writer, String callerId, String md5sum,
 
 void createPubHeader(ByteDataWriter writer, String callerId, String md5sum,
     String type, bool latching, String messageDefinition) {
-  return serializeStringFields(writer, [
+  final fields = [
     messageDefinitionPrefix + messageDefinition,
     callerIdPrefix + callerId,
     if (latching) latchingField,
     md5Prefix + md5sum,
     typePrefix + type,
-  ]);
+  ];
+  serializeStringFields(writer, fields);
+  print(fields);
+  print(writer.toBytes());
 }
 
 void createServiceClientHeader(ByteDataWriter writer, String callerId,
@@ -84,18 +90,19 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final reader = ByteDataReader(endian: Endian.little);
   reader.add(header.buffer);
   final info = <String, String>{};
-  final regex = RegExp(r'(\w+)=([\s\S]+)');
+  final regex = RegExp(r'(\w+)=([\s\S]*)');
   final fields = deserializeStringFields(reader);
   print(fields);
   fields.forEach((field) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
-      return;
+      return null;
     }
     final match = regex.allMatches(field).toList()[0];
     info[match.group(1)] = match.group(2);
   });
+  print(info);
   return TCPRosHeader.fromMap(info);
 }
 
@@ -233,8 +240,8 @@ class TCPRosHeader<T> {
         info['message_definition'],
         info['error'],
         info['persistent'],
-        info['tcp_nodelay'] ?? '0' != '0',
-        info['latching'] ?? '0' != '0');
+        (info['tcp_nodelay'] ?? '0') != '0',
+        (info['latching'] ?? '0') != '0');
   }
 }
 
@@ -242,7 +249,7 @@ class TCPRosChunkTransformer {
   bool _inBody = false;
   int _bytesConsumed = 0;
   int _messageLen = -1;
-  Uint8List _buffer = Uint8List(0);
+  List<int> _buffer = [];
   bool _deserializeServiceResponse = false;
   bool _serviceRespSuccess;
 
@@ -252,21 +259,22 @@ class TCPRosChunkTransformer {
     _transformer = StreamTransformer.fromHandlers(handleData: _handleData);
   }
 
-  void _handleData(data, sink) {
+  void _handleData(Uint8List data, sink) {
+    print(data);
     var pos = 0;
     var chunkLen = data.length;
     while (pos < chunkLen) {
       if (_inBody) {
         final messageRemaining = _messageLen - _bytesConsumed;
         if (chunkLen >= messageRemaining + pos) {
-          final restMessage = data.slice(pos, pos + messageRemaining);
+          final restMessage = data.sublist(pos, pos + messageRemaining);
           _buffer.addAll(restMessage);
           _emitMessage(sink);
 
           // Next message
           pos += messageRemaining;
         } else {
-          _buffer.addAll(data.slice(pos));
+          _buffer.addAll(data.sublist(pos));
           _bytesConsumed += chunkLen - pos;
           pos = chunkLen;
         }
@@ -279,18 +287,20 @@ class TCPRosChunkTransformer {
         var bufLen = _buffer.length;
         // first 4 bytes of the message are a uint32 length field
         if (chunkLen - pos >= 4 - bufLen) {
-          _buffer.addAll(data.slice(pos, pos + 4 - bufLen));
-          _messageLen = (ByteDataReader(endian: Endian.little)..add(_buffer))
+          _buffer.addAll(data.sublist(pos, pos + 4 - bufLen));
+          _messageLen = (ByteDataReader(endian: Endian.little, copy: true)
+                ..add(_buffer))
               .readUint32();
+          print(_messageLen);
           pos += 4 - bufLen;
-          _buffer = Uint8List(0);
+          _buffer = [];
           if (_messageLen == 0 && pos == chunkLen) {
             _emitMessage(sink);
           } else {
             _inBody = true;
           }
         } else {
-          _buffer.addAll(data.slice(pos));
+          _buffer.addAll(data.sublist(pos));
           pos = chunkLen;
         }
       }
@@ -298,11 +308,13 @@ class TCPRosChunkTransformer {
   }
 
   void _emitMessage(sink) {
+    print('Emitting message');
+    print('Buffer: $_buffer');
     sink.add(TCPRosChunk(_buffer,
         serviceResponse: _deserializeServiceResponse,
         serviceResponseSuccess: _serviceRespSuccess));
     // Reset buffer
-    _buffer = Uint8List(0);
+    _buffer = [];
     _bytesConsumed = 0;
     _inBody = false;
     _deserializeServiceResponse = false;
@@ -312,7 +324,7 @@ class TCPRosChunkTransformer {
 
 @freezed
 abstract class TCPRosChunk with _$TCPRosChunk {
-  factory TCPRosChunk(Uint8List buffer,
+  factory TCPRosChunk(List<int> buffer,
       {@Default(false) bool serviceResponse,
       bool serviceResponseSuccess}) = _TcpRosChunk;
 }

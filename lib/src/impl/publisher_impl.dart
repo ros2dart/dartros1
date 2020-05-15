@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/utils/tcpros_utils.dart';
@@ -53,6 +54,7 @@ class PublisherImpl<T extends RosMessage> {
 
   void publish(T message, [int ms]) {
     if (isShutdown) {
+      print('Shutdown, not sending any more messages');
       return;
     }
     // final delay = ms ?? throttleMs;
@@ -70,11 +72,14 @@ class PublisherImpl<T extends RosMessage> {
       print('Publishing message on ${topic} with no subscribers');
     }
     try {
+      print('Publishing message on ${topic} with subscribers');
       messages.forEach((msg) {
-        final writer = ByteDataWriter();
+        final writer = ByteDataWriter(endian: Endian.little);
+
         serializeMessage(writer, msg);
         for (final client in subClients.values) {
-          client.write(writer.toString());
+          print(writer.toBytes());
+          client.add(writer.toBytes());
         }
         if (latching) {
           lastSentMsg = msg;
@@ -113,15 +118,20 @@ class PublisherImpl<T extends RosMessage> {
 
   bool get isShutdown => _state == State.SHUTDOWN;
 
-  void handleSubscriberConnection(Socket connection, TCPRosHeader header) {
-    final writer = ByteDataWriter();
-    final err =
+  void handleSubscriberConnection(
+      Socket connection, Stream listener, TCPRosHeader header) {
+    print('Handling subscriber connection');
+    final writer = ByteDataWriter(endian: Endian.little);
+    final validated =
         validateSubHeader(writer, header, topic, type, messageClass.md5sum);
-    if (err) {
+
+    if (!validated) {
+      print('Sub header not validated');
+      print(writer.toBytes());
       connection.add(writer.toBytes());
       connection.close();
-      return;
     }
+    print('Sub header validated');
     // TODO: Logging
     createPubHeader(writer, node.nodeName, messageClass.md5sum, type, latching,
         messageClass.messageDefinition);
@@ -129,7 +139,10 @@ class PublisherImpl<T extends RosMessage> {
     if (tcpNoDelay || header.tcpNoDelay) {
       connection.setOption(SocketOption.tcpNoDelay, true);
     }
-    connection.listen((_) {}, onError: () {}, onDone: () {
+    listener.listen((_) {}, onError: (e) {
+      print(e);
+    }, onDone: () {
+      print('finished');
       subClients.remove(connection.name);
       connection.close();
     });

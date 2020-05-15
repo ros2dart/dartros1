@@ -12,7 +12,7 @@ T _$identity<T>(T value) => value;
 class _$TCPRosChunkTearOff {
   const _$TCPRosChunkTearOff();
 
-  _TcpRosChunk call(Uint8List buffer,
+  _TcpRosChunk call(List<int> buffer,
       {bool serviceResponse = false, bool serviceResponseSuccess}) {
     return _TcpRosChunk(
       buffer,
@@ -26,7 +26,7 @@ class _$TCPRosChunkTearOff {
 const $TCPRosChunk = _$TCPRosChunkTearOff();
 
 mixin _$TCPRosChunk {
-  Uint8List get buffer;
+  List<int> get buffer;
   bool get serviceResponse;
   bool get serviceResponseSuccess;
 
@@ -38,7 +38,7 @@ abstract class $TCPRosChunkCopyWith<$Res> {
           TCPRosChunk value, $Res Function(TCPRosChunk) then) =
       _$TCPRosChunkCopyWithImpl<$Res>;
   $Res call(
-      {Uint8List buffer, bool serviceResponse, bool serviceResponseSuccess});
+      {List<int> buffer, bool serviceResponse, bool serviceResponseSuccess});
 }
 
 class _$TCPRosChunkCopyWithImpl<$Res> implements $TCPRosChunkCopyWith<$Res> {
@@ -55,7 +55,7 @@ class _$TCPRosChunkCopyWithImpl<$Res> implements $TCPRosChunkCopyWith<$Res> {
     Object serviceResponseSuccess = freezed,
   }) {
     return _then(_value.copyWith(
-      buffer: buffer == freezed ? _value.buffer : buffer as Uint8List,
+      buffer: buffer == freezed ? _value.buffer : buffer as List<int>,
       serviceResponse: serviceResponse == freezed
           ? _value.serviceResponse
           : serviceResponse as bool,
@@ -73,7 +73,7 @@ abstract class _$TcpRosChunkCopyWith<$Res>
       __$TcpRosChunkCopyWithImpl<$Res>;
   @override
   $Res call(
-      {Uint8List buffer, bool serviceResponse, bool serviceResponseSuccess});
+      {List<int> buffer, bool serviceResponse, bool serviceResponseSuccess});
 }
 
 class __$TcpRosChunkCopyWithImpl<$Res> extends _$TCPRosChunkCopyWithImpl<$Res>
@@ -92,7 +92,7 @@ class __$TcpRosChunkCopyWithImpl<$Res> extends _$TCPRosChunkCopyWithImpl<$Res>
     Object serviceResponseSuccess = freezed,
   }) {
     return _then(_TcpRosChunk(
-      buffer == freezed ? _value.buffer : buffer as Uint8List,
+      buffer == freezed ? _value.buffer : buffer as List<int>,
       serviceResponse: serviceResponse == freezed
           ? _value.serviceResponse
           : serviceResponse as bool,
@@ -110,7 +110,7 @@ class _$_TcpRosChunk implements _TcpRosChunk {
         assert(serviceResponse != null);
 
   @override
-  final Uint8List buffer;
+  final List<int> buffer;
   @JsonKey(defaultValue: false)
   @override
   final bool serviceResponse;
@@ -149,11 +149,11 @@ class _$_TcpRosChunk implements _TcpRosChunk {
 }
 
 abstract class _TcpRosChunk implements TCPRosChunk {
-  factory _TcpRosChunk(Uint8List buffer,
+  factory _TcpRosChunk(List<int> buffer,
       {bool serviceResponse, bool serviceResponseSuccess}) = _$_TcpRosChunk;
 
   @override
-  Uint8List get buffer;
+  List<int> get buffer;
   @override
   bool get serviceResponse;
   @override
