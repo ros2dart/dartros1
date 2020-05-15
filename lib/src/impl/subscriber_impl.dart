@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
@@ -41,7 +42,8 @@ class SubscriberImpl<T extends RosMessage> {
 
   String get spinnerId => 'Subscriber://$topic';
 
-  Stream<T> get stream => null;
+  final StreamController<T> _streamController = StreamController();
+  Stream<T> get stream => _streamController.stream;
 
   String get type => messageClass.fullType;
 
@@ -119,15 +121,16 @@ class SubscriberImpl<T extends RosMessage> {
   }
 
   Future<void> _handleTopicRequestResponse(
-      ProtocolParams resp, String uri) async {
+      ProtocolParams parms, String uri) async {
     if (isShutdown) {
       return;
     }
-    final socket = await Socket.connect(resp.address, resp.port);
+    final socket = await Socket.connect(parms.address, parms.port);
     if (isShutdown) {
       await socket.close();
       return;
     }
+    final listener = socket.asBroadcastStream();
     final writer = ByteDataWriter(endian: Endian.little);
     createSubHeader(
       writer,
@@ -141,6 +144,66 @@ class SubscriberImpl<T extends RosMessage> {
     socket.add(writer.toBytes());
     // TODO: Some more stuff here, listening for errors and close
     pendingClients[uri] = socket;
+    try {
+      final connectionHeader =
+          await listener.transform(TCPRosChunkTransformer().transformer).first;
+      await _handleConnectionHeader(socket, listener, uri, connectionHeader);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> _handleConnectionHeader(
+      Socket socket,
+      Stream<Uint8List> listener,
+      String uri,
+      TCPRosChunk connectionHeader) async {
+    if (isShutdown) {
+      _disconnectClient(uri);
+      return;
+    }
+    final header = parseTcpRosHeader(connectionHeader);
+    if (header.error != null) {
+      print(header.error);
+      return;
+    }
+    final writer = ByteDataWriter(endian: Endian.little);
+    final validated =
+        validatePubHeader(writer, header, type, messageClass.md5sum);
+    if (!validated) {
+      print('Unable to validate subscriber ${topic} connection header $header');
+      socket.add(writer.toBytes());
+      await socket.flush();
+      await socket.close();
+      return;
+    }
+    pubClients[uri] = socket;
+    pendingClients.remove(uri);
+    final deserializer = TCPRosChunkTransformer().transformer;
+    listener.transform(deserializer).listen(_handleMessage, onError: (e) {
+      print(
+          'Subscriber client socket ${socket.name} on topic ${topic} had error: $e');
+    }, onDone: () {
+      print(
+          'Subscriber client socket ${socket.name} on topic $topic disconnected');
+      _disconnectClient(uri);
+    });
+  }
+
+  void _handleMessage(TCPRosChunk message) {
+    _handleMsgQueue([message]);
+  }
+
+  void _handleMsgQueue(List<TCPRosChunk> messages) {
+    try {
+      for (final message in messages) {
+        final reader = ByteDataReader(endian: Endian.little);
+        reader.add(message.buffer);
+        _streamController.add(messageClass.deserialize(reader));
+      }
+    } catch (e) {
+      print('Error while deserializing message on topic $topic, $e');
+    }
   }
 
   void registerSubscriber() {

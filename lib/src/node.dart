@@ -204,7 +204,7 @@ class Node extends rpc_server.XmlRpcHandler
     _tcpRosServer = await listenRandomPort(
       10,
       (port) async => await ServerSocket.bind(
-        InternetAddress('127.0.0.1', type: InternetAddressType.IPv4),
+        '0.0.0.0',
         0,
       ),
     );
@@ -224,6 +224,7 @@ class Node extends rpc_server.XmlRpcHandler
           // TODO: Log error
           connection.add(
               serializeString('Unable to validate connection header $message'));
+          await connection.flush();
           await connection.close();
           return;
         }
@@ -241,6 +242,7 @@ class Node extends rpc_server.XmlRpcHandler
         } else {
           connection.add(serializeString(
               'Connection header $message has neither topic nor service'));
+          await connection.flush();
           await connection.close();
         }
       },

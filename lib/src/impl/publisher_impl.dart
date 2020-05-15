@@ -118,8 +118,8 @@ class PublisherImpl<T extends RosMessage> {
 
   bool get isShutdown => _state == State.SHUTDOWN;
 
-  void handleSubscriberConnection(
-      Socket connection, Stream listener, TCPRosHeader header) {
+  Future<void> handleSubscriberConnection(
+      Socket connection, Stream listener, TCPRosHeader header) async {
     print('Handling subscriber connection');
     final writer = ByteDataWriter(endian: Endian.little);
     final validated =
@@ -129,7 +129,9 @@ class PublisherImpl<T extends RosMessage> {
       print('Sub header not validated');
       print(writer.toBytes());
       connection.add(writer.toBytes());
-      connection.close();
+      await connection.flush();
+      await connection.close();
+      return;
     }
     print('Sub header validated');
     // TODO: Logging
