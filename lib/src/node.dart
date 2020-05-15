@@ -30,6 +30,7 @@ class Node extends rpc_server.XmlRpcHandler
   int get tcpRosPort => _tcpRosPort;
   @override
   String nodeName;
+  Completer<bool> nodeReady = Completer();
   Node._(this.nodeName, this.rosMasterURI)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
     logDir = path.join(homeDir, 'log');
@@ -45,6 +46,7 @@ class Node extends rpc_server.XmlRpcHandler
   Future<void> _startServers() async {
     await _startTcpRosServer();
     await _startXmlRpcServer();
+    nodeReady.complete();
   }
 
   final Map<String, PublisherImpl> _publishers = {};
@@ -121,10 +123,10 @@ class Node extends rpc_server.XmlRpcHandler
     int throttleMs,
   ) {
     if (!_publishers.containsKey(topic)) {
-      _publishers[topic] = PublisherImpl(
+      _publishers[topic] = PublisherImpl<T>(
           this, topic, typeClass, latching, tcpNoDelay, queueSize, throttleMs);
     }
-    return Publisher(_publishers[topic]);
+    return Publisher<T>(_publishers[topic]);
   }
 
   Subscriber<T> subscribe<T extends RosMessage<T>>(

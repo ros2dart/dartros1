@@ -9,12 +9,12 @@ import 'utils/remapping.dart';
 import 'names.dart';
 
 // TODO: Node handle
-NodeHandle initNode(
+Future<NodeHandle> initNode(
   String name,
   List<String> args, {
   bool anonymize = false,
   String rosMasterUri,
-}) {
+}) async {
   final remappings = processRemapping(args);
   NetworkUtils.init(remappings);
   final nodeName = _resolveNodeName(name, remappings, anonymize);
@@ -31,6 +31,7 @@ NodeHandle initNode(
       remappings['__master'] ??
       Platform.environment['ROS_MASTER_URI'];
   final node = Node(nodeName.name, masterUri);
+  await node.nodeReady.future;
   // TODO: Initialize Publishers for Logging and Subscriber for RosTime after node has finished initializing
   return NodeHandle(node);
 }
