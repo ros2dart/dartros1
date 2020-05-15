@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
+import 'package:rxdart/rxdart.dart';
 
 import '../utils/network_utils.dart';
 import '../utils/tcpros_utils.dart';
@@ -42,7 +43,7 @@ class SubscriberImpl<T extends RosMessage> {
 
   String get spinnerId => 'Subscriber://$topic';
 
-  final StreamController<T> _streamController = StreamController();
+  final BehaviorSubject<T> _streamController = BehaviorSubject();
   Stream<T> get stream => _streamController.stream;
 
   String get type => messageClass.fullType;
