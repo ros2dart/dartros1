@@ -112,4 +112,31 @@ class PublisherImpl<T extends RosMessage> {
   }
 
   bool get isShutdown => _state == State.SHUTDOWN;
+
+  void handleSubscriberConnection(Socket connection, TCPRosHeader header) {
+    final writer = ByteDataWriter();
+    final err =
+        validateSubHeader(writer, header, topic, type, messageClass.md5sum);
+    if (err) {
+      connection.add(writer.toBytes());
+      connection.close();
+      return;
+    }
+    // TODO: Logging
+    createPubHeader(writer, node.nodeName, messageClass.md5sum, type, latching,
+        messageClass.messageDefinition);
+    connection.add(writer.toBytes());
+    if (tcpNoDelay || header.tcpNoDelay) {
+      connection.setOption(SocketOption.tcpNoDelay, true);
+    }
+    connection.listen((_) {}, onError: () {}, onDone: () {
+      subClients.remove(connection.name);
+      connection.close();
+    });
+    if (lastSentMsg != null) {
+      serializeMessage(writer, lastSentMsg);
+      connection.add(writer.toBytes());
+    }
+    subClients[connection.name] = connection;
+  }
 }

@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:dartx/dartx.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'msg_utils.dart';
+part 'tcpros_utils.freezed.dart';
 
 const callerIdPrefix = 'callerid=';
 const md5Prefix = 'md5sum=';
@@ -76,10 +80,12 @@ void createServiceServerHeader(
   ]);
 }
 
-Map<String, String> parseTcpRosHeader(header) {
+TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
+  final reader = ByteDataReader(endian: Endian.little);
+  reader.add(header.buffer);
   final info = <String, String>{};
   final regex = RegExp(r'(\w+)=([\s\S]+)');
-  final fields = deserializeStringFields(header);
+  final fields = deserializeStringFields(reader);
   print(fields);
   fields.forEach((field) {
     final hasMatch = regex.hasMatch(field);
@@ -90,7 +96,7 @@ Map<String, String> parseTcpRosHeader(header) {
     final match = regex.allMatches(field).toList()[0];
     info[match.group(1)] = match.group(2);
   });
-  return info;
+  return TCPRosHeader.fromMap(info);
 }
 
 bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
@@ -147,6 +153,12 @@ bool validatePubHeader(
   return true;
 }
 
+Uint8List serializeString(String message) {
+  final writer = ByteDataWriter();
+  writer.writeString(message);
+  return writer.toBytes();
+}
+
 Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
     {prependMessageLength = true}) {
   final msgSize = message.getMessageSize();
@@ -191,6 +203,120 @@ class TCPRosHeader<T> {
   final String topic;
   final String type;
   final String md5sum;
+  final String service;
+  final String callerId;
+  final String messageDefinition;
+  final String error;
+  final String persistent;
+  final bool tcpNoDelay;
+  final bool latching;
 
-  const TCPRosHeader(this.topic, this.type, this.md5sum);
+  const TCPRosHeader(
+      this.topic,
+      this.type,
+      this.md5sum,
+      this.service,
+      this.callerId,
+      this.messageDefinition,
+      this.error,
+      this.persistent,
+      this.tcpNoDelay,
+      this.latching);
+
+  factory TCPRosHeader.fromMap(Map<String, String> info) {
+    return TCPRosHeader(
+        info['topic'],
+        info['type'],
+        info['md5sum'],
+        info['service'],
+        info['callerId'],
+        info['message_definition'],
+        info['error'],
+        info['persistent'],
+        info['tcp_nodelay'] ?? '0' != '0',
+        info['latching'] ?? '0' != '0');
+  }
+}
+
+class TCPRosChunkTransformer {
+  bool _inBody = false;
+  int _bytesConsumed = 0;
+  int _messageLen = -1;
+  Uint8List _buffer = Uint8List(0);
+  bool _deserializeServiceResponse = false;
+  bool _serviceRespSuccess;
+
+  StreamTransformer<Uint8List, TCPRosChunk> _transformer;
+  StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
+  TCPRosChunkTransformer() {
+    _transformer = StreamTransformer.fromHandlers(handleData: _handleData);
+  }
+
+  void _handleData(data, sink) {
+    var pos = 0;
+    var chunkLen = data.length;
+    while (pos < chunkLen) {
+      if (_inBody) {
+        final messageRemaining = _messageLen - _bytesConsumed;
+        if (chunkLen >= messageRemaining + pos) {
+          final restMessage = data.slice(pos, pos + messageRemaining);
+          _buffer.addAll(restMessage);
+          _emitMessage(sink);
+
+          // Next message
+          pos += messageRemaining;
+        } else {
+          _buffer.addAll(data.slice(pos));
+          _bytesConsumed += chunkLen - pos;
+          pos = chunkLen;
+        }
+      } else {
+        // If deserializing service response first byte is success
+        if (_deserializeServiceResponse && _serviceRespSuccess == null) {
+          _serviceRespSuccess = data[0] != 0;
+          pos++;
+        }
+        var bufLen = _buffer.length;
+        // first 4 bytes of the message are a uint32 length field
+        if (chunkLen - pos >= 4 - bufLen) {
+          _buffer.addAll(data.slice(pos, pos + 4 - bufLen));
+          _messageLen = (ByteDataReader(endian: Endian.little)..add(_buffer))
+              .readUint32();
+          pos += 4 - bufLen;
+          _buffer = Uint8List(0);
+          if (_messageLen == 0 && pos == chunkLen) {
+            _emitMessage(sink);
+          } else {
+            _inBody = true;
+          }
+        } else {
+          _buffer.addAll(data.slice(pos));
+          pos = chunkLen;
+        }
+      }
+    }
+  }
+
+  void _emitMessage(sink) {
+    sink.add(TCPRosChunk(_buffer,
+        serviceResponse: _deserializeServiceResponse,
+        serviceResponseSuccess: _serviceRespSuccess));
+    // Reset buffer
+    _buffer = Uint8List(0);
+    _bytesConsumed = 0;
+    _inBody = false;
+    _deserializeServiceResponse = false;
+    _serviceRespSuccess = null;
+  }
+}
+
+@freezed
+abstract class TCPRosChunk with _$TCPRosChunk {
+  factory TCPRosChunk(Uint8List buffer,
+      {@Default(false) bool serviceResponse,
+      bool serviceResponseSuccess}) = _TcpRosChunk;
+}
+
+extension NamedSocket on Socket {
+  String get name => remoteAddress.address + ':' + remotePort.toString();
 }

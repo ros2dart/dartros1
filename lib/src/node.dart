@@ -15,35 +15,40 @@ import 'utils/log/logger.dart';
 
 import 'ros_xmlrpc_common.dart';
 import 'utils/network_utils.dart';
+import 'utils/tcpros_utils.dart';
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
   static Node _node;
-
-  final Map<String, PublisherImpl> _publishers = {};
-  final Map<String, SubscriberImpl> _subscribers = {};
   static Node get singleton => _node;
   factory Node(String name, String rosMasterURI) {
     return _node ?? Node._(name, rosMasterURI);
   }
   @override
-  String get xmlRpcUri => '${_server.host}:${_server.port}';
+  String get xmlRpcUri => '${_xmlRpcServer.host}:${_xmlRpcServer.port}';
   @override
   int get tcpRosPort => _tcpRosPort;
-
+  @override
+  String nodeName;
   Node._(this.nodeName, this.rosMasterURI)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
-    ProcessSignal.sigint.watch().listen((sig) => shutdown());
     logDir = path.join(homeDir, 'log');
     Logger.logLevel = Level.warning;
     logger = Logger('');
     logger.error('Logging');
     logger.warn('Logging');
     print('here');
-    startXmlRpcServer();
+    _startServers();
+
+    ProcessSignal.sigint.watch().listen((sig) => shutdown());
   }
-  @override
-  String nodeName;
+  Future<void> _startServers() async {
+    await _startTcpRosServer();
+    await _startXmlRpcServer();
+  }
+
+  final Map<String, PublisherImpl> _publishers = {};
+  final Map<String, SubscriberImpl> _subscribers = {};
   bool _ok = true;
   bool get ok => _ok;
   Map<String, dynamic> publishers = {};
@@ -56,7 +61,8 @@ class Node extends rpc_server.XmlRpcHandler
   String logDir;
   final int _tcpRosPort = 0;
   final String rosMasterURI;
-  rpc_server.SimpleXmlRpcServer _server;
+  rpc_server.SimpleXmlRpcServer _xmlRpcServer;
+  ServerSocket _tcpRosServer;
 
   bool get isShutdown => !ok;
 
@@ -67,6 +73,8 @@ class Node extends rpc_server.XmlRpcHandler
 
   Future<void> shutdown() async {
     logger.debug('Shutting node down');
+    logger.debug('Shutdown tcprosServer');
+    await _stopTcpRosServer();
     _ok = false;
     logger.debug('Shutdown subscribers');
     for (final s in subscribers.values) {
@@ -84,7 +92,7 @@ class Node extends rpc_server.XmlRpcHandler
     }
     logger.debug('Shutdown servers...done');
     logger.debug('Shutdown XMLRPC server');
-    await stopXmlRpcServer();
+    await _stopXmlRpcServer();
     logger.debug('Shutdown XMLRPC server...done');
     logger.debug('Shutting node done completed');
     exit(0);
@@ -159,7 +167,7 @@ class Node extends rpc_server.XmlRpcHandler
   /// 1
 
   /// Starts the server for the slave api
-  Future<void> startXmlRpcServer() async {
+  Future<void> _startXmlRpcServer() async {
     methods.addAll({
       'getBusStats': _handleGetBusStats,
       'getBusInfo': _handleGetBusInfo,
@@ -172,21 +180,64 @@ class Node extends rpc_server.XmlRpcHandler
       'publisherUpdate': _handlePublisherUpdate,
       'requestTopic': _handleRequestTopic,
     });
-    _server = listenRandomPort(
+    _xmlRpcServer = await listenRandomPort(
       10,
-      (port) => rpc_server.SimpleXmlRpcServer(
+      (port) async => rpc_server.SimpleXmlRpcServer(
         host: '0.0.0.0',
         port: port,
         handler: this,
       ),
     );
-    await _server.start();
+    await _xmlRpcServer.start();
   }
 
   /// Stops the server for the slave api
-  Future<void> stopXmlRpcServer() async {
-    await _server.stop(force: true);
+  Future<void> _stopXmlRpcServer() async {
+    await _xmlRpcServer.stop(force: true);
   }
+
+  Future<void> _startTcpRosServer() async {
+    _tcpRosServer = await listenRandomPort(
+      10,
+      (port) async => await ServerSocket.bind(
+        '0.0.0.0',
+        0,
+      ),
+    );
+    await _tcpRosServer.listen((connection) async {
+      //TODO: logging
+      await connection
+          .transform(TCPRosChunkTransformer().transformer)
+          .firstWhere((message) {
+        final header = parseTcpRosHeader(message);
+        if (header == null) {
+          // TODO: Log error
+          connection.add(
+              serializeString('Unable to validate connection header $message'));
+          connection.close();
+          return true;
+        }
+        print('Got connection header $header');
+        if (header.topic != null) {
+          final topic = header.topic;
+          if (_publishers.containsKey(topic)) {
+            _publishers[topic].handleSubscriberConnection(connection, header);
+          } else {
+            // TODO: Log error
+          }
+        } else if (header.service != null) {
+          // TODO: Service
+        } else {
+          connection.add(serializeString(
+              'Connection header $message has neither topic nor service'));
+          connection.close();
+        }
+        return true;
+      });
+    });
+  }
+
+  _stopTcpRosServer() {}
 
   ///
   /// Retrieve transport/topic statistics

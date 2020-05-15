@@ -3,12 +3,13 @@ import 'package:dartx/dartx.dart';
 
 enum StatusCode { SUCCESS, FAILURE, ERROR }
 
-dynamic listenRandomPort(int limit, Function(int) create) {
+Future<dynamic> listenRandomPort(
+    int limit, Future<dynamic> Function(int) create) async {
   final random = Random();
   for (final _ in 0.rangeTo(limit)) {
     try {
       final port = random.nextInt(65535 - 1024) + 1024;
-      final result = create(port);
+      final result = await create(port);
       return result;
     } catch (e) {
       // Do nothing
