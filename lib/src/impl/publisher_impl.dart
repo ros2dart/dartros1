@@ -108,6 +108,7 @@ class PublisherImpl<T extends RosMessage> {
 
     } catch (err) {
       print('Error while registering publisher $topic: $err');
+      print(StackTrace.current);
     }
   }
 
