@@ -130,6 +130,149 @@ abstract class _TopicInfo implements TopicInfo {
   _$TopicInfoCopyWith<_TopicInfo> get copyWith;
 }
 
+class _$ProtocolParamsTearOff {
+  const _$ProtocolParamsTearOff();
+
+  _ProtocolParams call(String protocol, String address, int port) {
+    return _ProtocolParams(
+      protocol,
+      address,
+      port,
+    );
+  }
+}
+
+// ignore: unused_element
+const $ProtocolParams = _$ProtocolParamsTearOff();
+
+mixin _$ProtocolParams {
+  String get protocol;
+  String get address;
+  int get port;
+
+  $ProtocolParamsCopyWith<ProtocolParams> get copyWith;
+}
+
+abstract class $ProtocolParamsCopyWith<$Res> {
+  factory $ProtocolParamsCopyWith(
+          ProtocolParams value, $Res Function(ProtocolParams) then) =
+      _$ProtocolParamsCopyWithImpl<$Res>;
+  $Res call({String protocol, String address, int port});
+}
+
+class _$ProtocolParamsCopyWithImpl<$Res>
+    implements $ProtocolParamsCopyWith<$Res> {
+  _$ProtocolParamsCopyWithImpl(this._value, this._then);
+
+  final ProtocolParams _value;
+  // ignore: unused_field
+  final $Res Function(ProtocolParams) _then;
+
+  @override
+  $Res call({
+    Object protocol = freezed,
+    Object address = freezed,
+    Object port = freezed,
+  }) {
+    return _then(_value.copyWith(
+      protocol: protocol == freezed ? _value.protocol : protocol as String,
+      address: address == freezed ? _value.address : address as String,
+      port: port == freezed ? _value.port : port as int,
+    ));
+  }
+}
+
+abstract class _$ProtocolParamsCopyWith<$Res>
+    implements $ProtocolParamsCopyWith<$Res> {
+  factory _$ProtocolParamsCopyWith(
+          _ProtocolParams value, $Res Function(_ProtocolParams) then) =
+      __$ProtocolParamsCopyWithImpl<$Res>;
+  @override
+  $Res call({String protocol, String address, int port});
+}
+
+class __$ProtocolParamsCopyWithImpl<$Res>
+    extends _$ProtocolParamsCopyWithImpl<$Res>
+    implements _$ProtocolParamsCopyWith<$Res> {
+  __$ProtocolParamsCopyWithImpl(
+      _ProtocolParams _value, $Res Function(_ProtocolParams) _then)
+      : super(_value, (v) => _then(v as _ProtocolParams));
+
+  @override
+  _ProtocolParams get _value => super._value as _ProtocolParams;
+
+  @override
+  $Res call({
+    Object protocol = freezed,
+    Object address = freezed,
+    Object port = freezed,
+  }) {
+    return _then(_ProtocolParams(
+      protocol == freezed ? _value.protocol : protocol as String,
+      address == freezed ? _value.address : address as String,
+      port == freezed ? _value.port : port as int,
+    ));
+  }
+}
+
+class _$_ProtocolParams implements _ProtocolParams {
+  _$_ProtocolParams(this.protocol, this.address, this.port)
+      : assert(protocol != null),
+        assert(address != null),
+        assert(port != null);
+
+  @override
+  final String protocol;
+  @override
+  final String address;
+  @override
+  final int port;
+
+  @override
+  String toString() {
+    return 'ProtocolParams(protocol: $protocol, address: $address, port: $port)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other is _ProtocolParams &&
+            (identical(other.protocol, protocol) ||
+                const DeepCollectionEquality()
+                    .equals(other.protocol, protocol)) &&
+            (identical(other.address, address) ||
+                const DeepCollectionEquality()
+                    .equals(other.address, address)) &&
+            (identical(other.port, port) ||
+                const DeepCollectionEquality().equals(other.port, port)));
+  }
+
+  @override
+  int get hashCode =>
+      runtimeType.hashCode ^
+      const DeepCollectionEquality().hash(protocol) ^
+      const DeepCollectionEquality().hash(address) ^
+      const DeepCollectionEquality().hash(port);
+
+  @override
+  _$ProtocolParamsCopyWith<_ProtocolParams> get copyWith =>
+      __$ProtocolParamsCopyWithImpl<_ProtocolParams>(this, _$identity);
+}
+
+abstract class _ProtocolParams implements ProtocolParams {
+  factory _ProtocolParams(String protocol, String address, int port) =
+      _$_ProtocolParams;
+
+  @override
+  String get protocol;
+  @override
+  String get address;
+  @override
+  int get port;
+  @override
+  _$ProtocolParamsCopyWith<_ProtocolParams> get copyWith;
+}
+
 class _$SystemStateTearOff {
   const _$SystemStateTearOff();
 

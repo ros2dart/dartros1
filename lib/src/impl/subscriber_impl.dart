@@ -1,8 +1,20 @@
+import 'dart:typed_data';
+
+import 'package:buffer/buffer.dart';
+import 'package:dartros/src/ros_xmlrpc_client.dart';
+
+import '../utils/network_utils.dart';
+import '../utils/tcpros_utils.dart';
+
 import '../../msg_utils.dart';
 import '../utils/client_states.dart';
 
 import '../node.dart';
 import 'dart:io';
+
+const protocols = [
+  ['TCPROS']
+];
 
 class SubscriberImpl<T extends RosMessage> {
   final Node node;
@@ -40,15 +52,95 @@ class SubscriberImpl<T extends RosMessage> {
   void shutdown() {
     _state = State.SHUTDOWN;
     //TODO: log some things
-    for (final client in pubClients.values) {
-      disconnectClient(client);
+    for (final client in pubClients.keys) {
+      _disconnectClient(client);
     }
     pubClients.clear();
-    for (final client in pendingClients.values) {
-      disconnectClient(client);
+    for (final client in pendingClients.keys) {
+      _disconnectClient(client);
     }
     pendingClients.clear();
     // TODO: spinner thing
+  }
+
+  void requestTopicFromPubs(List<String> pubs) {
+    pubs.forEach((uri) => _requestTopicFromPublisher(uri.trim()));
+  }
+
+  void _handlePublisherUpdate(List<String> pubs) {
+    final missing = Set.of(pubClients.keys);
+    for (final pub in pubs) {
+      final uri = pub.trim();
+      if (!pubClients.containsKey(uri)) {
+        _requestTopicFromPublisher(uri);
+      } else {
+        missing.remove(uri);
+      }
+    }
+    for (final pub in missing) {
+      _disconnectClient(pub);
+    }
+  }
+
+  Future<void> _requestTopicFromPublisher(String uri) async {
+    final info = NetworkUtils.getAddressAndPortFromUri(uri);
+    //TODO: log
+    try {
+      final resp =
+          await node.requestTopic(info.host, info.port, topic, protocols);
+      _handleTopicRequestResponse(resp, uri);
+    } catch (e) {
+      //TODO: Log
+    }
+  }
+
+  void _disconnectClient(String id) {
+    final client = pubClients[id] ?? pendingClients[id];
+    if (client != null) {
+      client.close();
+      pubClients.remove(id);
+      pendingClients.remove(id);
+    }
+  }
+
+  Future<void> _register() async {
+    try {
+      final resp = await node.registerSubscriber(topic, type);
+      if (isShutdown) {
+        return;
+      }
+      _state = State.REGISTERED;
+      if (resp.isNotEmpty) {
+        requestTopicFromPubs(resp);
+      }
+    } catch (e) {
+      // TODO: Logging
+    }
+  }
+
+  Future<void> _handleTopicRequestResponse(
+      ProtocolParams resp, String uri) async {
+    if (isShutdown) {
+      return;
+    }
+    final socket = await Socket.connect(resp.address, resp.port);
+    if (isShutdown) {
+      await socket.close();
+      return;
+    }
+    final writer = ByteDataWriter(endian: Endian.little);
+    createSubHeader(
+      writer,
+      node.nodeName,
+      messageClass.md5sum,
+      topic,
+      type,
+      messageClass.messageDefinition,
+      tcpNoDelay,
+    );
+    socket.add(writer.toBytes());
+    // TODO: Some more stuff here, listening for errors and close
+    pendingClients[uri] = socket;
   }
 
   void registerSubscriber() {
@@ -61,8 +153,4 @@ class SubscriberImpl<T extends RosMessage> {
       node.unsubscribe(topic);
     }
   }
-
-  void _register() {}
-
-  void disconnectClient(Socket client) {}
 }

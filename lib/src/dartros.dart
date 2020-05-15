@@ -3,12 +3,13 @@
 import 'dart:io';
 
 import 'node.dart';
+import 'node_handle.dart';
 import 'utils/network_utils.dart';
 import 'utils/remapping.dart';
 import 'names.dart';
 
 // TODO: Node handle
-Node initNode(
+NodeHandle initNode(
   String name,
   List<String> args, {
   bool anonymize = false,
@@ -20,7 +21,7 @@ Node initNode(
   names.init(remappings, nodeName.namespace);
   if (Node.singleton != null) {
     if (nodeName.name == Node.singleton.nodeName) {
-      return Node.singleton;
+      return nh;
     } else {
       throw Exception(
           'Unable to initialize ${nodeName.name} - node ${Node.singleton.nodeName} already exists');
@@ -29,10 +30,14 @@ Node initNode(
   final masterUri = rosMasterUri ??
       remappings['__master'] ??
       Platform.environment['ROS_MASTER_URI'];
-  final node = Node(nodeName.name, rosMasterUri);
+  final node = Node(nodeName.name, masterUri);
   // TODO: Initialize Publishers for Logging and Subscriber for RosTime after node has finished initializing
-  return node;
+  return NodeHandle(node);
 }
+
+NodeHandle get nh => NodeHandle(Node.singleton);
+NodeHandle getNodeHandle(String namespace) =>
+    NodeHandle(Node.singleton, namespace);
 
 NodeName _resolveNodeName(
     String nodeName, Map<String, String> remappings, bool anonymize) {
@@ -61,7 +66,6 @@ String _anonymizeNodeName(nodeName) {
 }
 
 class NodeName {
-  final String name;
-  final String namespace;
+  final String name, namespace;
   NodeName(this.name, this.namespace);
 }

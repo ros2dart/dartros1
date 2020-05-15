@@ -1,9 +1,9 @@
-import 'package:dartros/dartros.dart';
+import 'package:dartros/dartros.dart' as dartros;
 
 void main(List<String> args) async {
-  final server = initNode('ros_node_1', args);
-  await server.printRosServerInfo();
-  print(await server.getParam('/foo'));
-  print(await server.setParam('/foo', 'value'));
-  print(await server.getParam('/foo'));
+  final nh = dartros.initNode('ros_node_1', args);
+  await nh.getMasterUri();
+  print(await nh.getParam('/foo'));
+  print(await nh.setParam('/foo', 'value'));
+  print(await nh.getParam('/foo'));
 }

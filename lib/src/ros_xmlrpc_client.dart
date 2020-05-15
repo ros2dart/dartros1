@@ -130,15 +130,14 @@ class SlaveApiClient {
 
   SlaveApiClient(this.nodeName, this.host, this.port);
 
-  Future<List<TopicInfo>> requestTopic(
+  Future<ProtocolParams> requestTopic(
       String topic, List<List<dynamic>> protocols) async {
-    return (await _rpcCall<List<List<String>>>(
-            'requestTopic',
-            [nodeName, topic, protocols],
-            host + ':' + port.toString(),
-            client.post))
-        .map((t) => TopicInfo(t[0], t[1]))
-        .toList();
+    final p = await _rpcCall<List<dynamic>>(
+        'requestTopic',
+        [nodeName, topic, protocols],
+        host + ':' + port.toString(),
+        client.post);
+    return ProtocolParams(p[0], p[1], p[2] as int);
   }
 }
 
@@ -344,6 +343,12 @@ mixin RosXmlRpcClient on XmlRpcClient {
 @freezed
 abstract class TopicInfo with _$TopicInfo {
   factory TopicInfo(String name, String type) = _TopicInfo;
+}
+
+@freezed
+abstract class ProtocolParams with _$ProtocolParams {
+  factory ProtocolParams(String protocol, String address, int port) =
+      _ProtocolParams;
 }
 
 @freezed

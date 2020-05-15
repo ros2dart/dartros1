@@ -26,6 +26,10 @@ class _NetworkUtils {
     return Uri.parse(uriString).host;
   }
 
+  Uri getAddressAndPortFromUri(String uriString) {
+    return Uri.parse(uriString);
+  }
+
   int getPortFromUri(String uriString) {
     return Uri.parse(uriString).port;
   }

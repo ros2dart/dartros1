@@ -371,9 +371,9 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   /// Our client's api to request a topic from another node
-  void requestTopic(String remoteAddress, int remotePort, String topic,
-      List<List<String>> protocols) {
+  Future<ProtocolParams> requestTopic(String remoteAddress, int remotePort,
+      String topic, List<List<String>> protocols) {
     final slave = SlaveApiClient(nodeName, remoteAddress, remotePort);
-    slave.requestTopic(topic, protocols);
+    return slave.requestTopic(topic, protocols);
   }
 }
