@@ -60,7 +60,9 @@ Future<T> _rpcCall<T>(
     httpPost: post,
     encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
     decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
-  ) as List<dynamic>;
+  );
+  print(result);
+
   final resp =
       XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
 
@@ -92,7 +94,7 @@ Future<StatusCode> _rpcCallStatus<T>(
     httpPost: post,
     encodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
     decodeCodecs: [...rpc.standardCodecs, rpc.faultCodec],
-  ) as List<dynamic>;
+  ) as List;
   final resp =
       XMLRPCResponse<T>(result[0] as int, result[1] as String, result[2]);
 
@@ -118,7 +120,7 @@ mixin XmlRpcClient {
     List<dynamic> params, {
     Map<String, String> headers,
   }) =>
-      _rpcCallStatus(methodName, params, rosMasterUri, client.post,
+      _rpcCallStatus<T>(methodName, params, rosMasterUri, client.post,
           headers: headers);
 }
 
