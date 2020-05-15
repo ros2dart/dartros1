@@ -228,6 +228,8 @@ mixin RosXmlRpcClient on XmlRpcClient {
     String topic,
     String topicType,
   ) {
+    print(nodeName);
+    print(xmlRpcUri);
     return _call<List<String>>(
         'registerPublisher', [nodeName, topic, topicType, xmlRpcUri]);
   }
