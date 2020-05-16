@@ -34,14 +34,9 @@ class Node extends rpc_server.XmlRpcHandler
   Completer<bool> nodeReady = Completer();
   Node._(this.nodeName, this.rosMasterURI)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
+    //TODO: Remove logdir probably
     logDir = path.join(homeDir, 'log');
-    Logger.logLevel = Level.warning;
-    logger = Logger('');
-    logger.error('Logging');
-    logger.warn('Logging');
-    print('here');
     _startServers();
-
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
   }
   Future<void> _startServers() async {
@@ -58,7 +53,6 @@ class Node extends rpc_server.XmlRpcHandler
   Map<String, PublisherImpl> publishers = {};
   Map<String, SubscriberImpl> subscribers = {};
   Map<String, dynamic> servers = {};
-  Logger logger;
   String homeDir = Platform.environment['ROS_HOME'] ??
       path.join(Platform.environment['HOME'], '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
@@ -75,29 +69,29 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   Future<void> shutdown() async {
-    logger.debug('Shutting node down');
-    logger.debug('Shutdown tcprosServer');
+    log.dartros.info('Shutting node down');
+    log.dartros.info('Shutdown tcprosServer');
     await _stopTcpRosServer();
     _ok = false;
-    logger.debug('Shutdown subscribers');
+    log.dartros.info('Shutdown subscribers');
     for (final s in subscribers.values) {
       s.shutdown();
     }
-    logger.debug('Shutdown subscribers...done');
-    logger.debug('Shutdown publishers');
+    log.dartros.info('Shutdown subscribers...done');
+    log.dartros.info('Shutdown publishers');
     for (final p in publishers.values) {
       p.shutdown();
     }
-    logger.debug('Shutdown publishers...done');
-    logger.debug('Shutdown servers');
+    log.dartros.info('Shutdown publishers...done');
+    log.dartros.info('Shutdown servers');
     for (final s in servers.values) {
       s.shutdown();
     }
-    logger.debug('Shutdown servers...done');
-    logger.debug('Shutdown XMLRPC server');
+    log.dartros.info('Shutdown servers...done');
+    log.dartros.info('Shutdown XMLRPC server');
     await _stopXmlRpcServer();
-    logger.debug('Shutdown XMLRPC server...done');
-    logger.debug('Shutting node done completed');
+    log.dartros.info('Shutdown XMLRPC server...done');
+    log.dartros.info('Shutting node done completed');
     exit(0);
   }
 
@@ -150,6 +144,7 @@ class Node extends rpc_server.XmlRpcHandler
     // TODO: log
     final pub = _publishers[topic];
     if (pub != null) {
+      log.superdebug.info('Unadvertising from topic $topic');
       _publishers.remove(topic);
       pub.shutdown();
     }
@@ -157,9 +152,9 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   Future<void> unsubscribe(String topic) {
-    // TODO: log
     final sub = _subscribers[topic];
     if (sub != null) {
+      log.superdebug.info('Unsubscribing from topic $topic');
       _subscribers.remove(topic);
       sub.shutdown();
     }
@@ -208,11 +203,11 @@ class Node extends rpc_server.XmlRpcHandler
         0,
       ),
     );
-    print('Start listening');
+
     _tcpStream = await _tcpRosServer.listen(
       (connection) async {
-        print('Got tcp ros connection');
-        //TODO: logging
+        log.superdebug
+            .info('Node $nodeName got connection from ${connection.name}');
 
         final listener = connection.asBroadcastStream();
         final message = await listener
@@ -221,21 +216,21 @@ class Node extends rpc_server.XmlRpcHandler
 
         final header = parseTcpRosHeader(message);
         if (header == null) {
-          // TODO: Log error
+          log.dartros.error('Unable to validate connection header $header');
           connection.add(
               serializeString('Unable to validate connection header $message'));
           await connection.flush();
           await connection.close();
           return;
         }
-        print('Got connection header $header');
+        log.superdebug.info('Got connection header $header');
         if (header.topic != null) {
           final topic = header.topic;
           if (_publishers.containsKey(topic)) {
-            _publishers[topic]
+            await _publishers[topic]
                 .handleSubscriberConnection(connection, listener, header);
           } else {
-            // TODO: Log error
+            log.dartros.info('Got connection header for unknown topic $topic');
           }
         } else if (header.service != null) {
           // TODO: Service
@@ -246,13 +241,15 @@ class Node extends rpc_server.XmlRpcHandler
           await connection.close();
         }
       },
-      onError: (e) => print('Socket error for tcp ros $e'),
-      onDone: () => print('Closing tcp ros server'),
+      onError: (e) => log.dartros.warn('Error on tcpros server! $e'),
+      onDone: () => log.dartros.info('Closing tcp ros server'),
     );
-    print('listening on $tcpRosPort');
+    log.superdebug.info('listening on $tcpRosPort');
   }
 
-  _stopTcpRosServer() {}
+  void _stopTcpRosServer() {
+    _tcpRosServer.close();
+  }
 
   ///
   /// Retrieve transport/topic statistics
@@ -266,6 +263,7 @@ class Node extends rpc_server.XmlRpcHandler
   /// subConnectionData: [connectionId, bytesReceived, dropEstimate, connected]*
   /// dropEstimate: -1 if no estimate.
   XMLRPCResponse _handleGetBusStats(String callerID) {
+    log.dartros.error('Handling get bus stats -- not implemented');
     return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', 0);
   }
 
@@ -281,7 +279,7 @@ class Node extends rpc_server.XmlRpcHandler
   /// topic is the topic name.
   /// connected1 indicates connection status. Note that this field is only provided by slaves written in Python at the moment (cf. rospy/masterslave.py in _TopicImpl.get_stats_info() vs. roscpp/publication.cpp in Publication::getInfo()).
   XMLRPCResponse _handleGetBusInfo(String callerID) {
-    print('get bus info');
+    log.dartros.info('Handling get bus info');
     var count = 0;
     return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', [
       for (final sub in subscribers.values)
@@ -295,7 +293,7 @@ class Node extends rpc_server.XmlRpcHandler
 
   /// Gets the URI of the master node
   XMLRPCResponse _handleGetMasterUri(String callerID) {
-    print('get master uri');
+    log.dartros.info('Handling get master uri');
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, rosMasterURI);
   }
@@ -305,9 +303,9 @@ class Node extends rpc_server.XmlRpcHandler
   /// [message] A message describing why the node is being shutdown
   XMLRPCResponse _handleShutdown(String callerID, [String message = '']) {
     if (message != null && message.isNotEmpty) {
-      print('shutdown request: $message');
+      log.dartros.warn('Shutdown request: $message');
     } else {
-      print('shutdown request');
+      log.dartros.warn('Shutdown request');
     }
     shutdown();
     return XMLRPCResponse(
@@ -318,7 +316,7 @@ class Node extends rpc_server.XmlRpcHandler
   ///
   /// returns the PID
   XMLRPCResponse _handleGetPid(String callerID) {
-    print('get pid');
+    log.dartros.info('Handling get pid');
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, pid);
   }
@@ -329,7 +327,7 @@ class Node extends rpc_server.XmlRpcHandler
   /// topicList is a list of topics this node subscribes to and is of the form
   /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
   XMLRPCResponse _handleGetSubscriptions(String callerID) {
-    print('get subscriptions');
+    log.dartros.info('Handling get subscriptions');
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
       for (final sub in subscribers.entries) [sub.key, sub.value.type]
@@ -342,7 +340,7 @@ class Node extends rpc_server.XmlRpcHandler
   /// topicList is a list of topics this node subscribes to and is of the form
   /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
   XMLRPCResponse _handleGetPublications(String callerID) {
-    print('get publications');
+    log.dartros.info('Handling get publications');
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
       for (final pub in publishers.entries) [pub.key, pub.value.type]
@@ -355,7 +353,8 @@ class Node extends rpc_server.XmlRpcHandler
   /// [parameterValue] new parameter value
   XMLRPCResponse _handleParamUpdate(
       String callerID, String parameterKey, dynamic parameterValue) {
-    print('param update');
+    log.dartros.info(
+        'Got param update! $callerID sent parameter $parameterKey: $parameterValue. Not really doing anything with it...');
     return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', 0);
   }
 
@@ -365,9 +364,20 @@ class Node extends rpc_server.XmlRpcHandler
   /// [publishers] List of current publishers for topic in form of XMLRPC URIs
   XMLRPCResponse _handlePublisherUpdate(
       String callerID, String topic, List<String> publishers) {
-    print('Publisher update');
-    return XMLRPCResponse(
-        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, 0);
+    log.superdebug.info(
+        'Publisher update from $callerID for topic $topic, with publishers $publishers');
+
+    if (subscribers.containsKey(topic)) {
+      final sub = subscribers[topic];
+      log.superdebug.info('Got sub for topic $topic');
+      sub.handlePublisherUpdate(publishers);
+      return XMLRPCResponse(StatusCode.SUCCESS.asInt,
+          'Handled publisher update for topic $topic', 0);
+    } else {
+      log.superdebug.warn('Got publisher update for unknown topic $topic');
+      return XMLRPCResponse(
+          StatusCode.FAILURE.asInt, 'Don\'t have topic $topic', 0);
+    }
   }
 
   /// Publisher node API method called by a subscriber node.
@@ -386,7 +396,8 @@ class Node extends rpc_server.XmlRpcHandler
   /// protocolParams may be an empty list if there are no compatible protocols.
   XMLRPCResponse _handleRequestTopic(
       String callerID, String topic, List<dynamic> protocols) {
-    print('Handling request topic');
+    log.superdebug.info(
+        'Handling topic request from $callerID for $topic with protocols: $protocols');
     List resp;
     if (_publishers.containsKey(topic)) {
       resp = [
@@ -395,22 +406,25 @@ class Node extends rpc_server.XmlRpcHandler
         ['TCPROS', _tcpRosServer.address.address, tcpRosPort]
       ];
     } else {
+      log.dartros.error('Topic $topic does not exist for this ros node');
       resp = [0, 'Unable to allocate topic connection for ' + topic, []];
     }
-    print(resp);
     return XMLRPCResponse(resp[0], resp[1], resp[2]);
   }
 
   /// Our client's api to request a topic from another node
   Future<ProtocolParams> requestTopic(String remoteAddress, int remotePort,
       String topic, List<List<String>> protocols) {
+    log.superdebug.info(
+        'Requesting topic $topic from $remoteAddress:$remotePort with protocols: $protocols');
+
     final slave = SlaveApiClient(nodeName, remoteAddress, remotePort);
     return slave.requestTopic(topic, protocols);
   }
 
   @override
   XmlDocument handleFault(Fault fault, {List<Codec> codecs}) {
-    print('Error in xmlRPC server $fault');
+    log.dartros.warn('XMLRPC Server error $fault');
     return super.handleFault(fault);
   }
 }

@@ -70,7 +70,7 @@ class SubscriberImpl<T extends RosMessage> {
     pubs.forEach((uri) => _requestTopicFromPublisher(uri.trim()));
   }
 
-  void _handlePublisherUpdate(List<String> pubs) {
+  void handlePublisherUpdate(List<String> pubs) {
     final missing = Set.of(pubClients.keys);
     for (final pub in pubs) {
       final uri = pub.trim();
