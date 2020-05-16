@@ -69,7 +69,7 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   Future<void> shutdown() async {
-    log.dartros.info('Shutting node down');
+    log.dartros.info('Shutting node $nodeName down at ${DateTime.now()}');
     log.dartros.info('Shutdown tcprosServer');
     await _stopTcpRosServer();
     _ok = false;
@@ -91,7 +91,7 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.info('Shutdown XMLRPC server');
     await _stopXmlRpcServer();
     log.dartros.info('Shutdown XMLRPC server...done');
-    log.dartros.info('Shutting node done completed');
+    log.dartros.info('Shutting $nodeName down completed at ${DateTime.now()}');
     exit(0);
   }
 
