@@ -35,7 +35,7 @@ List<String> deserializeStringFields(ByteDataReader reader) {
   while (length < totalLength) {
     final string = reader.readString();
     length += string.lenInBytes + 4;
-    print('Read string $string, length $length');
+    // print('Read string $string, length $length');
     stringList.add(string);
   }
   return stringList;
@@ -63,8 +63,8 @@ void createPubHeader(ByteDataWriter writer, String callerId, String md5sum,
     typePrefix + type,
   ];
   serializeStringFields(writer, fields);
-  print(fields);
-  print(writer.toBytes());
+  // print(fields);
+  // print(writer.toBytes());
 }
 
 void createServiceClientHeader(ByteDataWriter writer, String callerId,
@@ -92,7 +92,7 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final info = <String, String>{};
   final regex = RegExp(r'(\w+)=([\s\S]*)');
   final fields = deserializeStringFields(reader);
-  print(fields);
+  // print(fields);
   fields.forEach((field) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
@@ -102,7 +102,7 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
     final match = regex.allMatches(field).toList()[0];
     info[match.group(1)] = match.group(2);
   });
-  print(info);
+  // print(info);
   return TCPRosHeader.fromMap(info);
 }
 
@@ -253,6 +253,11 @@ class TCPRosChunkTransformer {
   bool _deserializeServiceResponse = false;
   bool _serviceRespSuccess;
 
+  bool get deserializeServiceResponse => _deserializeServiceResponse;
+  set deserializeServiceResponse(bool value) {
+    _deserializeServiceResponse = value;
+  }
+
   StreamTransformer<Uint8List, TCPRosChunk> _transformer;
   StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
   TCPRosChunkTransformer() {
@@ -260,7 +265,7 @@ class TCPRosChunkTransformer {
   }
 
   void _handleData(Uint8List data, sink) {
-    print(data);
+    // print(data);
     var pos = 0;
     var chunkLen = data.length;
     while (pos < chunkLen) {
@@ -291,7 +296,7 @@ class TCPRosChunkTransformer {
           _messageLen = (ByteDataReader(endian: Endian.little, copy: true)
                 ..add(_buffer))
               .readUint32();
-          print(_messageLen);
+          // print(_messageLen);
           pos += 4 - bufLen;
           _buffer = [];
           if (_messageLen == 0 && pos == chunkLen) {
@@ -308,8 +313,8 @@ class TCPRosChunkTransformer {
   }
 
   void _emitMessage(sink) {
-    print('Emitting message');
-    print('Buffer: $_buffer');
+    // print('Emitting message');
+    // print('Buffer: $_buffer');
     sink.add(TCPRosChunk(_buffer,
         serviceResponse: _deserializeServiceResponse,
         serviceResponseSuccess: _serviceRespSuccess));

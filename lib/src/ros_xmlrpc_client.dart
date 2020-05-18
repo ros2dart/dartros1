@@ -135,9 +135,10 @@ class SlaveApiClient {
   SlaveApiClient(this.nodeName, this.host, this.port);
 
   Future<ProtocolParams> requestTopic(
-      String topic, List<List<dynamic>> protocols) async {
+      String topic, List<List<String>> protocols) async {
     final p = await _rpcCall('requestTopic', [nodeName, topic, protocols],
         host + ':' + port.toString(), client.post);
+    print('Got protocol params response $p');
     return ProtocolParams(p[0], p[1], p[2] as int);
   }
 }
@@ -196,8 +197,12 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<List<String>> registerSubscriber(
     String topic,
     String topicType,
-  ) {
-    return _call('registerSubscriber', [nodeName, topic, topicType, xmlRpcUri]);
+  ) async {
+    print('registering subscriber');
+    return (await _call(
+                'registerSubscriber', [nodeName, topic, topicType, xmlRpcUri])
+            as List)
+        .cast<String>();
   }
 
   /// Unsubscribes the [callerID] from the specified [topic].

@@ -71,6 +71,7 @@ class PublisherImpl<T extends RosMessage> {
     if (numSubscribers == 0) {
       log.dartros.debugThrottled(
           2000, 'Publishing message on $topic with no subscribers');
+      return;
     }
     try {
       messages.forEach((msg) {

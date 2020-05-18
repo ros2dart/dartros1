@@ -1,16 +1,16 @@
 import 'dart:io';
 
-import 'package:logger/logger.dart' as logger;
+import 'package:logger/logger.dart' as logging;
 export 'package:logger/logger.dart';
 
 enum Level { trace, debug, info, warn, error, fatal }
 
-class RosFilter extends logger.LogFilter {
+class RosFilter extends logging.LogFilter {
   String logger;
   RosFilter(this.logger);
 
   @override
-  bool shouldLog(logger.LogEvent event) {
+  bool shouldLog(logging.LogEvent event) {
     // TODO: From the logger name get the current log level of the logger.
     // TODO: Create a custom ros logger
     return true;
@@ -19,7 +19,7 @@ class RosFilter extends logger.LogFilter {
 
 final log = Logger();
 
-class Logger extends logger.Logger {
+class Logger extends logging.Logger {
   static const SUPERDEBUG = 'superdebug';
   static const DARTROS = 'dartros';
   static const MASTERAPI = 'masterapi';
@@ -54,7 +54,7 @@ class Logger extends logger.Logger {
   Logger._(this.name, {this.level})
       : super(
           filter: RosFilter(name),
-          printer: logger.PrettyPrinter(
+          printer: logging.PrettyPrinter(
             // printTime: true,
             printEmojis: false,
             methodCount: 0,
@@ -62,7 +62,7 @@ class Logger extends logger.Logger {
             lineLength: stdout.terminalColumns,
           ),
           level: level.loggingLevel,
-          output: logger.ConsoleOutput(),
+          output: logging.ConsoleOutput(),
         );
   void trace(message) => v(message);
   void debug(message) => d(message);
@@ -114,21 +114,21 @@ class Logger extends logger.Logger {
 }
 
 extension LevelToLoggingLevel on Level {
-  logger.Level get loggingLevel {
+  logging.Level get loggingLevel {
     switch (this) {
       case Level.trace:
-        return logger.Level.verbose;
+        return logging.Level.verbose;
       case Level.debug:
-        return logger.Level.debug;
+        return logging.Level.debug;
       case Level.info:
-        return logger.Level.info;
+        return logging.Level.info;
       case Level.warn:
-        return logger.Level.warning;
+        return logging.Level.warning;
       case Level.error:
-        return logger.Level.error;
+        return logging.Level.error;
       case Level.fatal:
-        return logger.Level.wtf;
+        return logging.Level.wtf;
     }
-    return logger.Level.nothing;
+    return logging.Level.nothing;
   }
 }

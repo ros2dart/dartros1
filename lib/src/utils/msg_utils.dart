@@ -11,6 +11,14 @@ abstract class RosMessage<T> implements Function {
   T deserialize(ByteDataReader reader);
 }
 
+abstract class RosServiceMessage<C extends RosMessage<C>,
+    R extends RosMessage<R>> {
+  C get request;
+  R get response;
+  String get md5sum;
+  String get fullType;
+}
+
 extension LenInBytes on String {
   int get lenInBytes => utf8.encode(this).length;
 }
