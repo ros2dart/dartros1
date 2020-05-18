@@ -101,19 +101,16 @@ class PublisherImpl<T extends RosMessage> {
   Future<void> _register() async {
     try {
       final resp = await node.registerPublisher(topic, type);
-
       // if we were shutdown between the starting the registration and now, bail
       if (isShutdown) {
         return;
       }
-
-      print('Registered $topic as a publisher: $resp');
+      log.dartros.debug('Registered $topic as a publisher: $resp');
       // registration worked
       _state = State.REGISTERED;
-      // this.emit('registered');
-
     } catch (err, trace) {
-      print('Error while registering publisher $topic: $err\n$trace');
+      log.dartros
+          .error('Error while registering publisher $topic: $err\n$trace');
     }
   }
 
