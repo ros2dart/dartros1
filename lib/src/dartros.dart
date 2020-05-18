@@ -77,7 +77,7 @@ NodeName _resolveNodeName(
   nodeName = names.resolve([namespace, nodeName]);
 
   // only anonymize node name if they didn't remap from the command line
-  if (anonymize && remappings['__name'] != null) {
+  if (anonymize && remappings['__name'] == null) {
     nodeName = _anonymizeNodeName(nodeName);
   }
 

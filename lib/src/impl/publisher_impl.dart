@@ -70,6 +70,7 @@ class PublisherImpl<T extends RosMessage> {
     if (numSubscribers == 0) {
       // TODO: log
       print('Publishing message on ${topic} with no subscribers');
+      return;
     }
     try {
       print('Publishing message on ${topic} with subscribers');

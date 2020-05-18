@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartros/src/publisher.dart';
@@ -6,6 +7,7 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
 import 'package:dartros/src/utils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
+import 'package:meta/meta.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml_rpc/client.dart';
@@ -50,15 +52,13 @@ class Node extends rpc_server.XmlRpcHandler
   StreamSubscription<Socket> _tcpStream;
   bool _ok = true;
   bool get ok => _ok;
-  Map<String, PublisherImpl> publishers = {};
-  Map<String, SubscriberImpl> subscribers = {};
   Map<String, dynamic> servers = {};
   String homeDir = Platform.environment['ROS_HOME'] ??
       path.join(Platform.environment['HOME'], '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
   String logDir;
   final String rosMasterURI;
-  rpc_server.SimpleXmlRpcServer _xmlRpcServer;
+  SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
 
   bool get isShutdown => !ok;
@@ -74,12 +74,12 @@ class Node extends rpc_server.XmlRpcHandler
     await _stopTcpRosServer();
     _ok = false;
     log.dartros.info('Shutdown subscribers');
-    for (final s in subscribers.values) {
+    for (final s in _subscribers.values) {
       s.shutdown();
     }
     log.dartros.info('Shutdown subscribers...done');
     log.dartros.info('Shutdown publishers');
-    for (final p in publishers.values) {
+    for (final p in _publishers.values) {
       p.shutdown();
     }
     log.dartros.info('Shutdown publishers...done');
@@ -132,7 +132,8 @@ class Node extends rpc_server.XmlRpcHandler
       int throttleMs,
       bool tcpNoDelay) {
     if (!_subscribers.containsKey(topic)) {
-      _subscribers[topic] = SubscriberImpl(
+      log.superdebug.info('Adding subscriber implementation for topic $topic');
+      _subscribers[topic] = SubscriberImpl<T>(
           this, topic, typeClass, queueSize, throttleMs, tcpNoDelay);
     }
     final sub = Subscriber<T>(_subscribers[topic]);
@@ -180,8 +181,8 @@ class Node extends rpc_server.XmlRpcHandler
     });
     _xmlRpcServer = await listenRandomPort(
       10,
-      (port) async => rpc_server.SimpleXmlRpcServer(
-        host: '0.0.0.0',
+      (port) async => SimpleXmlRpcServer(
+        host: '127.0.0.1',
         port: port,
         handler: this,
       ),
@@ -199,7 +200,7 @@ class Node extends rpc_server.XmlRpcHandler
     _tcpRosServer = await listenRandomPort(
       10,
       (port) async => await ServerSocket.bind(
-        '0.0.0.0',
+        '127.0.0.1',
         0,
       ),
     );
@@ -282,10 +283,10 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.info('Handling get bus info');
     var count = 0;
     return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', [
-      for (final sub in subscribers.values)
+      for (final sub in _subscribers.values)
         for (final client in sub.clientUris)
           [++count, client, 'o', 'TCPROS', sub.topic, true],
-      for (final pub in publishers.values)
+      for (final pub in _publishers.values)
         for (final client in pub.clientUris)
           [++count, client, 'o', 'TCPROS', pub.topic, true]
     ]);
@@ -330,7 +331,7 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.info('Handling get subscriptions');
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
-      for (final sub in subscribers.entries) [sub.key, sub.value.type]
+      for (final sub in _subscribers.entries) [sub.key, sub.value.type]
     ]);
   }
 
@@ -343,7 +344,7 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.info('Handling get publications');
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, [
-      for (final pub in publishers.entries) [pub.key, pub.value.type]
+      for (final pub in _publishers.entries) [pub.key, pub.value.type]
     ]);
   }
 
@@ -363,12 +364,11 @@ class Node extends rpc_server.XmlRpcHandler
   /// [topic] Topic name
   /// [publishers] List of current publishers for topic in form of XMLRPC URIs
   XMLRPCResponse _handlePublisherUpdate(
-      String callerID, String topic, List<String> publishers) {
+      String callerID, String topic, List<dynamic> publishers) {
     log.superdebug.info(
         'Publisher update from $callerID for topic $topic, with publishers $publishers');
-
-    if (subscribers.containsKey(topic)) {
-      final sub = subscribers[topic];
+    if (_subscribers.containsKey(topic)) {
+      final sub = _subscribers[topic];
       log.superdebug.info('Got sub for topic $topic');
       sub.handlePublisherUpdate(publishers);
       return XMLRPCResponse(StatusCode.SUCCESS.asInt,
@@ -403,7 +403,7 @@ class Node extends rpc_server.XmlRpcHandler
       resp = [
         1,
         'Allocated topic connection on port ' + tcpRosPort.toString(),
-        ['TCPROS', _tcpRosServer.address.address, tcpRosPort]
+        ['TCPROS', _tcpRosServer.address.host, tcpRosPort]
       ];
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');
@@ -427,4 +427,43 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.warn('XMLRPC Server error $fault');
     return super.handleFault(fault);
   }
+}
+
+/// A [XmlRpcServer] that handles the XMLRPC server protocol with a single threaded [HttpServer]
+class SimpleXmlRpcServer extends rpc_server.XmlRpcServer {
+  /// The [HttpServer] used for handling responses
+  HttpServer _httpServer;
+
+  @override
+  String get host => _httpServer?.address?.host ?? super.host;
+
+  /// Creates a [SimpleXmlRpcServer]
+  SimpleXmlRpcServer({
+    @required String host,
+    @required int port,
+    @required rpc_server.XmlRpcHandler handler,
+    Encoding encoding = utf8,
+  }) : super(host: host, port: port, handler: handler, encoding: encoding);
+
+  /// Starts up the [_httpServer] and starts listening to requests
+  @override
+  Future<void> start() async {
+    _httpServer = await HttpServer.bind(host, port);
+    _httpServer.listen((req) => acceptRequest(req, encoding));
+  }
+
+  /// Stops the [_httpServer]
+  ///
+  /// [force] determines whether to stop the [HttpServer] immediately even if there are open connections
+  @override
+  Future<void> stop({bool force = false}) async {
+    await _httpServer.close(force: force);
+  }
+
+  // @override
+  // void acceptRequest(request, encoding) async {
+  //   final req = await encoding.decodeStream(request);
+  //   print(req);
+  //   super.acceptRequest(request, encoding);
+  // }
 }

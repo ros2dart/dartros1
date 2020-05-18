@@ -18,7 +18,7 @@ const protocols = [
   ['TCPROS']
 ];
 
-class SubscriberImpl<T extends RosMessage> {
+class SubscriberImpl<T extends RosMessage<T>> {
   final Node node;
   final String topic;
   int _count = 0;
@@ -70,7 +70,7 @@ class SubscriberImpl<T extends RosMessage> {
     pubs.forEach((uri) => _requestTopicFromPublisher(uri.trim()));
   }
 
-  void handlePublisherUpdate(List<String> pubs) {
+  void handlePublisherUpdate(List<dynamic> pubs) {
     final missing = Set.of(pubClients.keys);
     for (final pub in pubs) {
       final uri = pub.trim();
@@ -89,9 +89,10 @@ class SubscriberImpl<T extends RosMessage> {
     final info = NetworkUtils.getAddressAndPortFromUri(uri);
     //TODO: log
     try {
-      final resp =
-          await node.requestTopic(info.host, info.port, topic, protocols);
-      _handleTopicRequestResponse(resp, uri);
+      print('Requesting topic from uri ${info.host}:${info.port}');
+      final resp = await node.requestTopic(
+          'http://' + info.host, info.port, topic, protocols);
+      await _handleTopicRequestResponse(resp, uri);
     } catch (e) {
       //TODO: Log
     }
@@ -116,8 +117,9 @@ class SubscriberImpl<T extends RosMessage> {
       if (resp.isNotEmpty) {
         requestTopicFromPubs(resp);
       }
-    } catch (e) {
-      // TODO: Logging
+    } catch (e, trace) {
+      print(e);
+      print(trace);
     }
   }
 
@@ -146,52 +148,60 @@ class SubscriberImpl<T extends RosMessage> {
     // TODO: Some more stuff here, listening for errors and close
     pendingClients[uri] = socket;
     try {
-      final connectionHeader =
-          await listener.transform(TCPRosChunkTransformer().transformer).first;
-      await _handleConnectionHeader(socket, listener, uri, connectionHeader);
+      _handleConnectionHeader(socket, listener, uri);
     } catch (e) {
-      print(e);
+      print(
+          'Subscriber client socket ${socket.name} on topic ${topic} had error: $e');
     }
   }
 
   Future<void> _handleConnectionHeader(
-      Socket socket,
-      Stream<Uint8List> listener,
-      String uri,
-      TCPRosChunk connectionHeader) async {
-    if (isShutdown) {
-      _disconnectClient(uri);
-      return;
+    Socket socket,
+    Stream<Uint8List> listener,
+    String uri,
+  ) async {
+    var first = true;
+    await for (final chunk
+        in listener.transform(TCPRosChunkTransformer().transformer)) {
+      if (isShutdown) {
+        _disconnectClient(uri);
+        return;
+      }
+      if (first) {
+        final header = parseTcpRosHeader(chunk);
+        if (header.error != null) {
+          print(header.error);
+          _disconnectClient(uri);
+          return;
+        }
+        final writer = ByteDataWriter(endian: Endian.little);
+        final validated =
+            validatePubHeader(writer, header, type, messageClass.md5sum);
+
+        if (!validated) {
+          print(
+              'Unable to validate subscriber ${topic} connection header $header');
+          socket.add(writer.toBytes());
+          await socket.flush();
+          await socket.close();
+          _disconnectClient(uri);
+          return;
+        }
+        print('Pub header validated');
+        pubClients[uri] = socket;
+        pendingClients.remove(uri);
+        first = false;
+      } else {
+        _handleMessage(chunk);
+      }
     }
-    final header = parseTcpRosHeader(connectionHeader);
-    if (header.error != null) {
-      print(header.error);
-      return;
-    }
-    final writer = ByteDataWriter(endian: Endian.little);
-    final validated =
-        validatePubHeader(writer, header, type, messageClass.md5sum);
-    if (!validated) {
-      print('Unable to validate subscriber ${topic} connection header $header');
-      socket.add(writer.toBytes());
-      await socket.flush();
-      await socket.close();
-      return;
-    }
-    pubClients[uri] = socket;
-    pendingClients.remove(uri);
-    final deserializer = TCPRosChunkTransformer().transformer;
-    listener.transform(deserializer).listen(_handleMessage, onError: (e) {
-      print(
-          'Subscriber client socket ${socket.name} on topic ${topic} had error: $e');
-    }, onDone: () {
-      print(
-          'Subscriber client socket ${socket.name} on topic $topic disconnected');
-      _disconnectClient(uri);
-    });
+    print(
+        'Subscriber client socket ${socket.name} on topic $topic disconnected');
+    _disconnectClient(uri);
   }
 
   void _handleMessage(TCPRosChunk message) {
+    print('Handling message');
     _handleMsgQueue([message]);
   }
 
