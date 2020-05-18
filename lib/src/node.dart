@@ -58,7 +58,7 @@ class Node extends rpc_server.XmlRpcHandler
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
   String logDir;
   final String rosMasterURI;
-  SimpleXmlRpcServer _xmlRpcServer;
+  rpc_server.SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
 
   bool get isShutdown => !ok;
@@ -181,7 +181,7 @@ class Node extends rpc_server.XmlRpcHandler
     });
     _xmlRpcServer = await listenRandomPort(
       10,
-      (port) async => SimpleXmlRpcServer(
+      (port) async => rpc_server.SimpleXmlRpcServer(
         host: '127.0.0.1',
         port: port,
         handler: this,
@@ -427,43 +427,4 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.warn('XMLRPC Server error $fault');
     return super.handleFault(fault);
   }
-}
-
-/// A [XmlRpcServer] that handles the XMLRPC server protocol with a single threaded [HttpServer]
-class SimpleXmlRpcServer extends rpc_server.XmlRpcServer {
-  /// The [HttpServer] used for handling responses
-  HttpServer _httpServer;
-
-  @override
-  String get host => _httpServer?.address?.host ?? super.host;
-
-  /// Creates a [SimpleXmlRpcServer]
-  SimpleXmlRpcServer({
-    @required String host,
-    @required int port,
-    @required rpc_server.XmlRpcHandler handler,
-    Encoding encoding = utf8,
-  }) : super(host: host, port: port, handler: handler, encoding: encoding);
-
-  /// Starts up the [_httpServer] and starts listening to requests
-  @override
-  Future<void> start() async {
-    _httpServer = await HttpServer.bind(host, port);
-    _httpServer.listen((req) => acceptRequest(req, encoding));
-  }
-
-  /// Stops the [_httpServer]
-  ///
-  /// [force] determines whether to stop the [HttpServer] immediately even if there are open connections
-  @override
-  Future<void> stop({bool force = false}) async {
-    await _httpServer.close(force: force);
-  }
-
-  // @override
-  // void acceptRequest(request, encoding) async {
-  //   final req = await encoding.decodeStream(request);
-  //   print(req);
-  //   super.acceptRequest(request, encoding);
-  // }
 }
