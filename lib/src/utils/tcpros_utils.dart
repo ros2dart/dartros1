@@ -253,6 +253,11 @@ class TCPRosChunkTransformer {
   bool _deserializeServiceResponse = false;
   bool _serviceRespSuccess;
 
+  bool get deserializeServiceResponse => _deserializeServiceResponse;
+  set deserializeServiceResponse(bool value) {
+    _deserializeServiceResponse = value;
+  }
+
   StreamTransformer<Uint8List, TCPRosChunk> _transformer;
   StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
   TCPRosChunkTransformer() {
