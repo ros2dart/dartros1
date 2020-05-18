@@ -71,8 +71,42 @@ class Logger extends logger.Logger {
   void error(message) => e(message);
   void fatal(message) => wtf(message);
 
-  // TODO: Support throttling and once logs
-  void traceThrottled(message) => v(message);
+  void traceThrottled(int ms, message) => _throttle(message, ms, trace);
+  void debugThrottled(int ms, message) => _throttle(message, ms, debug);
+  void infoThrottled(int ms, message) => _throttle(message, ms, info);
+  void warnThrottled(int ms, message) => _throttle(message, ms, warn);
+  void errorThrottled(int ms, message) => _throttle(message, ms, error);
+  void fatalThrottled(int ms, message) => _throttle(message, ms, fatal);
+
+  void traceOnce(message) => _once(message, trace);
+  void debugOnce(message) => _once(message, debug);
+  void infoOnce(message) => _once(message, info);
+  void warnOnce(message) => _once(message, warn);
+  void errorOnce(message) => _once(message, error);
+  void fatalOnce(message) => _once(message, fatal);
+
+  void _throttle(message, int ms, Function(dynamic) _logger) {
+    if (_lastSentThrottled.containsKey(message)) {
+      if (_lastSentThrottled[message].millisecondsSinceEpoch <
+          DateTime.now().millisecondsSinceEpoch - ms) {
+        _logger(message);
+        _lastSentThrottled[message] = DateTime.now();
+      }
+    } else {
+      _logger(message);
+      _lastSentThrottled[message] = DateTime.now();
+    }
+  }
+
+  void _once(message, Function(dynamic) _logger) {
+    if (!_onceSent.contains(message)) {
+      _logger(message);
+      _onceSent.add(message);
+    }
+  }
+
+  Map<String, DateTime> _lastSentThrottled = {};
+  Set<String> _onceSent = {};
 
   Future<void> initializeRosLogger() async {
     //TODO: initialize ros logger

@@ -7,6 +7,7 @@ import 'package:dartros/src/utils/tcpros_utils.dart';
 import '../../msg_utils.dart';
 import '../node.dart';
 import '../utils/client_states.dart';
+import '../utils/log/logger.dart';
 
 class PublisherImpl<T extends RosMessage> {
   final Node node;
@@ -68,11 +69,10 @@ class PublisherImpl<T extends RosMessage> {
       return;
     }
     if (numSubscribers == 0) {
-      // TODO: log
-      print('Publishing message on ${topic} with no subscribers');
+      log.dartros.debugThrottled(
+          2000, 'Publishing message on $topic with no subscribers');
     }
     try {
-      print('Publishing message on ${topic} with subscribers');
       messages.forEach((msg) {
         final writer = ByteDataWriter(endian: Endian.little);
 
@@ -86,15 +86,15 @@ class PublisherImpl<T extends RosMessage> {
         }
       });
     } catch (e) {
-      // TODO: log
-      print('Error when publishing message on topic $topic: $e');
+      log.dartros.error('Error when publishing message on topic $topic: $e');
     }
   }
 
   void shutdown() {
     _state = State.SHUTDOWN;
-    //TODO: Log
+    log.dartros.debug('Shutting down publisher $topic');
     subClients.values.forEach((c) => c.close());
+    subClients.clear();
   }
 
   Future<void> _register() async {
