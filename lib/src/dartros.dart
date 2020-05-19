@@ -53,7 +53,7 @@ Future<NodeHandle> initNode(
       Platform.environment['ROS_MASTER_URI'];
   final node = Node(nodeName.name, masterUri);
   await node.nodeReady.future;
-  await log.initializeRosLogger();
+  await Logger.initializeRosLogger();
   await Time.initializeRosTime();
   return NodeHandle(node);
 }

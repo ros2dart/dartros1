@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:logger/logger.dart' as logging;
+import 'package:rosgraph_msgs/msgs.dart';
+import 'package:std_msgs/msgs.dart';
+import '../../../dartros.dart';
+import '../../publisher.dart';
 export 'package:logger/logger.dart';
 
 enum Level { trace, debug, info, warn, error, fatal }
@@ -11,9 +15,28 @@ class RosFilter extends logging.LogFilter {
 
   @override
   bool shouldLog(logging.LogEvent event) {
-    // TODO: From the logger name get the current log level of the logger.
-    // TODO: Create a custom ros logger
-    return true;
+    if (event.level.index >= Logger._loggers[logger].level.loggingLevel.index) {
+      return true;
+    }
+    return false;
+  }
+}
+
+class RosPrinter extends logging.PrettyPrinter {
+  String logger;
+  RosPrinter(this.logger);
+
+  @override
+  List<String> log(logging.LogEvent event) {
+    Logger._rosLog?.publish(
+        Log(
+          header: Header(stamp: RosTime.now()),
+          msg: event.message,
+          level: event.level.intValue,
+          name: nh.nodeName,
+        ),
+        0);
+    return super.log(event);
   }
 }
 
@@ -26,7 +49,9 @@ class Logger extends logging.Logger {
   static const PARAMS = 'params';
   static final Logger _log = Logger._('ros');
   static final Map<String, Logger> _loggers = {};
+  static Publisher<Log> _rosLog;
   factory Logger() => _log;
+
   void initializeNodeLogger(String nodeName, {Level level}) {
     getChildLogger(SUPERDEBUG, level: Level.fatal);
     getChildLogger(DARTROS, level: Level.warn);
@@ -108,8 +133,9 @@ class Logger extends logging.Logger {
   Map<String, DateTime> _lastSentThrottled = {};
   Set<String> _onceSent = {};
 
-  Future<void> initializeRosLogger() async {
-    //TODO: initialize ros logger
+  static Future<void> initializeRosLogger() async {
+    _rosLog = nh.advertise<Log>('/rosout', rosgraph_msgs.Log,
+        queueSize: 10, latching: true);
   }
 }
 
@@ -130,5 +156,27 @@ extension LevelToLoggingLevel on Level {
         return logging.Level.wtf;
     }
     return logging.Level.nothing;
+  }
+}
+
+extension LoggingLevelToString on logging.Level {
+  int get intValue {
+    switch (this) {
+      case logging.Level.verbose:
+        return Log.DEBUG;
+      case logging.Level.debug:
+        return Log.DEBUG;
+      case logging.Level.info:
+        return Log.INFO;
+      case logging.Level.warning:
+        return Log.WARN;
+      case logging.Level.error:
+        return Log.ERROR;
+      case logging.Level.wtf:
+        return Log.FATAL;
+      case logging.Level.nothing:
+        return Log.FATAL;
+    }
+    return Log.FATAL;
   }
 }

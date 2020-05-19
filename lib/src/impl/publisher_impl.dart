@@ -124,15 +124,11 @@ class PublisherImpl<T extends RosMessage> {
         validateSubHeader(writer, header, topic, type, messageClass.md5sum);
 
     if (!validated) {
-      print('Sub header not validated');
-      print(writer.toBytes());
       connection.add(writer.toBytes());
       await connection.flush();
       await connection.close();
       return;
     }
-    print('Sub header validated');
-    // TODO: Logging
     createPubHeader(writer, node.nodeName, messageClass.md5sum, type, latching,
         messageClass.messageDefinition);
     connection.add(writer.toBytes());
@@ -140,9 +136,8 @@ class PublisherImpl<T extends RosMessage> {
       connection.setOption(SocketOption.tcpNoDelay, true);
     }
     listener.listen((_) {}, onError: (e) {
-      print(e);
+      log.dartros.warn('Error on publisher listener $e');
     }, onDone: () {
-      print('finished');
       subClients.remove(connection.name);
       connection.close();
     });
