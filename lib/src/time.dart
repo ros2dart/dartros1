@@ -1,3 +1,4 @@
+import 'package:rosgraph_msgs/msgs.dart';
 export 'utils/time_utils.dart';
 import 'utils/time_utils.dart';
 import '../dartros.dart';
@@ -9,10 +10,25 @@ class Time {
     try {
       useSimTime = await nh.getParam('/use_sim_time');
       if (useSimTime) {
-        // nh.subscribe('/clock', rosgraph_msgs.Clock, (msg) {}, throttleMs: -1);
+        nh.subscribe(
+          '/clock',
+          rosgraph_msgs.Clock,
+          (Clock msg) {
+            simTime = msg.clock;
+          },
+          throttleMs: -1,
+        );
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  static RosTime now() {
+    if (useSimTime) {
+      return simTime;
+    } else {
+      return RosTime.now();
     }
   }
 }
