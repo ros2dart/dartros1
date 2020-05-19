@@ -1,7 +1,7 @@
 name: dartros
 description: A dart implementation of a ROS 1 Client Library
 version: 0.0.1
-# homepage: https://www.example.com
+repository: https://github.com/TimWhiting/dartros
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -9,14 +9,16 @@ environment:
 dependencies:
   path: ^1.6.0
   logger: ^0.9.1
-  dartx: any
-  buffer: any
-  meta: any
-  freezed_annotation: any
+  dartx: ^0.4.1
+  buffer: ^1.0.6
+  meta: ^1.1.8
+  freezed_annotation: ^0.7.1
   xml_rpc: ^0.3.0
+  http: ^0.12.1
+  xml: ^4.1.0
   # reflectable: any
   string_validator: ^0.1.4
-  rxdart: any
+  rxdart: ^0.24.1
 
 dev_dependencies:
   pedantic: ^1.8.0
