@@ -19,7 +19,6 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
   Map<String, Socket> _clients = {};
   final bool persist;
   final int port = 0;
-  bool _callInProgress = false;
   final R Function(C) requestCallback;
   State _state = State.REGISTERING;
   List<String> get clientUris => _clients.keys.toList();
