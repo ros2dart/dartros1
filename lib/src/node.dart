@@ -168,7 +168,6 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   Future<void> unadvertise<T>(String topic) {
-    // TODO: log
     final pub = _publishers[topic];
     if (pub != null) {
       log.superdebug.info('Unadvertising from topic $topic');
@@ -260,7 +259,7 @@ class Node extends rpc_server.XmlRpcHandler
           return;
         }
         log.superdebug.info('Got connection header $header');
-        if (header.topic != null) {
+        if (header.topic.isNotNullOrEmpty) {
           final topic = header.topic;
           if (_publishers.containsKey(topic)) {
             await _publishers[topic]
@@ -268,8 +267,15 @@ class Node extends rpc_server.XmlRpcHandler
           } else {
             log.dartros.info('Got connection header for unknown topic $topic');
           }
-        } else if (header.service != null) {
-          // TODO: Service
+        } else if (header.service.isNotNullOrEmpty) {
+          final service = header.service;
+          final serviceServer = _services[service];
+          if (serviceServer != null) {
+            await serviceServer.handleClientConnection(
+                connection, listener, header);
+          } else {
+            log.dartros.info('Got service connection for unknown service');
+          }
         } else {
           connection.add(serializeString(
               'Connection header $message has neither topic nor service'));
