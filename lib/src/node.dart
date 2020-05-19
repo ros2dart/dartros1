@@ -52,10 +52,9 @@ class Node extends rpc_server.XmlRpcHandler
   final Map<String, PublisherImpl> _publishers = {};
   final Map<String, SubscriberImpl> _subscribers = {};
   final Map<String, ServiceServer> _services = {};
-  StreamSubscription<Socket> _tcpStream;
   bool _ok = true;
   bool get ok => _ok;
-  Map<String, dynamic> servers = {};
+  bool get isShutdown => !ok;
   String homeDir = Platform.environment['ROS_HOME'] ??
       path.join(Platform.environment['HOME'], '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
@@ -63,13 +62,6 @@ class Node extends rpc_server.XmlRpcHandler
   final String rosMasterURI;
   rpc_server.SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
-
-  bool get isShutdown => !ok;
-
-  Future<void> printRosServerInfo() async {
-    final response = await getSystemState();
-    print(response);
-  }
 
   Future<void> shutdown() async {
     log.dartros.info('Shutting node $nodeName down at ${DateTime.now()}');
@@ -87,7 +79,7 @@ class Node extends rpc_server.XmlRpcHandler
     }
     log.dartros.info('Shutdown publishers...done');
     log.dartros.info('Shutdown servers');
-    for (final s in servers.values) {
+    for (final s in _services.values) {
       s.shutdown();
     }
     log.dartros.info('Shutdown servers...done');
@@ -222,7 +214,7 @@ class Node extends rpc_server.XmlRpcHandler
       ),
     );
     await _xmlRpcServer.start();
-    print('Started xmlRPCServer');
+    log.superdebug.debug('Slave API Listening on port ${_xmlRpcServer.port}');
   }
 
   /// Stops the server for the slave api
@@ -239,7 +231,7 @@ class Node extends rpc_server.XmlRpcHandler
       ),
     );
 
-    _tcpStream = await _tcpRosServer.listen(
+    await _tcpRosServer.listen(
       (connection) async {
         log.superdebug
             .info('Node $nodeName got connection from ${connection.name}');

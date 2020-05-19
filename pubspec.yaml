@@ -1,6 +1,6 @@
 name: dartros
-description: A starting point for Dart libraries or applications.
-# version: 1.0.0
+description: A dart implementation of a ROS 1 Client Library
+version: 0.0.1
 # homepage: https://www.example.com
 
 environment:
