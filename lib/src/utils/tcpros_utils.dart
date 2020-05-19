@@ -137,6 +137,29 @@ bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
   return true;
 }
 
+bool validateServiceClientHeader(
+    ByteDataWriter writer, TCPRosHeader header, String service, String md5sum) {
+  if (header.service.isNullOrEmpty) {
+    writer.writeString('Connection header missing expected field [service]');
+    return false;
+  }
+  if (header.md5sum.isNullOrEmpty) {
+    writer.writeString('Connection header missing expected field [md5sum]');
+    return false;
+  }
+  if (header.service != service) {
+    writer.writeString(
+        'Got incorrect service [${header.service}] expected [$service]');
+    return false;
+  }
+  if (header.md5sum != md5sum) {
+    writer.writeString(
+        'Got incorrect md5sum [${header.md5sum}] expected [$md5sum]');
+    return false;
+  }
+  return true;
+}
+
 bool validatePubHeader(
     ByteDataWriter writer, TCPRosHeader header, String type, String md5sum) {
   if (header.type.isNullOrEmpty) {
@@ -173,6 +196,23 @@ Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
     writer.writeUint32(msgSize);
   }
   message.serialize(writer);
+  return writer.toBytes();
+}
+
+Uint8List serializeServiceResponse(
+    ByteDataWriter writer, dynamic message, bool success,
+    {prependResponseInfo = true}) {
+  final msgSize = message.getMessageSize();
+  if (prependResponseInfo) {
+    if (success) {
+      writer.writeUint8(1);
+      writer.writeUint32(msgSize);
+      message.serialize(writer);
+    } else {
+      writer.writeUint8(0);
+      writer.writeString('Unable to handle service call');
+    }
+  }
   return writer.toBytes();
 }
 
@@ -214,7 +254,7 @@ class TCPRosHeader<T> {
   final String callerId;
   final String messageDefinition;
   final String error;
-  final String persistent;
+  final bool persistent;
   final bool tcpNoDelay;
   final bool latching;
 
@@ -239,7 +279,7 @@ class TCPRosHeader<T> {
         info['callerId'],
         info['message_definition'],
         info['error'],
-        info['persistent'],
+        (info['persistent'] ?? '0') != '0',
         (info['tcp_nodelay'] ?? '0') != '0',
         (info['latching'] ?? '0') != '0');
   }

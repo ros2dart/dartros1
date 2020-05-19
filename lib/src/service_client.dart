@@ -27,7 +27,6 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
   final T serviceClass;
   final bool persist;
   final int maxQueueSize;
-  final bool calling;
   final Node node;
   final List<ServiceCall> _callQueue = [];
   ServiceCall _currentCall;
@@ -37,7 +36,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
   Stream _clientStream;
   State _state = State.REGISTERED;
   ServiceClient(this.service, this.serviceClass, this.persist,
-      this.maxQueueSize, this.calling, this.node);
+      this.maxQueueSize, this.node);
   String get type => serviceClass.fullType;
   void close() {
     if (!_callInProgress) {

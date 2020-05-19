@@ -14,6 +14,8 @@ import 'package:xml_rpc/client.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
 import 'impl/publisher_impl.dart';
 import 'impl/subscriber_impl.dart';
+import 'service_client.dart';
+import 'service_server.dart';
 import 'utils/log/logger.dart';
 
 import 'ros_xmlrpc_common.dart';
@@ -49,6 +51,7 @@ class Node extends rpc_server.XmlRpcHandler
 
   final Map<String, PublisherImpl> _publishers = {};
   final Map<String, SubscriberImpl> _subscribers = {};
+  final Map<String, ServiceServer> _services = {};
   StreamSubscription<Socket> _tcpStream;
   bool _ok = true;
   bool get ok => _ok;
@@ -141,6 +144,29 @@ class Node extends rpc_server.XmlRpcHandler
     return sub;
   }
 
+  ServiceServer<C, R, T> advertiseService<C extends RosMessage<C>,
+          R extends RosMessage<R>, T extends RosServiceMessage<C, R>>(
+      String service, T messageClass, R Function(C) callback) {
+    if (_services.containsKey(service)) {
+      log.dartros.warn(
+          'Tried to advertise a service that is already advertised in this node [$service]');
+      return null;
+    } else {
+      _services[service] =
+          ServiceServer<C, R, T>(service, messageClass, this, true, callback);
+      return _services[service];
+    }
+  }
+
+  ServiceClient<C, R, T> serviceClient<
+          C extends RosMessage<C>,
+          R extends RosMessage<R>,
+          T extends RosServiceMessage<C, R>>(String service, T messageClass,
+      {bool persist = true, maxQueueSize = -1}) {
+    return ServiceClient<C, R, T>(
+        service, messageClass, persist, maxQueueSize, this);
+  }
+
   Future<void> unadvertise<T>(String topic) {
     // TODO: log
     final pub = _publishers[topic];
@@ -160,6 +186,15 @@ class Node extends rpc_server.XmlRpcHandler
       sub.shutdown();
     }
     return unregisterSubscriber(topic);
+  }
+
+  Future<void> unadvertiseService(String service) async {
+    if (_services.containsKey(service)) {
+      log.superdebug.info('Unadvertising service $service');
+      _services[service].disconnect();
+      _services.remove(service);
+      return await unregisterService(service);
+    }
   }
 
   /// The following section is an implementation of the Slave API from here: http://wiki.ros.org/ROS/Slave_API
