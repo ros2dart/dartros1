@@ -29,7 +29,7 @@ void serializeStringFields(ByteDataWriter writer, List<String> fields) {
 List<String> deserializeStringFields(ByteDataReader reader) {
   // final totalLength = reader.readUint32(Endian.little);
   final totalLength = reader.remainingLength;
-  print('Total length of string fields $totalLength');
+  // print('Total length of string fields $totalLength');
   final stringList = <String>[];
   var length = 0;
   while (length < totalLength) {
@@ -362,7 +362,6 @@ class TCPRosChunkTransformer {
     _buffer = [];
     _bytesConsumed = 0;
     _inBody = false;
-    _deserializeServiceResponse = false;
     _serviceRespSuccess = null;
   }
 }

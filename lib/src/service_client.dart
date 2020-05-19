@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:dartx/dartx.dart';
 
 import 'node.dart';
 import 'utils/client_states.dart';
@@ -84,9 +84,9 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
       _currentCall = null;
       _scheduleNextCall();
       _call.completer.complete(resp);
-    } catch (e) {
+    } catch (e, stack) {
       if (!isShutdown) {
-        log.dartros.error('Error during service $service call $e\n');
+        log.dartros.error('Error during service $service call $e\n$stack');
       }
       _callInProgress = false;
       _call?.completer?.completeError('$e');
@@ -110,6 +110,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
         await _connectToService(serviceHost, _call);
       } catch (e) {
         log.dartros.error('Failure in service lookup $e');
+        rethrow;
       }
     } else {
       _call._client = _client;
@@ -137,12 +138,16 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
   }
 
   Future<void> _connectToService(Uri uri, ServiceCall _call) async {
-    log.dartros.debug('Service client $service connection to $uri');
+    log.dartros
+        .debug('Service client $service connection to ${uri.host}:${uri.port}');
     try {
       _call._client = await Socket.connect(uri.host, uri.port);
       final transformer = TCPRosChunkTransformer();
       _call._clientStream =
           _call._client.transform(transformer.transformer).asBroadcastStream();
+      if (persist) {
+        _clientStream = _call._clientStream;
+      }
       log.dartros.debug('Sending service client $service connection header');
       final writer = ByteDataWriter(endian: Endian.little);
       createServiceClientHeader(
@@ -162,13 +167,14 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
       final msg = await _call._clientStream.first;
       if (!transformer.deserializeServiceResponse) {
         final header = parseTcpRosHeader(msg);
-        if (header.error.isNotEmpty) {
+        if (header.error.isNotNullOrEmpty) {
           _call.completer.completeError(header.error);
         }
         transformer.deserializeServiceResponse = true;
       }
     } catch (e) {
       log.dartros.error('Error connecting to service $service at $uri');
+      rethrow;
     }
   }
 

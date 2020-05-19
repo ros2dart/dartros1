@@ -1,6 +1,8 @@
 import 'names.dart';
 import 'node.dart';
 import 'ros_xmlrpc_client.dart';
+import 'service_client.dart';
+import 'service_server.dart';
 import 'subscriber.dart';
 import 'utils/msg_utils.dart';
 import 'publisher.dart';
@@ -59,6 +61,24 @@ class NodeHandle {
         queueSize, throttleMs, tcpNoDelay);
   }
 
+  /// Advertises service server with type [typeClass]
+  ///
+  /// [typeClass] must be a [RosServiceMessage]
+  ServiceServer<C, R, T> advertiseService<C extends RosMessage<C>,
+          R extends RosMessage<R>, T extends RosServiceMessage<C, R>>(
+      String service, T messageClass, R Function(C) callback) {
+    return node.advertiseService(_resolveName(service), messageClass, callback);
+  }
+
+  ServiceClient<C, R, T> serviceClient<
+          C extends RosMessage<C>,
+          R extends RosMessage<R>,
+          T extends RosServiceMessage<C, R>>(String service, T messageClass,
+      {bool persist = true, maxQueueSize = -1}) {
+    return node.serviceClient(_resolveName(service), messageClass,
+        persist: persist, maxQueueSize: maxQueueSize);
+  }
+
   void unadvertise(String topic) {
     node.unadvertise(_resolveName(topic));
   }
@@ -67,7 +87,9 @@ class NodeHandle {
     node.unsubscribe(_resolveName(topic));
   }
 
-  // TODO: Service and action clients
+  void unadvertiseService(String topic) {
+    node.unadvertiseService(_resolveName(topic));
+  }
 
   /// A helper function to resolve the name within the handle's namespace
   String _resolveName(String name,

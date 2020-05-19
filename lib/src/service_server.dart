@@ -45,6 +45,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
     if (isShutdown) {
       return;
     }
+    final name = connection.name;
     log.dartros.debug('Service $service handling new client connection');
     final writer = ByteDataWriter(endian: Endian.little);
     final validated = validateServiceClientHeader(
@@ -57,27 +58,35 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
     }
     createServiceServerHeader(writer, node.nodeName, messageClass.md5sum, type);
     connection.add(writer.toBytes());
-    _clients[connection.name] = connection;
-    await for (final data in listener) {
-      log.dartros.trace('Service $service got message! $data');
-      final reader = ByteDataReader(endian: Endian.little)..add(data);
-      final req = messageClass.request.deserialize(reader);
-      final result = requestCallback(req);
-      if (isShutdown) {
-        return;
+    _clients[name] = connection;
+    try {
+      await for (final data in listener) {
+        log.dartros.trace('Service $service got message! $data');
+        final reader = ByteDataReader(endian: Endian.little)..add(data);
+        final req = messageClass.request.deserialize(reader);
+        final result = requestCallback(req);
+        if (isShutdown) {
+          return;
+        }
+        final writer = ByteDataWriter(endian: Endian.little);
+        serializeServiceResponse(writer, result, true);
+        log.dartros.debug('Serializing service response ${writer.toBytes()}');
+        connection.add(writer.toBytes());
+        await connection.flush();
+        log.dartros.debug('Flushed service response');
+        if (!header.persistent) {
+          log.dartros.debug('Closing non-persistent service client');
+          await connection.close();
+          _clients.remove(name);
+          return;
+        }
       }
-      final writer = ByteDataWriter(endian: Endian.little);
-      serializeServiceResponse(writer, result, true);
-      connection.add(writer.toBytes());
-      if (!header.persistent) {
-        log.dartros.debug('Closing non-persistent service client');
-        await connection.close();
-        _clients.remove(connection.name);
-        return;
-      }
+    } catch (e) {
+      _clients.remove(name);
+      log.dartros.debug('Service client $name disconnected with error: $e!');
     }
-    _clients.remove(connection.name);
-    log.dartros.debug('Service client ${connection.name} disconnected!');
+    _clients.remove(name);
+    log.dartros.debug('Service client $name disconnected!');
   }
 
   Future<void> _register() async {

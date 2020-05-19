@@ -280,8 +280,8 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Return service URL (address and port). Fails if there is no provider.
   Future<String> lookupService(
     String service,
-  ) {
-    return _call('lookupService', [nodeName, service]);
+  ) async {
+    return (await _call('lookupService', [nodeName, service])) as String;
   }
 
   /// Get list of topics that can be subscribed to.
