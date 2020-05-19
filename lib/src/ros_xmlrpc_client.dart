@@ -115,8 +115,10 @@ mixin XmlRpcClient {
     String methodName,
     List<dynamic> params, {
     Map<String, String> headers,
+    dynamic Function() onError,
   }) =>
-      _rpcCall(methodName, params, rosMasterUri, client.post, headers: headers);
+      _rpcCall(methodName, params, rosMasterUri, client.post,
+          headers: headers, onError: onError);
   Future<StatusCode> _callRpc(
     String methodName,
     List<dynamic> params, {

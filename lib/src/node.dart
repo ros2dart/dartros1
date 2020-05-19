@@ -27,7 +27,8 @@ class Node extends rpc_server.XmlRpcHandler
   static Node _node;
   static Node get singleton => _node;
   factory Node(String name, String rosMasterURI) {
-    return _node ?? Node._(name, rosMasterURI);
+    _node ??= Node._(name, rosMasterURI);
+    return _node;
   }
   @override
   String get xmlRpcUri => 'http://${_xmlRpcServer.host}:${_xmlRpcServer.port}';

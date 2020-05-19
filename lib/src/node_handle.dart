@@ -31,7 +31,8 @@ class NodeHandle {
 
   // Param stuff
   Future<bool> hasParam(String param) => node.hasParam(param);
-  Future<Object> getParam(String param) => node.getParam(param);
+  Future<T> getParam<T>(String param, {T defaultValue}) =>
+      node.getParam<T>(param, defaultValue: defaultValue);
   Future<bool> setParam(String param, Object value) =>
       node.setParam(param, value);
   Future<bool> deleteParam(String param) => node.deleteParam(param);

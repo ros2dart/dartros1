@@ -1,5 +1,6 @@
 import 'package:rosgraph_msgs/msgs.dart';
 export 'utils/time_utils.dart';
+import 'utils/log/logger.dart';
 import 'utils/time_utils.dart';
 import '../dartros.dart';
 
@@ -8,7 +9,8 @@ class Time {
   static bool useSimTime = false;
   static Future<void> initializeRosTime() async {
     try {
-      useSimTime = await nh.getParam('/use_sim_time');
+      useSimTime = await nh.getParam('/use_sim_time', defaultValue: false);
+      log.dartros.info('Sim time: $useSimTime');
       if (useSimTime) {
         nh.subscribe(
           '/clock',

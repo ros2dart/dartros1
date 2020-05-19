@@ -3,8 +3,9 @@ part of 'ros_xmlrpc_client.dart';
 mixin RosParamServerClient on XmlRpcClient {
   // TODO: Handle remapping keys
 
-  Future<Object> getParam(String key) async {
-    return (await _call('getParam', [nodeName, key]));
+  Future<T> getParam<T>(String key, {T defaultValue}) async {
+    return (await _call('getParam', [nodeName, key],
+        onError: () => defaultValue)) as T;
   }
 
   Future<List<String>> getParamNames() async {
