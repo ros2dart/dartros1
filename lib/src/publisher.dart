@@ -21,5 +21,6 @@ class Publisher<T extends RosMessage<T>> {
   }
 
   bool get isShutdown => impl == null;
-  void publish(T message, int throttleMs) => impl?.publish(message, throttleMs);
+  void publish(T message, [int throttleMs = 0]) =>
+      impl?.publish(message, throttleMs);
 }
