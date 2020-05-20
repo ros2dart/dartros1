@@ -19,7 +19,8 @@ dependencies:
   # reflectable: any
   string_validator: ^0.1.4
   rxdart: ^0.24.1
-  rosgraph_msgs: ^0.0.1
+  rosgraph_msgs: ^0.0.2
+  actionlib_msgs: ^0.0.1
 
 dev_dependencies:
   pedantic: ^1.8.0
