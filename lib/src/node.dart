@@ -31,7 +31,7 @@ class Node extends rpc_server.XmlRpcHandler
     return _node;
   }
   @override
-  String get xmlRpcUri => 'http://${_xmlRpcServer.host}:${_xmlRpcServer.port}';
+  String get xmlRpcUri => 'http://${NetworkUtils.host}:${_xmlRpcServer.port}';
   @override
   int get tcpRosPort => _tcpRosServer.port;
   @override
@@ -39,8 +39,8 @@ class Node extends rpc_server.XmlRpcHandler
   Completer<bool> nodeReady = Completer();
   Node._(this.nodeName, this.rosMasterURI)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
-    //TODO: Remove logdir probably
-    logDir = path.join(homeDir, 'log');
+    // TODO: Remove logdir probably
+    // logDir = path.join(homeDir, 'log');
     _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
   }
@@ -209,7 +209,7 @@ class Node extends rpc_server.XmlRpcHandler
     _xmlRpcServer = await listenRandomPort(
       10,
       (port) async => rpc_server.SimpleXmlRpcServer(
-        host: '127.0.0.1',
+        host: '0.0.0.0',
         port: port,
         handler: this,
       ),
@@ -227,7 +227,7 @@ class Node extends rpc_server.XmlRpcHandler
     _tcpRosServer = await listenRandomPort(
       10,
       (port) async => await ServerSocket.bind(
-        '127.0.0.1',
+        '0.0.0.0',
         0,
       ),
     );
@@ -437,7 +437,7 @@ class Node extends rpc_server.XmlRpcHandler
       resp = [
         1,
         'Allocated topic connection on port ' + tcpRosPort.toString(),
-        ['TCPROS', _tcpRosServer.address.host, tcpRosPort]
+        ['TCPROS', NetworkUtils.host, tcpRosPort]
       ];
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');

@@ -35,7 +35,7 @@ class _NetworkUtils {
   }
 
   String formatServiceUri(int port) {
-    return 'rosrpc://127.0.0.1:' + port.toString();
+    return 'rosrpc://$host:$port';
   }
 
   Future<String> getIPAddress({
