@@ -48,10 +48,10 @@ abstract class RosActionMessage<
     AR extends RosActionResult<R>> {
   AG get actionGoal;
   AF get actionFeedback;
-  AR get actionResponse;
+  AR get actionResult;
   G get goal;
   F get feedback;
-  R get response;
+  R get result;
   String get md5sum;
   String get fullType;
 }
