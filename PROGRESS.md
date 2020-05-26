@@ -39,3 +39,13 @@ src/lib
 src/lib/impl
 * PublisherImpl.js -- done
 * SubscriberImpl.js -- done, except some debug log statements
+
+src/actions/
+* ActionClient.js -- TODO
+* ActionServer.js -- TODO
+* ClientGoalHandle.js -- TODO
+* ClientStates.js -- TODO
+* GoalHandle.js -- TODO
+* GoalIdGenerator -- done
+* SimpleActionClient -- TODO
+* SimpleActionServer -- TODO
