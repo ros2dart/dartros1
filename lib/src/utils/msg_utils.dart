@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:actionlib_msgs/msgs.dart';
 import 'package:buffer/buffer.dart';
+import 'package:std_msgs/msgs.dart';
 import 'time_utils.dart';
 export 'time_utils.dart';
 
@@ -14,6 +16,41 @@ abstract class RosMessage<T> implements Function {
 abstract class RosServiceMessage<C extends RosMessage<C>,
     R extends RosMessage<R>> {
   C get request;
+  R get response;
+  String get md5sum;
+  String get fullType;
+}
+
+abstract class RosActionGoal<G extends RosMessage<G>> extends RosMessage {
+  Header get header;
+  GoalID get goal_id;
+  G get goal;
+}
+
+abstract class RosActionFeedback<F extends RosMessage<F>> extends RosMessage {
+  Header get header;
+  GoalStatus get status;
+  F get feedback;
+}
+
+abstract class RosActionResult<R extends RosMessage<R>> extends RosMessage {
+  Header get header;
+  GoalStatus get status;
+  R get result;
+}
+
+abstract class RosActionMessage<
+    G extends RosMessage<G>,
+    AG extends RosActionGoal<G>,
+    F extends RosMessage<F>,
+    AF extends RosActionFeedback<F>,
+    R extends RosMessage<R>,
+    AR extends RosActionResult<R>> {
+  AG get actionGoal;
+  AF get actionFeedback;
+  AR get actionResponse;
+  G get goal;
+  F get feedback;
   R get response;
   String get md5sum;
   String get fullType;

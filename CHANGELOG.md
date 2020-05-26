@@ -1,3 +1,7 @@
+## 0.0.3
+- Added type for actionlib msgs, required for development of them
+- v0.0.4 should contain a basic implementation of actions
+
 ## 0.0.2+1
 - Better logging and some cleanup of print statements
 
