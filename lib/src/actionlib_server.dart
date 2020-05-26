@@ -18,10 +18,10 @@ abstract class ActionLibServer<G extends RosMessage<G>, F extends RosMessage<F>,
   final String actionServer;
   ActionLibServer(this.actionServer, this.node, this.goalClass,
       this.feedbackClass, this.resultClass) {
-    _goalSub = node.subscribe(actionServer + '/goal', goalClass, _handleGoal,
+    _goalSub = node.subscribe(actionServer + '/goal', goalClass, handleGoal,
         queueSize: 50);
     _cancelSub = node.subscribe(
-        actionServer + '/cancel', actionlib_msgs.GoalID, _handleCancel,
+        actionServer + '/cancel', actionlib_msgs.GoalID, handleCancel,
         queueSize: 50);
     _statusPub = node.advertise(
         actionServer + '/status', actionlib_msgs.GoalStatusArray,
@@ -32,8 +32,8 @@ abstract class ActionLibServer<G extends RosMessage<G>, F extends RosMessage<F>,
         node.advertise(actionServer + '/result', resultClass, queueSize: 50);
   }
 
-  void _handleGoal(G goal);
-  void _handleCancel(GoalID id);
+  void handleGoal(G goal);
+  void handleCancel(GoalID id);
   void publishResult(R result) {
     _resultPub.publish(result);
   }
@@ -50,7 +50,7 @@ abstract class ActionLibServer<G extends RosMessage<G>, F extends RosMessage<F>,
   GoalID generateGoalID() {
     final now = RosTime.now();
     return GoalID(
-        id: '${nh.nodeName}-${_goalCount++}-${now.secs}-${now.nsecs}',
+        id: '${nh.nodeName}-${_goalCount++}-${now.secs}.${now.nsecs}',
         stamp: now);
   }
 
