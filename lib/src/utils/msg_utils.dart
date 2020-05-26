@@ -21,19 +21,22 @@ abstract class RosServiceMessage<C extends RosMessage<C>,
   String get fullType;
 }
 
-abstract class RosActionGoal<G extends RosMessage<G>> extends RosMessage {
+abstract class RosActionGoal<G extends RosMessage<G>>
+    extends RosMessage<RosActionGoal<G>> {
   Header get header;
   GoalID get goal_id;
   G get goal;
 }
 
-abstract class RosActionFeedback<F extends RosMessage<F>> extends RosMessage {
+abstract class RosActionFeedback<F extends RosMessage<F>>
+    extends RosMessage<RosActionGoal<F>> {
   Header get header;
   GoalStatus get status;
   F get feedback;
 }
 
-abstract class RosActionResult<R extends RosMessage<R>> extends RosMessage {
+abstract class RosActionResult<R extends RosMessage<R>>
+    extends RosMessage<RosActionGoal<R>> {
   Header get header;
   GoalStatus get status;
   R get result;

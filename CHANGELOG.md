@@ -1,6 +1,9 @@
+## 0.0.3+2
+- Fixed actionlib messages
+
 ## 0.0.3+1
 - Fixed actionlib interface
-- 
+ 
 ## 0.0.3
 - Added type for actionlib msgs, required for development of them
 - v0.0.4 should contain a basic implementation of actions
