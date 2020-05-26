@@ -16,8 +16,8 @@ class Subscriber<T extends RosMessage<T>> {
   String get topic => _topic;
   String get type => _type;
   int get numPublishers => impl?.numPublishers ?? 0;
-  void shutdown() {
-    impl.unregisterSubscriber();
+  Future<void> shutdown() async {
+    await impl.unregisterSubscriber();
     impl = null;
   }
 

@@ -15,8 +15,8 @@ class Publisher<T extends RosMessage<T>> {
   String get type => _type;
   bool get latching => impl?.latching ?? false;
   int get numSubscribers => impl?.numSubscribers ?? 0;
-  void shutdown() {
-    impl.unregisterPublisher();
+  Future<void> shutdown() async {
+    await impl.unregisterPublisher();
     impl = null;
   }
 

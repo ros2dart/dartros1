@@ -52,15 +52,15 @@ class SubscriberImpl<T extends RosMessage<T>> {
   bool get isShutdown => _state == State.SHUTDOWN;
   List<String> get clientUris => pubClients.keys;
 
-  void shutdown() {
+  Future<void> shutdown() async {
     _state = State.SHUTDOWN;
     //TODO: log some things
     for (final client in pubClients.keys) {
-      _disconnectClient(client);
+      await _disconnectClient(client);
     }
     pubClients.clear();
     for (final client in pendingClients.keys) {
-      _disconnectClient(client);
+      await _disconnectClient(client);
     }
     pendingClients.clear();
     // TODO: spinner thing
@@ -70,18 +70,18 @@ class SubscriberImpl<T extends RosMessage<T>> {
     pubs.forEach((uri) => _requestTopicFromPublisher(uri.trim()));
   }
 
-  void handlePublisherUpdate(List<dynamic> pubs) {
+  Future<void> handlePublisherUpdate(List<dynamic> pubs) async {
     final missing = Set.of(pubClients.keys);
     for (final pub in pubs) {
       final uri = pub.trim();
       if (!pubClients.containsKey(uri)) {
-        _requestTopicFromPublisher(uri);
+        await _requestTopicFromPublisher(uri);
       } else {
         missing.remove(uri);
       }
     }
     for (final pub in missing) {
-      _disconnectClient(pub);
+      await _disconnectClient(pub);
     }
   }
 
@@ -98,10 +98,10 @@ class SubscriberImpl<T extends RosMessage<T>> {
     }
   }
 
-  void _disconnectClient(String id) {
+  Future<void> _disconnectClient(String id) async {
     final client = pubClients[id] ?? pendingClients[id];
     if (client != null) {
-      client.close();
+      await client.close();
       pubClients.remove(id);
       pendingClients.remove(id);
     }
@@ -221,10 +221,10 @@ class SubscriberImpl<T extends RosMessage<T>> {
     _count++;
   }
 
-  void unregisterSubscriber() {
+  Future<void> unregisterSubscriber() async {
     _count--;
     if (_count <= 0) {
-      node.unsubscribe(topic);
+      await node.unsubscribe(topic);
     }
   }
 }

@@ -46,10 +46,10 @@ class PublisherImpl<T extends RosMessage> {
     count++;
   }
 
-  void unregisterPublisher() {
+  Future<void> unregisterPublisher() async {
     count--;
     if (count <= 0) {
-      node.unadvertise<T>(topic);
+      await node.unadvertise<T>(topic);
     }
   }
 
@@ -91,10 +91,10 @@ class PublisherImpl<T extends RosMessage> {
     }
   }
 
-  void shutdown() {
+  Future<void> shutdown() async {
     _state = State.SHUTDOWN;
     log.dartros.debug('Shutting down publisher $topic');
-    subClients.values.forEach((c) => c.close());
+    await Future.wait(subClients.values.map((c) async => await c.close()));
     subClients.clear();
   }
 

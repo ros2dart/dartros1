@@ -160,22 +160,22 @@ class Node extends rpc_server.XmlRpcHandler
         service, messageClass, persist, maxQueueSize, this);
   }
 
-  Future<void> unadvertise<T>(String topic) {
+  Future<void> unadvertise<T>(String topic) async {
     final pub = _publishers[topic];
     if (pub != null) {
       log.superdebug.info('Unadvertising from topic $topic');
       _publishers.remove(topic);
-      pub.shutdown();
+      await pub.shutdown();
     }
     return unregisterPublisher(topic);
   }
 
-  Future<void> unsubscribe(String topic) {
+  Future<void> unsubscribe(String topic) async {
     final sub = _subscribers[topic];
     if (sub != null) {
       log.superdebug.info('Unsubscribing from topic $topic');
       _subscribers.remove(topic);
-      sub.shutdown();
+      await sub.shutdown();
     }
     return unregisterSubscriber(topic);
   }
