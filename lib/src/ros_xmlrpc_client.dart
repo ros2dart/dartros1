@@ -140,7 +140,6 @@ class SlaveApiClient {
       String topic, List<List<String>> protocols) async {
     final p = await _rpcCall('requestTopic', [nodeName, topic, protocols],
         host + ':' + port.toString(), client.post);
-    print('Got protocol params response $p');
     return ProtocolParams(p[0], p[1], p[2] as int);
   }
 }
@@ -150,12 +149,11 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// 2
   /// 2.1 register / unregister methods
 
-  /// Registers [callerID] as a provider of the specified [service]
+  /// Registers node by [nodeName] as a provider of the specified [service]
   ///
-  /// [callerID] is the ROS caller ID
   /// [service] is the fully qualified name of the service
-  /// [serviceAPI] is the ROSRPC Service URI
-  /// [callerAPI] is the XML-RPC URI of the caller node
+  /// `serviceAPI` is the ROSRPC Service URI
+  /// [xmlRpcUri] is the XML-RPC URI of the caller node
   ///
   /// Returns an int that can be ignored
   Future<void> registerService(
@@ -169,11 +167,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
     ]);
   }
 
-  /// Unregisters [callerID] as a provider of the specified [service]
+  /// Unregisters the node by [nodeName] as a provider of the specified [service]
   ///
-  /// [callerID] is the ROS caller ID
   /// [service] is the fully qualified name of the service
-  /// [serviceAPI] is the ROSRPC Service URI
+  /// `serviceAPI` is the ROSRPC Service URI
   ///
   /// Returns number of unregistrations (either 0 or 1).
   /// If this is zero it means that the caller was not registered as a service provider.
@@ -185,33 +182,30 @@ mixin RosXmlRpcClient on XmlRpcClient {
         [nodeName, service, NetworkUtils.formatServiceUri(tcpRosPort)]);
   }
 
-  /// Subscribe the [callerID] to the specified [topic].
+  /// Subscribe the node by [nodeName] to the specified [topic].
   ///
   /// In addition to receiving a list of current publishers, the subscriber
   /// will also receive notifications of new publishers via the publisherUpdate API
   ///
-  /// [callerID] is the ROS caller ID
   /// [topic] is the fully qualified name of the topic
   /// [topicType] is the datatype for the topic. Must be a package-resource name i.e. the .msg name
-  /// [callerAPI] is the XML-RPC URI of the caller node
+  /// [xmlRpcUri] is the XML-RPC URI of the caller node
   ///
   /// Returns a list of XMLRPC API URIs for nodes currently publishing the specified topic.
   Future<List<String>> registerSubscriber(
     String topic,
     String topicType,
   ) async {
-    print('registering subscriber');
     return (await _call(
                 'registerSubscriber', [nodeName, topic, topicType, xmlRpcUri])
             as List)
         .cast<String>();
   }
 
-  /// Unsubscribes the [callerID] from the specified [topic].
+  /// Unsubscribes the node by [nodeName] from the specified [topic].
   ///
-  /// [callerID] is the ROS caller ID
   /// [topic] is the fully qualified name of the topic
-  /// [callerAPI] is the XML-RPC URI of the caller node
+  /// [xmlRpcUri] is the XML-RPC URI of the caller node
   ///
   /// Return of zero means that the caller was not registered as a subscriber.
   /// The call still succeeds as the intended final state is reached.
@@ -221,29 +215,25 @@ mixin RosXmlRpcClient on XmlRpcClient {
     await _call('unregisterSubscriber', [nodeName, topic, xmlRpcUri]);
   }
 
-  /// Register the [callerID] as a publisher of the specified [topic].
+  /// Register the node by [nodeName] as a publisher of the specified [topic].
   ///
-  /// [callerID] is the ROS caller ID
   /// [topic] is the fully qualified name of the topic
   /// [topicType] is the datatype for the topic. Must be a package-resource name i.e. the .msg name
-  /// [callerAPI] is the XML-RPC URI of the caller node
+  /// [xmlRpcUri] is the XML-RPC URI of the caller node
   ///
   /// Returns a list of XMLRPC API URIs for nodes currently subscribing the specified topic.
   Future<List<String>> registerPublisher(
     String topic,
     String topicType,
   ) async {
-    print(nodeName);
-    print(xmlRpcUri);
     return (await _call(
                 'registerPublisher', [nodeName, topic, topicType, xmlRpcUri])
             as List)
         .cast<String>();
   }
 
-  /// Unregisters the [callerID] as a publisher of the specified [topic].
+  /// Unregisters the node by [nodeName] as a publisher of the specified [topic].
   ///
-  /// [callerID] is the ROS caller ID
   /// [topic] is the fully qualified name of the topic
   /// [callerAPI] is the XML-RPC URI of the caller node
   ///
@@ -263,7 +253,6 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Use [lookupService] instead to lookup ROS-RPC URIs.
   ///
   /// [nodeName] is the name of the node to lookup
-  /// [callerID] is the ROS caller ID
   ///
   /// Returns the URI of the node
   Future<String> lookupNode(
@@ -275,7 +264,6 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Gets the URI of the master
   ///
   /// [service] is the fully qualified name of the service
-  /// [callerID] is the ROS caller ID
   ///
   /// Return service URL (address and port). Fails if there is no provider.
   Future<String> lookupService(
@@ -289,7 +277,6 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// This does not return topics that have no publishers.
   /// See [getSystemState] to get more comprehensive list.
   ///
-  /// [callerID] is the ROS caller ID
   /// [subgraph] is for restricting topic names to match within the specified subgraph.
   /// Subgraph namespace is resolved relative to the caller's namespace.
   /// Use empty string to specify all names.
@@ -303,8 +290,6 @@ mixin RosXmlRpcClient on XmlRpcClient {
 
   /// Retrieve list topic names and their types.
   ///
-  /// [callerID] is the ROS caller ID
-  ///
   /// Returns a list of (topicName, topicType) pairs (lists)
   Future<List<TopicInfo>> getTopicTypes() async {
     return (await _call('getTopicTypes', [nodeName]))
@@ -314,16 +299,14 @@ mixin RosXmlRpcClient on XmlRpcClient {
 
   /// Retrieve list representation of system state (i.e. publishers, subscribers, and services).
   ///
-  /// [callerID] is the ROS caller ID
-  ///
   /// Returns the information in the following format
-  /// System state is in list representation [publishers, subscribers, services]
+  /// System state is in list representation `[publishers, subscribers, services]`
   /// publishers is of the form
-  /// [ [topic1, [topic1Publisher1...topic1PublisherN]] ... ]
+  /// `[ [topic1, [topic1Publisher1...topic1PublisherN]] ... ]`
   /// subscribers is of the form
-  /// [ [topic1, [topic1Subscriber1...topic1SubscriberN]] ... ]
+  /// `[ [topic1, [topic1Subscriber1...topic1SubscriberN]] ... ]`
   /// services is of the form
-  /// [ [service1, [service1Provider1...service1ProviderN]] ... ]
+  /// `[ [service1, [service1Provider1...service1ProviderN]] ... ]`
   Future<SystemState> getSystemState() async {
     final resp = await _call('getSystemState', [nodeName]);
     return SystemState(
@@ -343,8 +326,6 @@ mixin RosXmlRpcClient on XmlRpcClient {
   }
 
   /// Gets the URI of the master.
-  ///
-  /// [callerID] is the ROS caller ID
   Future<String> getMasterUri() {
     return _call('getUri', [nodeName]);
   }
