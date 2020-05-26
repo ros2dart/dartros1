@@ -55,7 +55,7 @@ class PublisherImpl<T extends RosMessage> {
 
   void publish(T message, [int ms]) {
     if (isShutdown) {
-      print('Shutdown, not sending any more messages');
+      log.dartros.debug('Shutdown, not sending any more messages');
       return;
     }
     // final delay = ms ?? throttleMs;
@@ -79,7 +79,6 @@ class PublisherImpl<T extends RosMessage> {
 
         serializeMessage(writer, msg);
         for (final client in subClients.values) {
-          print(writer.toBytes());
           client.add(writer.toBytes());
         }
         if (latching) {
@@ -118,7 +117,6 @@ class PublisherImpl<T extends RosMessage> {
 
   Future<void> handleSubscriberConnection(
       Socket connection, Stream listener, TCPRosHeader header) async {
-    print('Handling subscriber connection');
     final writer = ByteDataWriter(endian: Endian.little);
     final validated =
         validateSubHeader(writer, header, topic, type, messageClass.md5sum);

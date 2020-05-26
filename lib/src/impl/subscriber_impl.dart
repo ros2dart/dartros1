@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
+import 'package:dartros/src/utils/log/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../utils/network_utils.dart';
@@ -89,7 +90,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
     final info = NetworkUtils.getAddressAndPortFromUri(uri);
     //TODO: log
     try {
-      print('Requesting topic from uri ${info.host}:${info.port}');
+      log.dartros.debug('Requesting topic from uri ${info.host}:${info.port}');
       final resp = await node.requestTopic(
           'http://' + info.host, info.port, topic, protocols);
       await _handleTopicRequestResponse(resp, uri);
@@ -148,9 +149,9 @@ class SubscriberImpl<T extends RosMessage<T>> {
     // TODO: Some more stuff here, listening for errors and close
     pendingClients[uri] = socket;
     try {
-      _handleConnectionHeader(socket, listener, uri);
+      await _handleConnectionHeader(socket, listener, uri);
     } catch (e) {
-      print(
+      log.dartros.error(
           'Subscriber client socket ${socket.name} on topic ${topic} had error: $e');
     }
   }
@@ -164,14 +165,14 @@ class SubscriberImpl<T extends RosMessage<T>> {
     await for (final chunk
         in listener.transform(TCPRosChunkTransformer().transformer)) {
       if (isShutdown) {
-        _disconnectClient(uri);
+        await _disconnectClient(uri);
         return;
       }
       if (first) {
         final header = parseTcpRosHeader(chunk);
         if (header.error != null) {
-          print(header.error);
-          _disconnectClient(uri);
+          log.dartros.debug('TCP ros header not valid ${header.error}');
+          await _disconnectClient(uri);
           return;
         }
         final writer = ByteDataWriter(endian: Endian.little);
@@ -179,15 +180,14 @@ class SubscriberImpl<T extends RosMessage<T>> {
             validatePubHeader(writer, header, type, messageClass.md5sum);
 
         if (!validated) {
-          print(
+          log.dartros.debug(
               'Unable to validate subscriber ${topic} connection header $header');
           socket.add(writer.toBytes());
           await socket.flush();
           await socket.close();
-          _disconnectClient(uri);
+          await _disconnectClient(uri);
           return;
         }
-        print('Pub header validated');
         pubClients[uri] = socket;
         pendingClients.remove(uri);
         first = false;
@@ -195,13 +195,13 @@ class SubscriberImpl<T extends RosMessage<T>> {
         _handleMessage(chunk);
       }
     }
-    print(
+    log.dartros.debug(
         'Subscriber client socket ${socket.name} on topic $topic disconnected');
-    _disconnectClient(uri);
+    await _disconnectClient(uri);
   }
 
   void _handleMessage(TCPRosChunk message) {
-    print('Handling message');
+    log.dartros.debug('Handling message');
     _handleMsgQueue([message]);
   }
 
@@ -213,7 +213,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
         _streamController.add(messageClass.deserialize(reader));
       }
     } catch (e) {
-      print('Error while deserializing message on topic $topic, $e');
+      log.dartros
+          .error('Error while deserializing message on topic $topic, $e');
     }
   }
 
