@@ -41,9 +41,9 @@ src/lib/impl
 * SubscriberImpl.js -- done, except some debug log statements
 
 src/actions/
-* ActionClient.js -- TODO
+* ActionClient.js -- done
 * ActionServer.js -- TODO
-* ClientGoalHandle.js -- TODO
+* ClientGoalHandle.js -- done
 * ClientStates.js -- done
 * GoalHandle.js -- done
 * GoalIdGenerator -- done

@@ -3,6 +3,7 @@ import 'package:actionlib_msgs/src/msgs/GoalStatusArray.dart';
 import '../../msg_utils.dart';
 import '../actionlib_client.dart';
 import '../node_handle.dart';
+import 'client_goal_handle.dart';
 import 'goal_id_generator.dart';
 
 class ActionClient<
@@ -15,6 +16,7 @@ class ActionClient<
         A extends RosActionMessage<G, AG, F, AF, R, AR>>
     extends ActionLibClient<G, AG, F, AF, R, AR, A> {
   bool _shutdown = false;
+  final Map<String, ClientGoalHandle<G, AG, F, AF, R, AR, A>> _goalLookup = {};
   ActionClient(
     String actionServer,
     NodeHandle node,
@@ -22,13 +24,23 @@ class ActionClient<
   ) : super(actionServer, node, actionClass);
 
   @override
-  void handleFeedback(AF feedback) {}
+  void handleFeedback(AF feedback) {
+    _goalLookup[feedback.status.goal_id.id].updateFeedback(feedback);
+  }
 
   @override
-  void handleResult(AR result) {}
+  void handleResult(AR result) {
+    final id = result.status.goal_id.id;
+    final handle = _goalLookup[id];
+    _goalLookup.remove(id);
+    handle.updateResult(result);
+  }
 
   @override
-  void handleStatus(GoalStatusArray status) {}
+  void handleStatus(GoalStatusArray status) {
+    status.status_list
+        .forEach((s) => _goalLookup[s.goal_id.id].updateStatus(s));
+  }
 
   @override
   Future<void> shutdown() async {
@@ -39,15 +51,20 @@ class ActionClient<
     await super.shutdown();
   }
 
-  void sendGoal(G goal) {
+  ClientGoalHandle<G, AG, F, AF, R, AR, A> sendGoal(G goal,
+      void Function(AF) feedbackCallback, void Function() transitionCallback) {
     final ag = actionClass.actionGoal();
     final now = RosTime.now();
+    final idStr = GoalIDGenerator.generateGoalID(now);
     ag.header.stamp = now;
     ag.goal_id.stamp = now;
-    ag.goal_id.id = GoalIDGenerator.generateGoalID(now);
+    ag.goal_id.id = idStr;
     ag.goal = goal;
     sendActionGoal(ag);
-    // TODO more stuff here
+    final handle = ClientGoalHandle<G, AG, F, AF, R, AR, A>(
+        ag, this, feedbackCallback, transitionCallback);
+    _goalLookup[idStr] = handle;
+    return handle;
   }
 
   void cancelAllGoals() {

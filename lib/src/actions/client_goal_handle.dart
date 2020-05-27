@@ -20,7 +20,7 @@ class ClientGoalHandle<
   GoalStatus _goalStatus;
   GoalStatus get goalStatus => _goalStatus;
   ActionClient _actionClient;
-  void Function(F) feedback;
+  void Function(AF) feedback;
   void Function() transition;
   ClientGoalHandle(
       actionGoal, this._actionClient, this.feedback, this.transition) {
@@ -40,7 +40,7 @@ class ClientGoalHandle<
       log.dartros.error('Trying to resend on an inactive ClientGoalHandle!');
     }
 
-    _actionClient.sendGoal(_goal);
+    _actionClient.sendActionGoal(_goal);
   }
 
   void cancel() {
@@ -443,5 +443,9 @@ class ClientGoalHandle<
     log.dartros.debug('Trying to transition to $newState');
     _state = newState;
     transition();
+  }
+
+  void updateFeedback(AF f) {
+    feedback(f);
   }
 }
