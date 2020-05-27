@@ -3,22 +3,26 @@ import '../dartros.dart';
 import 'node_handle.dart';
 import 'utils/msg_utils.dart';
 
-abstract class ActionLibServer<G extends RosMessage<G>, F extends RosMessage<F>,
-    R extends RosMessage<R>> {
+abstract class ActionLibServer<
+    G extends RosMessage<G>,
+    AG extends RosActionGoal<G, AG>,
+    F extends RosMessage<F>,
+    AF extends RosActionFeedback<F, AF>,
+    R extends RosMessage<R>,
+    AR extends RosActionResult<R, AR>,
+    A extends RosActionMessage<G, AG, F, AF, R, AR>> {
   final NodeHandle node;
-  final G goalClass;
-  final F feedbackClass;
-  final R resultClass;
-  Subscriber<G> _goalSub;
+  final A actionClass;
+  Subscriber<AG> _goalSub;
   Subscriber<GoalID> _cancelSub;
   Publisher<GoalStatusArray> _statusPub;
-  Publisher<F> _feedbackPub;
-  Publisher<R> _resultPub;
+  Publisher<AF> _feedbackPub;
+  Publisher<AR> _resultPub;
   int _goalCount = 0;
   final String actionServer;
-  ActionLibServer(this.actionServer, this.node, this.goalClass,
-      this.feedbackClass, this.resultClass) {
-    _goalSub = node.subscribe(actionServer + '/goal', goalClass, handleGoal,
+  ActionLibServer(this.actionServer, this.node, this.actionClass) {
+    _goalSub = node.subscribe(
+        actionServer + '/goal', actionClass.actionGoal, handleGoal,
         queueSize: 50);
     _cancelSub = node.subscribe(
         actionServer + '/cancel', actionlib_msgs.GoalID, handleCancel,
@@ -26,27 +30,29 @@ abstract class ActionLibServer<G extends RosMessage<G>, F extends RosMessage<F>,
     _statusPub = node.advertise(
         actionServer + '/status', actionlib_msgs.GoalStatusArray,
         queueSize: 50);
-    _feedbackPub = node.advertise(actionServer + '/feedback', feedbackClass,
+    _feedbackPub = node.advertise(
+        actionServer + '/feedback', actionClass.actionFeedback,
         queueSize: 50);
-    _resultPub =
-        node.advertise(actionServer + '/result', resultClass, queueSize: 50);
+    _resultPub = node.advertise(
+        actionServer + '/result', actionClass.actionResult,
+        queueSize: 50);
   }
 
-  void handleGoal(G goal);
+  void handleGoal(AG goal);
   void handleCancel(GoalID id);
-  void publishResult(R result) {
+  void publishActionResult(AR result) {
     _resultPub.publish(result);
   }
 
-  void publisherFeedback(F feedback) {
+  void publisherFeedback(AF feedback) {
     _feedbackPub.publish(feedback);
   }
 
-  void publishStatus(GoalStatusArray status) {
+  void publishActionStatuses(GoalStatusArray status) {
     _statusPub.publish(status);
   }
 
-  String get type => goalClass.fullType;
+  String get type => actionClass.fullType;
   GoalID generateGoalID() {
     final now = RosTime.now();
     return GoalID(

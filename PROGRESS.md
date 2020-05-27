@@ -44,8 +44,8 @@ src/actions/
 * ActionClient.js -- TODO
 * ActionServer.js -- TODO
 * ClientGoalHandle.js -- TODO
-* ClientStates.js -- TODO
-* GoalHandle.js -- TODO
+* ClientStates.js -- done
+* GoalHandle.js -- done
 * GoalIdGenerator -- done
 * SimpleActionClient -- TODO
 * SimpleActionServer -- TODO

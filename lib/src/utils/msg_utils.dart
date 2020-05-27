@@ -11,6 +11,7 @@ abstract class RosMessage<T> implements Function {
   String get messageDefinition;
   String get md5sum;
   T deserialize(ByteDataReader reader);
+  T call();
 }
 
 abstract class RosServiceMessage<C extends RosMessage<C>,
@@ -21,34 +22,34 @@ abstract class RosServiceMessage<C extends RosMessage<C>,
   String get fullType;
 }
 
-abstract class RosActionGoal<G extends RosMessage<G>>
-    extends RosMessage<RosActionGoal<G>> {
-  Header get header;
-  GoalID get goal_id;
-  G get goal;
+abstract class RosActionGoal<G extends RosMessage<G>,
+    AG extends RosActionGoal<G, AG>> extends RosMessage<AG> {
+  Header header;
+  GoalID goal_id;
+  G goal;
 }
 
-abstract class RosActionFeedback<F extends RosMessage<F>>
-    extends RosMessage<RosActionGoal<F>> {
-  Header get header;
-  GoalStatus get status;
-  F get feedback;
+abstract class RosActionFeedback<F extends RosMessage<F>,
+    AF extends RosActionFeedback<F, AF>> extends RosMessage<AF> {
+  Header header;
+  GoalStatus status;
+  F feedback;
 }
 
-abstract class RosActionResult<R extends RosMessage<R>>
-    extends RosMessage<RosActionGoal<R>> {
-  Header get header;
-  GoalStatus get status;
-  R get result;
+abstract class RosActionResult<R extends RosMessage<R>,
+    AR extends RosActionResult<R, AR>> extends RosMessage<AR> {
+  Header header;
+  GoalStatus status;
+  R result;
 }
 
 abstract class RosActionMessage<
     G extends RosMessage<G>,
-    AG extends RosActionGoal<G>,
+    AG extends RosActionGoal<G, AG>,
     F extends RosMessage<F>,
-    AF extends RosActionFeedback<F>,
+    AF extends RosActionFeedback<F, AF>,
     R extends RosMessage<R>,
-    AR extends RosActionResult<R>> {
+    AR extends RosActionResult<R, AR>> {
   AG get actionGoal;
   AF get actionFeedback;
   AR get actionResult;
