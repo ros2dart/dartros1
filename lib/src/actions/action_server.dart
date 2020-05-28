@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:actionlib_msgs/src/msgs/GoalID.dart';
 import 'package:actionlib_msgs/src/msgs/GoalStatus.dart';
 import 'package:actionlib_msgs/src/msgs/GoalStatusArray.dart';
-
+import 'package:dartx/dartx.dart';
 import '../../msg_utils.dart';
 import '../actionlib_client.dart';
 import '../actionlib_server.dart';
 import '../node_handle.dart';
+import 'goal_handle.dart';
 import 'goal_id_generator.dart';
 
 class ActionServer<
@@ -17,22 +20,150 @@ class ActionServer<
         AR extends RosActionResult<R, AR>,
         A extends RosActionMessage<G, AG, F, AF, R, AR>>
     extends ActionLibServer<G, AG, F, AF, R, AR, A> {
-  ActionServer(String actionServer, NodeHandle node, A actionClass)
+  final List<GoalHandle> _goalHandleList = [];
+  final Map<String, GoalHandle> _goalHandleCache = {};
+  RosTime _lastCancelStamp = RosTime.epoch();
+  RosTime _statusListTimeout = RosTime(secs: 5, nsecs: 0);
+  bool _shutdown = false;
+  bool _started = false;
+  Timer _statusFreqTimer;
+  void Function(GoalHandle) goalHandle;
+  void Function(GoalHandle) cancelHandle;
+  Map<String, int> _pubSeqs = {'result': 0, 'Feedback': 0, 'status': 0};
+  ActionServer(String actionServer, NodeHandle node, A actionClass,
+      this.goalHandle, this.cancelHandle)
       : super(actionServer, node, actionClass);
 
-  @override
-  void handleCancel(GoalID id) {
-    // TODO: implement handleCancel
+  void start() {
+    _started = true;
+    publishStatus();
+    final statusFreq = 5;
+    if (statusFreq > 0) {
+      _statusFreqTimer?.cancel();
+      _statusFreqTimer = Timer.periodic(
+        (1000 / statusFreq).milliseconds,
+        (timer) {
+          publishStatus();
+        },
+      );
+    }
   }
 
   @override
-  void handleGoal(AG goal) {
-    // TODO: implement handleGoal
+  Future<void> shutdown() async {
+    _shutdown = true;
+    _statusFreqTimer?.cancel();
+    _statusFreqTimer = null;
+    await super.shutdown();
   }
 
-  void publishFeedback(GoalStatus status, feedback) {}
+  GoalHandle getGoalHandle(String id) {
+    return _goalHandleCache[id];
+  }
 
-  void publishStatus() {}
+  @override
+  void handleCancel(GoalID msg) {
+    if (!_started) {
+      return;
+    }
+    final id = msg.id;
+    final stamp = msg.stamp;
+    final isZero = stamp.isZeroTime();
+    final shouldCancelEverything = id == '' && isZero;
+    var idFound = false;
+    for (final handle in _goalHandleList) {
+      final handleStamp = handle.status.goal_id.stamp;
+      if (shouldCancelEverything ||
+          handle.id == id ||
+          (!handleStamp.isZeroTime() && handleStamp < stamp)) {
+        if (handle.id == id) {
+          idFound = true;
+        }
+        if (handle.setCancelRequested()) {
+          cancelHandle(handle);
+        }
+      }
+    }
+    if (id != '' && !idFound) {
+      final handle = GoalHandle<G, AG, F, AF, R, AR, A>(
+          msg, this, GoalStatus.RECALLING, null);
+      _goalHandleList.add(handle);
+      _goalHandleCache[handle.id] = handle;
+    }
+    if (stamp > _lastCancelStamp) {
+      _lastCancelStamp = stamp;
+    }
+  }
 
-  void publishResult(GoalStatus status, result) {}
+  @override
+  bool handleGoal(AG goal) {
+    if (!_started) {
+      return false;
+    }
+    final id = goal.goal_id.id;
+    var handle = getGoalHandle(id);
+    if (handle != null) {
+      if (handle.statusId == GoalStatus.RECALLING) {
+        handle.setCanceled(actionClass.actionResult());
+      }
+      handle.destructionTime = goal.goal_id.stamp;
+      return false;
+    }
+    handle = GoalHandle<G, AG, F, AF, R, AR, A>(
+        goal.goal_id, this, GoalStatus.PENDING, goal.goal);
+    _goalHandleList.add(handle);
+    _goalHandleCache[handle.id] = handle;
+    final goalStamp = goal.goal_id.stamp;
+    if (goalStamp.isZeroTime() && goalStamp < _lastCancelStamp) {
+      handle.setCanceled(actionClass.actionResult());
+      return false;
+    } else {
+      goalHandle(handle);
+    }
+    return true;
+  }
+
+  void publishFeedback(GoalStatus status, F feedback) {
+    final msg = actionClass.actionFeedback();
+    msg.feedback = feedback;
+    msg.status = status;
+    msg.header.stamp = RosTime.now();
+    msg.header.seq = _getAndIncrementSeq('feedback');
+    publishActionFeedback(msg);
+    publishStatus();
+  }
+
+  void publishStatus() {
+    final msg = GoalStatusArray();
+    msg.header.stamp = RosTime.now();
+    msg.header.seq = _getAndIncrementSeq('status');
+    final goalsToRemove = <GoalHandle>{};
+    final now = RosTime.now();
+    for (final handle in _goalHandleList) {
+      msg.status_list.add(handle.status);
+      final t = handle.destructionTime;
+      if (!t.isZeroTime() && (t + _statusListTimeout) < now) {
+        goalsToRemove.add(handle);
+      }
+    }
+    for (final handle in goalsToRemove) {
+      _goalHandleList.remove(handle);
+      _goalHandleCache.remove(handle);
+    }
+    publishActionStatus(msg);
+  }
+
+  void publishResult(GoalStatus status, R result) {
+    final msg = actionClass.actionResult();
+    msg.status = status;
+    msg.result = result;
+    msg.header.stamp = RosTime.now();
+    msg.header.seq = _getAndIncrementSeq('result');
+    publishActionResult(msg);
+    publishStatus();
+  }
+
+  int _getAndIncrementSeq(String type) {
+    return _pubSeqs[type]++;
+  }
 }

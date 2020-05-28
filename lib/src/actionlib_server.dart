@@ -38,17 +38,17 @@ abstract class ActionLibServer<
         queueSize: 50);
   }
 
-  void handleGoal(AG goal);
+  bool handleGoal(AG goal);
   void handleCancel(GoalID id);
   void publishActionResult(AR result) {
     _resultPub.publish(result);
   }
 
-  void publisherFeedback(AF feedback) {
+  void publishActionFeedback(AF feedback) {
     _feedbackPub.publish(feedback);
   }
 
-  void publishActionStatuses(GoalStatusArray status) {
+  void publishActionStatus(GoalStatusArray status) {
     _statusPub.publish(status);
   }
 

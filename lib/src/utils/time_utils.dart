@@ -34,4 +34,25 @@ class RosTime {
   int toSeconds() {
     return secs + (nsecs * NSEC_TO_SEC).toInt();
   }
+
+  bool operator <(RosTime other) {
+    return toDateTime() < other.toDateTime();
+  }
+
+  bool operator <=(RosTime other) {
+    return toDateTime() <= other.toDateTime();
+  }
+
+  bool operator >(RosTime other) {
+    return toDateTime() > other.toDateTime();
+  }
+
+  bool operator >=(RosTime other) {
+    return toDateTime() >= other.toDateTime();
+  }
+
+  RosTime operator +(RosTime other) {
+    return RosTime.fromDateTime(toDateTime() +
+        Duration(seconds: other.secs, microseconds: other.nsecs ~/ 1000));
+  }
 }
