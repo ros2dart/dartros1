@@ -7,7 +7,6 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
 import 'package:dartros/src/utils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
-import 'package:meta/meta.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml_rpc/client.dart';
@@ -70,14 +69,10 @@ class Node extends rpc_server.XmlRpcHandler
     await _stopTcpRosServer();
     _ok = false;
     log.dartros.info('Shutdown subscribers');
-    for (final s in _subscribers.values) {
-      s.shutdown();
-    }
+    await Future.wait(_subscribers.values.map((s) => s.shutdown()));
     log.dartros.info('Shutdown subscribers...done');
     log.dartros.info('Shutdown publishers');
-    for (final p in _publishers.values) {
-      p.shutdown();
-    }
+    await Future.wait(_publishers.values.map((p) => p.shutdown()));
     log.dartros.info('Shutdown publishers...done');
     log.dartros.info('Shutdown servers');
     for (final s in _services.values) {
