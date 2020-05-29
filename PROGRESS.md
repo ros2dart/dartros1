@@ -42,10 +42,10 @@ src/lib/impl
 
 src/actions/
 * ActionClient.js -- done
-* ActionServer.js -- TODO
+* ActionServer.js -- done
 * ClientGoalHandle.js -- done
 * ClientStates.js -- done
 * GoalHandle.js -- done
 * GoalIdGenerator -- done
-* SimpleActionClient -- TODO
-* SimpleActionServer -- TODO
+* SimpleActionClient -- done
+* SimpleActionServer -- done

@@ -5,11 +5,10 @@ import 'package:actionlib_msgs/src/msgs/GoalStatus.dart';
 import 'package:actionlib_msgs/src/msgs/GoalStatusArray.dart';
 import 'package:dartx/dartx.dart';
 import '../../msg_utils.dart';
-import '../actionlib_client.dart';
+import '../utils/log/logger.dart';
 import '../actionlib_server.dart';
 import '../node_handle.dart';
 import 'goal_handle.dart';
-import 'goal_id_generator.dart';
 
 class ActionServer<
         G extends RosMessage<G>,
@@ -23,15 +22,13 @@ class ActionServer<
   final List<GoalHandle> _goalHandleList = [];
   final Map<String, GoalHandle> _goalHandleCache = {};
   RosTime _lastCancelStamp = RosTime.epoch();
-  RosTime _statusListTimeout = RosTime(secs: 5, nsecs: 0);
-  bool _shutdown = false;
+  final _statusListTimeout = RosTime(secs: 5, nsecs: 0);
   bool _started = false;
   Timer _statusFreqTimer;
   void Function(GoalHandle) goalHandle;
   void Function(GoalHandle) cancelHandle;
-  Map<String, int> _pubSeqs = {'result': 0, 'Feedback': 0, 'status': 0};
-  ActionServer(String actionServer, NodeHandle node, A actionClass,
-      this.goalHandle, this.cancelHandle)
+  final Map<String, int> _pubSeqs = {'result': 0, 'Feedback': 0, 'status': 0};
+  ActionServer(String actionServer, NodeHandle node, A actionClass)
       : super(actionServer, node, actionClass);
 
   void start() {
@@ -51,7 +48,6 @@ class ActionServer<
 
   @override
   Future<void> shutdown() async {
-    _shutdown = true;
     _statusFreqTimer?.cancel();
     _statusFreqTimer = null;
     await super.shutdown();
@@ -80,7 +76,10 @@ class ActionServer<
           idFound = true;
         }
         if (handle.setCancelRequested()) {
-          cancelHandle(handle);
+          cancelHandle != null
+              ? cancelHandle(handle)
+              : log.dartros
+                  .debug('Cancel Requested, but no cancel handle to call');
         }
       }
     }
@@ -118,7 +117,9 @@ class ActionServer<
       handle.setCanceled(actionClass.actionResult());
       return false;
     } else {
-      goalHandle(handle);
+      goalHandle != null
+          ? goalHandle(handle)
+          : log.dartros.debug('Goal Handler is empty!');
     }
     return true;
   }

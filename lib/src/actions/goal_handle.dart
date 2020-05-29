@@ -35,7 +35,7 @@ class GoalHandle<
     server.publishFeedback(status, feedback);
   }
 
-  _setStatus(int s, [String text]) {
+  void _setStatus(int s, [String text]) {
     _status.status = s;
     if (text != null) {
       _status.text = text;
