@@ -235,7 +235,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Unregisters the node by [nodeName] as a publisher of the specified [topic].
   ///
   /// [topic] is the fully qualified name of the topic
-  /// [callerAPI] is the XML-RPC URI of the caller node
+  /// [xmlRpcUri] is the XML-RPC URI of the caller node
   ///
   /// Return of zero means that the caller was not registered as a publisher.
   /// The call still succeeds as the intended final state is reached.
