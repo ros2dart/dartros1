@@ -1,11 +1,11 @@
 import 'package:string_validator/string_validator.dart';
 
-final names = Names();
+final Names names = Names();
 
 class Names {
-  var remappings = <String, String>{};
-  String namespace = '';
   Names();
+  Map<String, String> remappings = {};
+  String namespace = '';
   void init(Map<String, String> remaps, String namespace) {
     this.namespace = namespace;
     for (final left in remaps.keys) {
@@ -44,22 +44,16 @@ class Names {
   }
 
   String clean(String name) {
-    name = name.replaceAll('//', '/');
-
-    if (name.endsWith('/')) {
-      return name.substring(0, name.length - 1);
+    final n = name.replaceAll('//', '/');
+    if (n.endsWith('/')) {
+      return n.substring(0, n.length - 1);
     }
-    // else
-    return name;
+    return n;
   }
 
-  String append(String left, String right) {
-    return clean(left + '/' + right);
-  }
+  String append(String left, String right) => clean('$left/$right');
 
-  String remap(String name) {
-    return resolve([name, true]);
-  }
+  String remap(String name) => resolve([name, true]);
 
   String resolve(List<Object> args) {
     final a = _parseResolveArgs(args);
@@ -76,15 +70,15 @@ class Names {
         return ns;
       }
       // else
-      return '/' + namespace;
+      return '/$namespace';
     }
 
     if (name.startsWith('~')) {
-      name = name.replaceAll('~', namespace + '/');
+      name = name.replaceAll('~', '$namespace/');
     }
 
     if (!name.startsWith('/')) {
-      name = namespace + '/' + name;
+      name = '$namespace/$name';
     }
 
     name = clean(name);
@@ -119,9 +113,7 @@ class Names {
     return name.substring(0, p);
   }
 
-  String _remap(name) {
-    return remappings[name] ?? name;
-  }
+  String _remap(name) => remappings[name] ?? name;
 
   List<Object> _parseResolveArgs(List<Object> args) {
     var name = namespace;
@@ -151,7 +143,6 @@ class Names {
     return [ns, name, remap];
   }
 
-  static bool _isValidCharInName(String char) {
-    return (isAlphanumeric(char) || char == '/' || char == '_');
-  }
+  static bool _isValidCharInName(String char) =>
+      isAlphanumeric(char) || char == '/' || char == '_';
 }

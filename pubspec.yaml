@@ -28,3 +28,4 @@ dev_dependencies:
   test: ^1.6.0
   freezed: any
   build_runner: any
+  abide: any

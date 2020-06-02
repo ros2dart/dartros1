@@ -14,15 +14,17 @@ import 'utils/tcpros_utils.dart';
 
 class ServiceCall<C extends RosMessage<C>, R extends RosMessage<R>,
     T extends RosServiceMessage<C, R>> {
+  ServiceCall(this.request, this.completer);
   final C request;
   final Completer<R> completer;
   Socket _client;
   Stream<TCPRosChunk> _clientStream;
-  ServiceCall(this.request, this.completer);
 }
 
 class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
     T extends RosServiceMessage<C, R>> {
+  ServiceClient(this.service, this.serviceClass, this.persist,
+      this.maxQueueSize, this.node);
   final String service;
   final T serviceClass;
   final bool persist;
@@ -35,8 +37,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
   Socket _client;
   Stream _clientStream;
   State _state = State.REGISTERED;
-  ServiceClient(this.service, this.serviceClass, this.persist,
-      this.maxQueueSize, this.node);
+
   String get type => serviceClass.fullType;
   void close() {
     if (!_callInProgress) {
@@ -84,7 +85,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
       _currentCall = null;
       _scheduleNextCall();
       _call.completer.complete(resp);
-    } catch (e, stack) {
+    } on Exception catch (e, stack) {
       if (!isShutdown) {
         log.dartros.error('Error during service $service call $e\n$stack');
       }
@@ -97,7 +98,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
 
   void _scheduleNextCall() {
     if (_callQueue.isNotEmpty && !isShutdown) {
-      scheduleMicrotask(() => _executeCall());
+      scheduleMicrotask(_executeCall);
     }
   }
 
@@ -108,7 +109,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
         _throwIfShutdown();
         final serviceHost = NetworkUtils.getAddressAndPortFromUri(serv);
         await _connectToService(serviceHost, _call);
-      } catch (e) {
+      } on Exception catch (e) {
         log.dartros.error('Failure in service lookup $e');
         rethrow;
       }
@@ -131,7 +132,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
       } else {
         throw Exception('$result');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       log.dartros.error('Error in sending service request');
       rethrow;
     }
@@ -172,7 +173,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
         }
         transformer.deserializeServiceResponse = true;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       log.dartros.error('Error connecting to service $service at $uri');
       rethrow;
     }

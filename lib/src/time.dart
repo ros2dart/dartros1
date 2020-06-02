@@ -1,11 +1,11 @@
 import 'package:rosgraph_msgs/msgs.dart';
-export 'utils/time_utils.dart';
+import '../dartros.dart';
 import 'utils/log/logger.dart';
 import 'utils/time_utils.dart';
-import '../dartros.dart';
+export 'utils/time_utils.dart';
 
 class Time {
-  static RosTime simTime = RosTime(secs: 0, nsecs: 0);
+  static RosTime simTime = const RosTime(secs: 0, nsecs: 0);
   static bool useSimTime = false;
   static Future<void> initializeRosTime() async {
     try {
@@ -21,7 +21,7 @@ class Time {
           throttleMs: -1,
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       rethrow;
     }
   }

@@ -1,14 +1,12 @@
-// TODO: Put public facing types in this file.
-
 import 'dart:io';
 
+import 'names.dart';
 import 'node.dart';
 import 'node_handle.dart';
 import 'time.dart';
 import 'utils/log/logger.dart';
 import 'utils/network_utils.dart';
 import 'utils/remapping.dart';
-import 'names.dart';
 
 /// Initializes a ros node for this process
 ///
@@ -73,22 +71,20 @@ NodeName _resolveNodeName(
 
   names.validate(namespace, throwError: true);
 
-  nodeName = remappings['__name'] ?? nodeName;
-  nodeName = names.resolve([namespace, nodeName]);
+  var name = remappings['__name'] ?? nodeName;
+  name = names.resolve([namespace, name]);
 
   // only anonymize node name if they didn't remap from the command line
   if (anonymize && remappings['__name'] == null) {
-    nodeName = _anonymizeNodeName(nodeName);
+    name = _anonymizeNodeName(name);
   }
 
-  return NodeName(nodeName, namespace);
+  return NodeName(name, namespace);
 }
 
-String _anonymizeNodeName(nodeName) {
-  return '${nodeName}_${pid}_${DateTime.now()}';
-}
+String _anonymizeNodeName(nodeName) => '${nodeName}_${pid}_${DateTime.now()}';
 
 class NodeName {
-  final String name, namespace;
   NodeName(this.name, this.namespace);
+  final String name, namespace;
 }

@@ -10,6 +10,18 @@ import '../utils/client_states.dart';
 import '../utils/log/logger.dart';
 
 class PublisherImpl<T extends RosMessage> {
+  PublisherImpl(
+    this.node,
+    this.topic,
+    this.messageClass,
+    // ignore: avoid_positional_boolean_parameters
+    this.latching,
+    this.tcpNoDelay,
+    this.queueSize,
+    this.throttleMs,
+  ) {
+    _register();
+  }
   final Node node;
   final String topic;
   final bool latching;
@@ -20,22 +32,7 @@ class PublisherImpl<T extends RosMessage> {
   T lastSentMsg;
   final T messageClass;
   State _state = State.REGISTERING;
-  //TODO:
-  // logger
-  // spinner?
   final Map<String, Socket> subClients = {};
-
-  PublisherImpl(
-    this.node,
-    this.topic,
-    this.messageClass,
-    this.latching,
-    this.tcpNoDelay,
-    this.queueSize,
-    this.throttleMs,
-  ) {
-    _register();
-  }
 
   String get type => messageClass.fullType;
   String get spinnerId => 'Publisher://$topic';
@@ -74,7 +71,7 @@ class PublisherImpl<T extends RosMessage> {
       return;
     }
     try {
-      messages.forEach((msg) {
+      for (final msg in messages) {
         final writer = ByteDataWriter(endian: Endian.little);
 
         serializeMessage(writer, msg);
@@ -84,8 +81,8 @@ class PublisherImpl<T extends RosMessage> {
         if (latching) {
           lastSentMsg = msg;
         }
-      });
-    } catch (e) {
+      }
+    } on Exception catch (e) {
       log.dartros.error('Error when publishing message on topic $topic: $e');
     }
   }
@@ -93,7 +90,7 @@ class PublisherImpl<T extends RosMessage> {
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
     log.dartros.debug('Shutting down publisher $topic');
-    await Future.wait(subClients.values.map((c) async => await c.close()));
+    await Future.wait(subClients.values.map((c) => c.close()));
     subClients.clear();
   }
 
@@ -107,7 +104,7 @@ class PublisherImpl<T extends RosMessage> {
       log.dartros.debug('Registered $topic as a publisher: $resp');
       // registration worked
       _state = State.REGISTERED;
-    } catch (err, trace) {
+    } on Exception catch (err, trace) {
       log.dartros
           .error('Error while registering publisher $topic: $err\n$trace');
     }

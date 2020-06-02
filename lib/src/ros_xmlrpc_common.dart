@@ -11,7 +11,7 @@ Future<dynamic> listenRandomPort(
       final port = random.nextInt(65535 - 1024) + 1024;
       final result = await create(port);
       return result;
-    } catch (e) {
+    } on Exception catch (e) {
       // Do nothing
     }
   }
@@ -19,20 +19,19 @@ Future<dynamic> listenRandomPort(
 }
 
 class XMLRPCResponse {
+  XMLRPCResponse(int status, this.statusMessage, this.value)
+      : statusCode = status.asStatusCode;
+
   final StatusCode statusCode;
   final String statusMessage;
   final dynamic value;
-  XMLRPCResponse(int status, this.statusMessage, dynamic invalue)
-      : statusCode = status.asStatusCode,
-        value = invalue;
 
   bool get success => statusCode == StatusCode.SUCCESS;
   bool get failure => statusCode == StatusCode.FAILURE;
   bool get error => statusCode == StatusCode.ERROR;
   @override
-  String toString() {
-    return 'XMLRPCResponse: $value, Status $statusCode: $statusMessage';
-  }
+  String toString() =>
+      'XMLRPCResponse: $value, Status $statusCode: $statusMessage';
 }
 
 extension StatusCodeAsIntString on StatusCode {

@@ -1,24 +1,26 @@
 import 'names.dart';
 import 'node.dart';
+import 'publisher.dart';
 import 'ros_xmlrpc_client.dart';
 import 'service_client.dart';
 import 'service_server.dart';
 import 'subscriber.dart';
 import 'utils/msg_utils.dart';
-import 'publisher.dart';
 
 class NodeHandle {
-  String _namespace = '';
-  final Node node;
   NodeHandle(this.node, [ns = '']) {
     namespace = ns;
   }
+  String _namespace = '';
+  final Node node;
+
   String get namespace => _namespace;
   set namespace(String ns) {
-    if (ns.startsWith('~')) {
-      ns = names.resolve([ns]);
+    var newNs = ns;
+    if (newNs.startsWith('~')) {
+      newNs = names.resolve([ns]);
     }
-    _namespace = _resolveName(namespace, remap: true);
+    _namespace = _resolveName(newNs, remap: true);
   }
 
   bool get isShutdown => node.isShutdown;
@@ -46,38 +48,37 @@ class NodeHandle {
   ///
   /// [typeClass] must be a [RosMessage]
   Publisher advertise<T extends RosMessage<T>>(String topic, T typeClass,
-      {latching = false, tcpNoDelay = false, queueSize = 1, throttleMs = 0}) {
-    return node.advertise<T>(_resolveName(topic), typeClass, latching,
-        tcpNoDelay, queueSize, throttleMs);
-  }
+          {bool latching = false,
+          bool tcpNoDelay = false,
+          int queueSize = 1,
+          int throttleMs = 0}) =>
+      node.advertise<T>(_resolveName(topic), typeClass, latching, tcpNoDelay,
+          queueSize, throttleMs);
 
   /// Subscribes to [topic] with message type [typeClass]
   ///
   /// [typeClass] must be a [RosMessage]
   Subscriber subscribe<T extends RosMessage<T>>(
-      String topic, T typeClass, void Function(T) callback,
-      {queueSize = 1, throttleMs = 1, tcpNoDelay = false}) {
-    return node.subscribe<T>(_resolveName(topic), typeClass, callback,
-        queueSize, throttleMs, tcpNoDelay);
-  }
+          String topic, T typeClass, void Function(T) callback,
+          {int queueSize = 1, int throttleMs = 1, bool tcpNoDelay = false}) =>
+      node.subscribe<T>(_resolveName(topic), typeClass, callback, queueSize,
+          throttleMs, tcpNoDelay);
 
-  /// Advertises service server with type [typeClass]
+  /// Advertises service server with type [messageClass]
   ///
-  /// [typeClass] must be a [RosServiceMessage]
+  /// [messageClass] must be a [RosServiceMessage]
   ServiceServer<C, R, T> advertiseService<C extends RosMessage<C>,
-          R extends RosMessage<R>, T extends RosServiceMessage<C, R>>(
-      String service, T messageClass, R Function(C) callback) {
-    return node.advertiseService(_resolveName(service), messageClass, callback);
-  }
+              R extends RosMessage<R>, T extends RosServiceMessage<C, R>>(
+          String service, T messageClass, R Function(C) callback) =>
+      node.advertiseService(_resolveName(service), messageClass, callback);
 
   ServiceClient<C, R, T> serviceClient<
-          C extends RosMessage<C>,
-          R extends RosMessage<R>,
-          T extends RosServiceMessage<C, R>>(String service, T messageClass,
-      {bool persist = true, maxQueueSize = -1}) {
-    return node.serviceClient(_resolveName(service), messageClass,
-        persist: persist, maxQueueSize: maxQueueSize);
-  }
+              C extends RosMessage<C>,
+              R extends RosMessage<R>,
+              T extends RosServiceMessage<C, R>>(String service, T messageClass,
+          {bool persist = true, int maxQueueSize = -1}) =>
+      node.serviceClient(_resolveName(service), messageClass,
+          persist: persist, maxQueueSize: maxQueueSize);
 
   void unadvertise(String topic) {
     node.unadvertise(_resolveName(topic));
@@ -100,29 +101,26 @@ class NodeHandle {
     if (name.isEmpty) {
       return namespace;
     }
-    if (name.startsWith('~')) {
+    var newName = name;
+    if (newName.startsWith('~')) {
       throw Exception('Using ~ names with NodeHandle methods is not allowed');
-    } else if (!name.startsWith('/') && name.isNotEmpty) {
-      name = names.append(namespace, name);
+    } else if (!newName.startsWith('/') && newName.isNotEmpty) {
+      newName = names.append(namespace, newName);
     } else {
-      name = names.clean(name);
+      newName = names.clean(newName);
     }
     if (remap) {
-      return _remapName(name);
+      return _remapName(newName);
     } else {
-      return names.resolve([name, false]);
+      return names.resolve([newName, false]);
     }
   }
 
   /// A helper function to remap a name to the node handle's namespace
   ///
   /// Should not be needed by users' code probably
-  String remapName(String name) {
-    return _remapName(_resolveName(name));
-  }
+  String remapName(String name) => _remapName(_resolveName(name));
 
   // A helper function to remap the name
-  String _remapName(String name) {
-    return names.remap(name);
-  }
+  String _remapName(String name) => names.remap(name);
 }

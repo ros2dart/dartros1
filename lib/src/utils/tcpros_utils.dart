@@ -23,7 +23,7 @@ const tcpNoDelayField = 'tcp_nodelay=1';
 void serializeStringFields(ByteDataWriter writer, List<String> fields) {
   final totalLength = fields.map((f) => f.lenInBytes + 4).sum();
   writer.writeUint32(totalLength, Endian.little);
-  fields.forEach((f) => writer.writeString(f));
+  fields.forEach(writer.writeString);
 }
 
 List<String> deserializeStringFields(ByteDataReader reader) {
@@ -42,16 +42,15 @@ List<String> deserializeStringFields(ByteDataReader reader) {
 }
 
 void createSubHeader(ByteDataWriter writer, String callerId, String md5sum,
-    String topic, String type, String messageDefinition, bool tcpNoDelay) {
-  return serializeStringFields(writer, [
-    callerIdPrefix + callerId,
-    md5Prefix + md5sum,
-    topicPrefix + topic,
-    typePrefix + type,
-    messageDefinitionPrefix + messageDefinition,
-    if (tcpNoDelay) tcpNoDelayField
-  ]);
-}
+        String topic, String type, String messageDefinition, bool tcpNoDelay) =>
+    serializeStringFields(writer, [
+      callerIdPrefix + callerId,
+      md5Prefix + md5sum,
+      topicPrefix + topic,
+      typePrefix + type,
+      messageDefinitionPrefix + messageDefinition,
+      if (tcpNoDelay) tcpNoDelayField
+    ]);
 
 void createPubHeader(ByteDataWriter writer, String callerId, String md5sum,
     String type, bool latching, String messageDefinition) {
@@ -68,23 +67,21 @@ void createPubHeader(ByteDataWriter writer, String callerId, String md5sum,
 }
 
 void createServiceClientHeader(ByteDataWriter writer, String callerId,
-    String service, String md5sum, String type, bool persistent) {
-  return serializeStringFields(writer, [
-    callerIdPrefix + callerId,
-    servicePrefix + service,
-    md5Prefix + md5sum,
-    if (persistent) persistentField
-  ]);
-}
+        String service, String md5sum, String type, bool persistent) =>
+    serializeStringFields(writer, [
+      callerIdPrefix + callerId,
+      servicePrefix + service,
+      md5Prefix + md5sum,
+      if (persistent) persistentField
+    ]);
 
 void createServiceServerHeader(
-    ByteDataWriter writer, String callerId, String md5sum, String type) {
-  return serializeStringFields(writer, [
-    callerIdPrefix + callerId,
-    md5Prefix + md5sum,
-    typePrefix + type,
-  ]);
-}
+        ByteDataWriter writer, String callerId, String md5sum, String type) =>
+    serializeStringFields(writer, [
+      callerIdPrefix + callerId,
+      md5Prefix + md5sum,
+      typePrefix + type,
+    ]);
 
 TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final reader = ByteDataReader(endian: Endian.little);
@@ -93,7 +90,7 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final regex = RegExp(r'(\w+)=([\s\S]*)');
   final fields = deserializeStringFields(reader);
   // print(fields);
-  fields.forEach((field) {
+  for (final field in fields) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
@@ -101,7 +98,7 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
     }
     final match = regex.allMatches(field).toList()[0];
     info[match.group(1)] = match.group(2);
-  });
+  }
   // print(info);
   return TCPRosHeader.fromMap(info);
 }
@@ -190,7 +187,7 @@ Uint8List serializeString(String message) {
 }
 
 Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
-    {prependMessageLength = true}) {
+    {bool prependMessageLength = true}) {
   final msgSize = message.getMessageSize();
   if (prependMessageLength) {
     writer.writeUint32(msgSize);
@@ -201,7 +198,7 @@ Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
 
 Uint8List serializeServiceResponse(
     ByteDataWriter writer, dynamic message, bool success,
-    {prependResponseInfo = true}) {
+    {bool prependResponseInfo = true}) {
   final msgSize = message.getMessageSize();
   if (prependResponseInfo) {
     if (success) {
@@ -217,14 +214,13 @@ Uint8List serializeServiceResponse(
 }
 
 T deserializeMessage<T extends RosMessage>(
-    ByteDataReader reader, T messageClass) {
-  return messageClass.deserialize(reader);
-}
+        ByteDataReader reader, T messageClass) =>
+    messageClass.deserialize(reader);
 
 Uint8List serializeResponse(
   dynamic response,
-  success, {
-  prependResponseInfo = true,
+  bool success, {
+  bool prependResponseInfo = true,
 }) {
   final writer = ByteDataWriter();
   if (prependResponseInfo) {
@@ -247,17 +243,6 @@ void createTcpRosError(ByteDataWriter writer, String str) {
 }
 
 class TCPRosHeader<T> {
-  final String topic;
-  final String type;
-  final String md5sum;
-  final String service;
-  final String callerId;
-  final String messageDefinition;
-  final String error;
-  final bool persistent;
-  final bool tcpNoDelay;
-  final bool latching;
-
   const TCPRosHeader(
       this.topic,
       this.type,
@@ -270,44 +255,47 @@ class TCPRosHeader<T> {
       this.tcpNoDelay,
       this.latching);
 
-  factory TCPRosHeader.fromMap(Map<String, String> info) {
-    return TCPRosHeader(
-        info['topic'],
-        info['type'],
-        info['md5sum'],
-        info['service'],
-        info['callerId'],
-        info['message_definition'],
-        info['error'],
-        (info['persistent'] ?? '0') != '0',
-        (info['tcp_nodelay'] ?? '0') != '0',
-        (info['latching'] ?? '0') != '0');
-  }
+  factory TCPRosHeader.fromMap(Map<String, String> info) => TCPRosHeader(
+      info['topic'],
+      info['type'],
+      info['md5sum'],
+      info['service'],
+      info['callerId'],
+      info['message_definition'],
+      info['error'],
+      (info['persistent'] ?? '0') != '0',
+      (info['tcp_nodelay'] ?? '0') != '0',
+      (info['latching'] ?? '0') != '0');
+  final String topic;
+  final String type;
+  final String md5sum;
+  final String service;
+  final String callerId;
+  final String messageDefinition;
+  final String error;
+  final bool persistent;
+  final bool tcpNoDelay;
+  final bool latching;
 }
 
 class TCPRosChunkTransformer {
+  TCPRosChunkTransformer() {
+    _transformer = StreamTransformer.fromHandlers(handleData: _handleData);
+  }
   bool _inBody = false;
   int _bytesConsumed = 0;
   int _messageLen = -1;
   List<int> _buffer = [];
-  bool _deserializeServiceResponse = false;
+  bool deserializeServiceResponse = false;
   bool _serviceRespSuccess;
-
-  bool get deserializeServiceResponse => _deserializeServiceResponse;
-  set deserializeServiceResponse(bool value) {
-    _deserializeServiceResponse = value;
-  }
 
   StreamTransformer<Uint8List, TCPRosChunk> _transformer;
   StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
-  TCPRosChunkTransformer() {
-    _transformer = StreamTransformer.fromHandlers(handleData: _handleData);
-  }
 
   void _handleData(Uint8List data, sink) {
     // print(data);
     var pos = 0;
-    var chunkLen = data.length;
+    final chunkLen = data.length;
     while (pos < chunkLen) {
       if (_inBody) {
         final messageRemaining = _messageLen - _bytesConsumed;
@@ -325,11 +313,11 @@ class TCPRosChunkTransformer {
         }
       } else {
         // If deserializing service response first byte is success
-        if (_deserializeServiceResponse && _serviceRespSuccess == null) {
+        if (deserializeServiceResponse && _serviceRespSuccess == null) {
           _serviceRespSuccess = data[0] != 0;
           pos++;
         }
-        var bufLen = _buffer.length;
+        final bufLen = _buffer.length;
         // first 4 bytes of the message are a uint32 length field
         if (chunkLen - pos >= 4 - bufLen) {
           _buffer.addAll(data.sublist(pos, pos + 4 - bufLen));
@@ -356,7 +344,7 @@ class TCPRosChunkTransformer {
     // print('Emitting message');
     // print('Buffer: $_buffer');
     sink.add(TCPRosChunk(_buffer,
-        serviceResponse: _deserializeServiceResponse,
+        serviceResponse: deserializeServiceResponse,
         serviceResponseSuccess: _serviceRespSuccess));
     // Reset buffer
     _buffer = [];
@@ -374,5 +362,5 @@ abstract class TCPRosChunk with _$TCPRosChunk {
 }
 
 extension NamedSocket on Socket {
-  String get name => remoteAddress.address + ':' + remotePort.toString();
+  String get name => '${remoteAddress.address}:$remotePort';
 }

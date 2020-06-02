@@ -13,6 +13,14 @@ class ClientGoalHandle<
     R extends RosMessage<R>,
     AR extends RosActionResult<R, AR>,
     A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+  ClientGoalHandle(
+      actionGoal, this._actionClient, this.feedback, this.transition) {
+    _goal = actionGoal;
+    _state = CommState.WAITING_FOR_GOAL_ACK;
+    _goalStatus = null;
+    _result = null;
+  }
+
   CommState _state;
   bool _active = true;
   AR _result;
@@ -22,13 +30,6 @@ class ClientGoalHandle<
   ActionClient _actionClient;
   void Function(AF) feedback;
   void Function() transition;
-  ClientGoalHandle(
-      actionGoal, this._actionClient, this.feedback, this.transition) {
-    _goal = actionGoal;
-    _state = CommState.WAITING_FOR_GOAL_ACK;
-    _goalStatus = null;
-    _result = null;
-  }
 
   void reset() {
     _active = false;
@@ -111,16 +112,12 @@ class ClientGoalHandle<
           log.dartros.error('Unknown goal status: ${_goalStatus.status}');
       }
     }
-    return null;
+    return _goalStatus.status;
   }
 
-  CommState getCommState() {
-    return _state;
-  }
+  CommState getCommState() => _state;
 
-  bool isExpired() {
-    return !_active;
-  }
+  bool isExpired() => !_active;
 
   void updateResult(AR ar) {
     _goalStatus = ar.status;
@@ -162,7 +159,7 @@ class ClientGoalHandle<
           _state != CommState.WAITING_FOR_RESULT &&
           _state != CommState.DONE) {
         log.dartros.warn('Transitioning goal to LOST');
-        _goalStatus.status == GoalStatus.LOST;
+        _goalStatus.status = GoalStatus.LOST;
         _transition(CommState.DONE);
       }
       return;

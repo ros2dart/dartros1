@@ -13,6 +13,21 @@ abstract class ActionLibClient<
     R extends RosMessage<R>,
     AR extends RosActionResult<R, AR>,
     A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+  ActionLibClient(this.actionServer, this.node, this.actionClass) {
+    _goalPub = node.advertise<AG>('$actionServer/goal', actionClass.actionGoal,
+        queueSize: 10, latching: false);
+    _cancelPub = node.advertise('$actionServer/cancel', actionlib_msgs.GoalID,
+        queueSize: 10, latching: false);
+    _statusSub = node.subscribe(
+        '$actionServer/status', actionlib_msgs.GoalStatusArray, _handleStatus,
+        queueSize: 1);
+    _feedbackSub = node.subscribe(
+        '$actionServer/feedback', actionClass.actionFeedback, handleFeedback,
+        queueSize: 1);
+    _resultSub = node.subscribe(
+        '$actionServer/result', actionClass.actionResult, handleResult,
+        queueSize: 1);
+  }
   final A actionClass;
   Publisher<AG> _goalPub;
   Publisher<GoalID> _cancelPub;
@@ -22,22 +37,7 @@ abstract class ActionLibClient<
   NodeHandle node;
   final String actionServer;
   bool hasStatus = false;
-  ActionLibClient(this.actionServer, this.node, this.actionClass) {
-    _goalPub = node.advertise<AG>(
-        actionServer + '/goal', actionClass.actionGoal,
-        queueSize: 10, latching: false);
-    _cancelPub = node.advertise(actionServer + '/cancel', actionlib_msgs.GoalID,
-        queueSize: 10, latching: false);
-    _statusSub = node.subscribe(
-        actionServer + '/status', actionlib_msgs.GoalStatusArray, _handleStatus,
-        queueSize: 1);
-    _feedbackSub = node.subscribe(
-        actionServer + '/feedback', actionClass.actionFeedback, handleFeedback,
-        queueSize: 1);
-    _resultSub = node.subscribe(
-        actionServer + '/result', actionClass.actionResult, handleResult,
-        queueSize: 1);
-  }
+
   String get type => actionClass.fullType;
   void cancel(String id, [RosTime stamp]) {
     stamp ??= RosTime.now();
@@ -59,30 +59,27 @@ abstract class ActionLibClient<
   void handleResult(AR result);
   void handleFeedback(AF feedback);
 
-  Future<void> shutdown() async {
-    return await Future.wait([
-      _goalPub.shutdown(),
-      _cancelPub.shutdown(),
-      _statusSub.shutdown(),
-      _feedbackSub.shutdown(),
-      _resultSub.shutdown()
-    ]);
-  }
+  Future<void> shutdown() => Future.wait([
+        _goalPub.shutdown(),
+        _cancelPub.shutdown(),
+        _statusSub.shutdown(),
+        _feedbackSub.shutdown(),
+        _resultSub.shutdown()
+      ]);
 
-  bool get isServerConnected {
-    return hasStatus &&
-        _goalPub.numSubscribers > 0 &&
-        _cancelPub.numSubscribers > 0 &&
-        _statusSub.numPublishers > 0 &&
-        _feedbackSub.numPublishers > 0 &&
-        _resultSub.numPublishers > 0;
-  }
+  bool get isServerConnected =>
+      hasStatus &&
+      _goalPub.numSubscribers > 0 &&
+      _cancelPub.numSubscribers > 0 &&
+      _statusSub.numPublishers > 0 &&
+      _feedbackSub.numPublishers > 0 &&
+      _resultSub.numPublishers > 0;
 
   Future<bool> waitForActionServerToStart([int timeoutMs = 0]) async {
     if (isServerConnected) {
       return Future.value(true);
     } else {
-      return await _waitForActionServerToStart(timeoutMs, DateTime.now());
+      return _waitForActionServerToStart(timeoutMs, DateTime.now());
     }
   }
 
@@ -97,7 +94,5 @@ abstract class ActionLibClient<
     return false;
   }
 
-  String generateGoalID([RosTime now]) {
-    GoalIDGenerator.generateGoalID(now);
-  }
+  String generateGoalID([RosTime now]) => GoalIDGenerator.generateGoalID(now);
 }

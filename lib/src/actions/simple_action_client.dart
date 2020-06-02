@@ -16,17 +16,16 @@ class SimpleActionClient<
         AR extends RosActionResult<R, AR>,
         A extends RosActionMessage<G, AG, F, AF, R, AR>>
     extends ActionClient<G, AG, F, AF, R, AR, A> {
+  SimpleActionClient(String actionServer, NodeHandle node, A actionClass)
+      : super(actionServer, node, actionClass);
   SimpleGoalState _state = SimpleGoalState.PENDING;
   ClientGoalHandle _handle;
   void Function(AF) _feedbackCallback;
   void Function() _activeCallback;
   void Function(SimpleGoalState, R) _doneCallback;
-  SimpleActionClient(String actionServer, NodeHandle node, A actionClass)
-      : super(actionServer, node, actionClass);
 
-  Future<void> waitForServer([int timeoutMs = 0]) {
-    super.waitForActionServerToStart(timeoutMs);
-  }
+  Future<void> waitForServer([int timeoutMs = 0]) =>
+      waitForActionServerToStart(timeoutMs);
 
   void sendSimpleGoal(
       G goal,
@@ -83,16 +82,16 @@ class SimpleActionClient<
       return false;
     }
 
-    if (timeout < RosTime(secs: 0, nsecs: 0)) {
+    if (timeout < const RosTime(secs: 0, nsecs: 0)) {
       log.dartros
           .warn('Timeout [$timeout] is invalid - timeouts can\'t be negative');
     }
 
     if (timeout.isZeroTime()) {
-      return await _waitForResult(0);
+      return _waitForResult(0);
     }
     // else
-    return await _waitForResult(timeout + RosTime.now());
+    return _waitForResult(timeout + RosTime.now());
   }
 
   Future<bool> _waitForResult(timeoutTime) async {
@@ -277,7 +276,9 @@ class SimpleActionClient<
   }
 
   void _handleFeedback(AF feedback) {
-    _feedbackCallback != null ? _feedbackCallback(feedback) : null;
+    if (_feedbackCallback != null) {
+      _feedbackCallback(feedback);
+    }
   }
 
   void _setSimpleState(SimpleGoalState newState) {

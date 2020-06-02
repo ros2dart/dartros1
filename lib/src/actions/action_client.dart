@@ -1,4 +1,4 @@
-import 'package:actionlib_msgs/src/msgs/GoalStatusArray.dart';
+import 'package:actionlib_msgs/msgs.dart';
 
 import '../../msg_utils.dart';
 import '../actionlib_client.dart';
@@ -15,13 +15,14 @@ class ActionClient<
         AR extends RosActionResult<R, AR>,
         A extends RosActionMessage<G, AG, F, AF, R, AR>>
     extends ActionLibClient<G, AG, F, AF, R, AR, A> {
-  bool _shutdown = false;
-  final Map<String, ClientGoalHandle<G, AG, F, AF, R, AR, A>> _goalLookup = {};
   ActionClient(
     String actionServer,
     NodeHandle node,
     A actionClass,
   ) : super(actionServer, node, actionClass);
+
+  bool _shutdown = false;
+  final Map<String, ClientGoalHandle<G, AG, F, AF, R, AR, A>> _goalLookup = {};
 
   @override
   void handleFeedback(AF feedback) {
@@ -38,8 +39,9 @@ class ActionClient<
 
   @override
   void handleStatus(GoalStatusArray status) {
-    status.status_list
-        .forEach((s) => _goalLookup[s.goal_id.id].updateStatus(s));
+    for (final s in status.status_list) {
+      _goalLookup[s.goal_id.id].updateStatus(s);
+    }
   }
 
   @override

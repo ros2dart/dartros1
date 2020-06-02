@@ -3,7 +3,7 @@ import 'package:dartx/dartx.dart';
 
 import 'service_message_example.dart';
 
-void main(List<String> args) async {
+Future<void> main(List<String> args) async {
   final node = await initNode('test_node', args, anonymize: true);
   final sub = node.advertiseService('/move_bloc', MoveBlock.empty$,
       (MoveBlockRequest message) {

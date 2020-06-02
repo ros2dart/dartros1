@@ -1,13 +1,10 @@
 import 'dart:async';
-
-import 'package:actionlib_msgs/src/msgs/GoalID.dart';
-import 'package:actionlib_msgs/src/msgs/GoalStatus.dart';
-import 'package:actionlib_msgs/src/msgs/GoalStatusArray.dart';
+import 'package:actionlib_msgs/msgs.dart';
 import 'package:dartx/dartx.dart';
 import '../../msg_utils.dart';
-import '../utils/log/logger.dart';
 import '../actionlib_server.dart';
 import '../node_handle.dart';
+import '../utils/log/logger.dart';
 import 'goal_handle.dart';
 
 class ActionServer<
@@ -19,22 +16,22 @@ class ActionServer<
         AR extends RosActionResult<R, AR>,
         A extends RosActionMessage<G, AG, F, AF, R, AR>>
     extends ActionLibServer<G, AG, F, AF, R, AR, A> {
+  ActionServer(String actionServer, NodeHandle node, A actionClass)
+      : super(actionServer, node, actionClass);
   final List<GoalHandle> _goalHandleList = [];
   final Map<String, GoalHandle> _goalHandleCache = {};
   RosTime _lastCancelStamp = RosTime.epoch();
-  final _statusListTimeout = RosTime(secs: 5, nsecs: 0);
+  final _statusListTimeout = const RosTime(secs: 5, nsecs: 0);
   bool _started = false;
   Timer _statusFreqTimer;
   void Function(GoalHandle) goalHandle;
   void Function(GoalHandle) cancelHandle;
   final Map<String, int> _pubSeqs = {'result': 0, 'Feedback': 0, 'status': 0};
-  ActionServer(String actionServer, NodeHandle node, A actionClass)
-      : super(actionServer, node, actionClass);
 
   void start() {
     _started = true;
     publishStatus();
-    final statusFreq = 5;
+    const statusFreq = 5;
     if (statusFreq > 0) {
       _statusFreqTimer?.cancel();
       _statusFreqTimer = Timer.periodic(
@@ -53,9 +50,7 @@ class ActionServer<
     await super.shutdown();
   }
 
-  GoalHandle getGoalHandle(String id) {
-    return _goalHandleCache[id];
-  }
+  GoalHandle getGoalHandle(String id) => _goalHandleCache[id];
 
   @override
   void handleCancel(GoalID msg) {
@@ -164,7 +159,5 @@ class ActionServer<
     publishStatus();
   }
 
-  int _getAndIncrementSeq(String type) {
-    return _pubSeqs[type]++;
-  }
+  int _getAndIncrementSeq(String type) => _pubSeqs[type]++;
 }

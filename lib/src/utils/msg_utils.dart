@@ -77,10 +77,11 @@ extension ByteDataReaderRosDeserializers on ByteDataReader {
   }
 
   List<T> readArray<T>(T Function() func, {int arrayLen}) {
-    if (arrayLen == null || arrayLen < 0) {
-      arrayLen = readUint32();
+    var len = arrayLen;
+    if (len == null || len < 0) {
+      len = readUint32();
     }
-    return List.generate(arrayLen, (_) => func());
+    return List.generate(len, (_) => func());
   }
 }
 
@@ -101,8 +102,6 @@ extension ByteDataReaderRosSerializers on ByteDataWriter {
     if (specArrayLen == null || specArrayLen < 0) {
       writeUint32(arrayLen);
     }
-    for (final elem in array) {
-      func(elem);
-    }
+    array.forEach(func);
   }
 }

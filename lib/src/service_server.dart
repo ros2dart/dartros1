@@ -12,6 +12,10 @@ import 'utils/tcpros_utils.dart';
 
 class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
     T extends RosServiceMessage<C, R>> {
+  ServiceServer(this.service, this.messageClass, this.node, this.persist,
+      this.requestCallback) {
+    _register();
+  }
   final String service;
   final T messageClass;
   String get type => messageClass.fullType;
@@ -23,10 +27,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
   State _state = State.REGISTERING;
   List<String> get clientUris => _clients.keys.toList();
   String get serviceUri => NetworkUtils.formatServiceUri(port);
-  ServiceServer(this.service, this.messageClass, this.node, this.persist,
-      this.requestCallback) {
-    _register();
-  }
+
   void shutdown() {
     node.unregisterService(service);
   }

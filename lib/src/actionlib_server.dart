@@ -11,6 +11,23 @@ abstract class ActionLibServer<
     R extends RosMessage<R>,
     AR extends RosActionResult<R, AR>,
     A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+  ActionLibServer(this.actionServer, this.node, this.actionClass) {
+    _goalSub = node.subscribe(
+        '$actionServer/goal', actionClass.actionGoal, handleGoal,
+        queueSize: 50);
+    _cancelSub = node.subscribe(
+        '$actionServer/cancel', actionlib_msgs.GoalID, handleCancel,
+        queueSize: 50);
+    _statusPub = node.advertise(
+        '$actionServer/status', actionlib_msgs.GoalStatusArray,
+        queueSize: 50);
+    _feedbackPub = node.advertise(
+        '$actionServer/feedback', actionClass.actionFeedback,
+        queueSize: 50);
+    _resultPub = node.advertise(
+        '$actionServer/result', actionClass.actionResult,
+        queueSize: 50);
+  }
   final NodeHandle node;
   final A actionClass;
   Subscriber<AG> _goalSub;
@@ -20,23 +37,6 @@ abstract class ActionLibServer<
   Publisher<AR> _resultPub;
   int _goalCount = 0;
   final String actionServer;
-  ActionLibServer(this.actionServer, this.node, this.actionClass) {
-    _goalSub = node.subscribe(
-        actionServer + '/goal', actionClass.actionGoal, handleGoal,
-        queueSize: 50);
-    _cancelSub = node.subscribe(
-        actionServer + '/cancel', actionlib_msgs.GoalID, handleCancel,
-        queueSize: 50);
-    _statusPub = node.advertise(
-        actionServer + '/status', actionlib_msgs.GoalStatusArray,
-        queueSize: 50);
-    _feedbackPub = node.advertise(
-        actionServer + '/feedback', actionClass.actionFeedback,
-        queueSize: 50);
-    _resultPub = node.advertise(
-        actionServer + '/result', actionClass.actionResult,
-        queueSize: 50);
-  }
 
   bool handleGoal(AG goal);
   void handleCancel(GoalID id);
@@ -60,13 +60,11 @@ abstract class ActionLibServer<
         stamp: now);
   }
 
-  Future<void> shutdown() {
-    return Future.wait([
-      _goalSub.shutdown(),
-      _cancelSub.shutdown(),
-      _statusPub.shutdown(),
-      _feedbackPub.shutdown(),
-      _resultPub.shutdown()
-    ]);
-  }
+  Future<void> shutdown() => Future.wait([
+        _goalSub.shutdown(),
+        _cancelSub.shutdown(),
+        _statusPub.shutdown(),
+        _feedbackPub.shutdown(),
+        _resultPub.shutdown()
+      ]);
 }
