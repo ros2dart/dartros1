@@ -308,7 +308,6 @@ class Node extends rpc_server.XmlRpcHandler
         for (final client in pub.clientUris)
           [++count, client, 'o', 'TCPROS', pub.topic, true]
     ];
-    print(resp);
     return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', resp);
   }
 
