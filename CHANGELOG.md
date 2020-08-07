@@ -1,3 +1,6 @@
+## 0.0.3+9
+- Fix service server issue with deserializing request
+  
 ## 0.0.3+8
 - Finish fixing bus info from node via rqt_graph
   

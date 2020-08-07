@@ -61,9 +61,10 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
     connection.add(writer.toBytes());
     _clients[name] = connection;
     try {
-      await for (final data in listener) {
+      await for (final data
+          in listener.transform(TCPRosChunkTransformer().transformer)) {
         log.dartros.trace('Service $service got message! $data');
-        final reader = ByteDataReader(endian: Endian.little)..add(data);
+        final reader = ByteDataReader(endian: Endian.little)..add(data.buffer);
         final req = messageClass.request.deserialize(reader);
         final result = requestCallback(req);
         if (isShutdown) {
