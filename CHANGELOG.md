@@ -1,3 +1,6 @@
+## 0.0.3+7
+- Fix exception when getting bus info from node via rqt_graph
+  
 ## 0.0.3+6
 - Export NodeHandle class. Still need work on generating action messages
 

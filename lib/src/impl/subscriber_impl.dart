@@ -50,7 +50,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
   int get numPublishers => pubClients.length;
   bool get isShutdown => _state == State.SHUTDOWN;
-  List<String> get clientUris => pubClients.keys;
+  List<String> get clientUris => pubClients.keys.toList();
 
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;

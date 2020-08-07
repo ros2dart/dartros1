@@ -37,7 +37,7 @@ class PublisherImpl<T extends RosMessage> {
   String get type => messageClass.fullType;
   String get spinnerId => 'Publisher://$topic';
   int get numSubscribers => subClients.keys.length;
-  List<String> get clientUris => subClients.keys;
+  List<String> get clientUris => subClients.keys.toList();
 
   void registerPublisher() {
     count++;

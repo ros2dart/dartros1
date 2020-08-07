@@ -300,14 +300,16 @@ class Node extends rpc_server.XmlRpcHandler
   XMLRPCResponse _handleGetBusInfo(String callerID) {
     log.dartros.info('Handling get bus info');
     var count = 0;
-    return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', [
+    final resp = [
       for (final sub in _subscribers.values)
         for (final client in sub.clientUris)
           [++count, client, 'o', 'TCPROS', sub.topic, true],
       for (final pub in _publishers.values)
         for (final client in pub.clientUris)
           [++count, client, 'o', 'TCPROS', pub.topic, true]
-    ]);
+    ];
+    print(resp);
+    return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', resp);
   }
 
   /// Gets the URI of the master node
