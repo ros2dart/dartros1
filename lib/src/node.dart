@@ -268,12 +268,12 @@ class Node extends rpc_server.XmlRpcHandler
   /// Retrieve transport/topic statistics
   /// Returns (int, str, [XMLRPCLegalValue*]) (code, statusMessage, stats)
   ///
-  /// stats is of the form [publishStats, subscribeStats, serviceStats] where
-  /// publishStats: [[topicName, messageDataSent, pubConnectionData]...]
-  /// subscribeStats: [[topicName, subConnectionData]...]
-  /// serviceStats: (proposed) [numRequests, bytesReceived, bytesSent]
-  /// pubConnectionData: [connectionId, bytesSent, numSent, connected]*
-  /// subConnectionData: [connectionId, bytesReceived, dropEstimate, connected]*
+  /// stats is of the form `[publishStats, subscribeStats, serviceStats]` where
+  /// publishStats: `[[topicName, messageDataSent, pubConnectionData]...]`
+  /// subscribeStats: `[[topicName, subConnectionData]...]`
+  /// serviceStats: (proposed) `[numRequests, bytesReceived, bytesSent]`
+  /// pubConnectionData: `[connectionId, bytesSent, numSent, connected]*`
+  /// subConnectionData: `[connectionId, bytesReceived, dropEstimate, connected]*`
   /// dropEstimate: -1 if no estimate.
   XMLRPCResponse _handleGetBusStats(String callerID) {
     log.dartros.error('Handling get bus stats -- not implemented');
@@ -282,9 +282,14 @@ class Node extends rpc_server.XmlRpcHandler
 
   /// Retrieve transport/topic connection information.
   ///
-  /// Returns (int, str, [XMLRPCLegalValue*]) (code, statusMessage, busInfo)
+  /// Returns
+  /// ```
+  /// (int, str, [XMLRPCLegalValue*]) (code, statusMessage, busInfo)
+  /// ```
   /// busInfo is of the form:
+  /// ```
   /// [[connectionId1, destinationId1, direction1, transport1, topic1, connected1]... ]
+  /// ```
   /// connectionId is defined by the node and is opaque.
   /// destinationId is the XMLRPC URI of the destination.
   /// direction is one of 'i', 'o', or 'b' (in, out, both).
@@ -338,7 +343,7 @@ class Node extends rpc_server.XmlRpcHandler
   ///
   /// returns the topicList
   /// topicList is a list of topics this node subscribes to and is of the form
-  /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
+  /// `[ [topic1, topicType1]...[topicN, topicTypeN] ]`
   XMLRPCResponse _handleGetSubscriptions(String callerID) {
     log.dartros.info('Handling get subscriptions');
     return XMLRPCResponse(
@@ -351,7 +356,7 @@ class Node extends rpc_server.XmlRpcHandler
   ///
   /// returns the topicList
   /// topicList is a list of topics this node subscribes to and is of the form
-  /// [ [topic1, topicType1]...[topicN, topicTypeN] ]
+  /// `[ [topic1, topicType1]...[topicN, topicTypeN] ]`
   XMLRPCResponse _handleGetPublications(String callerID) {
     log.dartros.info('Handling get publications');
     return XMLRPCResponse(
@@ -402,9 +407,9 @@ class Node extends rpc_server.XmlRpcHandler
   /// [topic] Topic name
   /// [protocols] List of desired protocols for communication in order of preference.
   /// Each protocol is a list of the form
-  /// [ProtocolName, ProtocolParam1, ProtocolParam2...N]
+  /// `[ProtocolName, ProtocolParam1, ProtocolParam2...N]`
   ///
-  /// Returns (int, str, [str, !XMLRPCLegalValue*] ) (code, statusMessage, protocolParams)
+  /// Returns `(int, str, [str, !XMLRPCLegalValue*] ) (code, statusMessage, protocolParams)`
   /// protocolParams may be an empty list if there are no compatible protocols.
   XMLRPCResponse _handleRequestTopic(
       String callerID, String topic, List<dynamic> protocols) {
