@@ -303,12 +303,13 @@ class Node extends rpc_server.XmlRpcHandler
     final resp = [
       for (final sub in _subscribers.values)
         for (final client in sub.clientUris)
-          [++count, client, 'o', 'TCPROS', sub.topic, true],
+          [++count, client, 'i', 'TCPROS', sub.topic, true],
       for (final pub in _publishers.values)
         for (final client in pub.clientUris)
           [++count, client, 'o', 'TCPROS', pub.topic, true]
     ];
-    return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', resp);
+    return XMLRPCResponse(
+        StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, resp);
   }
 
   /// Gets the URI of the master node
