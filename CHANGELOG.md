@@ -1,4 +1,4 @@
-## 0.0.3+3
+## 0.0.3+4
 - Attempt to publish with documentation as well as updated dependencies
 
 ## 0.0.3+3
