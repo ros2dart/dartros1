@@ -1,3 +1,6 @@
+## 0.0.3+5
+- Try to fix a logging problem when used with flutter
+
 ## 0.0.3+4
 - Attempt to publish with documentation as well as updated dependencies
 
