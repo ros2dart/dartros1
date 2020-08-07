@@ -110,7 +110,7 @@ Future<StatusCode> _rpcCallStatus(
 
 mixin XmlRpcClient {
   final http.Client client = http.Client();
-  String get rosMasterUri => 'http://localhost:11311';
+  String get rosMasterURI => 'http://localhost:11311';
   String get nodeName;
   int get tcpRosPort;
   String get xmlRpcUri;
@@ -121,14 +121,14 @@ mixin XmlRpcClient {
     Map<String, String> headers,
     dynamic Function() onError,
   }) =>
-      _rpcCall(methodName, params, rosMasterUri, client.post,
+      _rpcCall(methodName, params, rosMasterURI, client.post,
           headers: headers, onError: onError);
   Future<StatusCode> _callRpc(
     String methodName,
     List<dynamic> params, {
     Map<String, String> headers,
   }) =>
-      _rpcCallStatus(methodName, params, rosMasterUri, client.post,
+      _rpcCallStatus(methodName, params, rosMasterURI, client.post,
           headers: headers);
 }
 

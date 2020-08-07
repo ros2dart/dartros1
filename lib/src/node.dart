@@ -51,6 +51,7 @@ class Node extends rpc_server.XmlRpcHandler
       path.join(Platform.environment['HOME'], '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
   String logDir;
+  @override
   final String rosMasterURI;
   rpc_server.SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
