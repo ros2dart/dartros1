@@ -13,22 +13,26 @@ import 'package:xml_rpc/client.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
 import 'impl/publisher_impl.dart';
 import 'impl/subscriber_impl.dart';
+import 'ros_xmlrpc_common.dart';
 import 'service_client.dart';
 import 'service_server.dart';
 import 'utils/log/logger.dart';
-
-import 'ros_xmlrpc_common.dart';
 import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
+  factory Node(String name, String rosMasterURI) =>
+      _node ??= Node._(name, rosMasterURI);
+  Node._(this.nodeName, this.rosMasterURI)
+      : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
+    _startServers();
+    ProcessSignal.sigint.watch().listen((sig) => shutdown());
+  }
+
   static Node _node;
   static Node get singleton => _node;
-  factory Node(String name, String rosMasterURI) {
-    _node ??= Node._(name, rosMasterURI);
-    return _node;
-  }
+
   @override
   String get xmlRpcUri => 'http://${NetworkUtils.host}:${_xmlRpcServer.port}';
   @override
@@ -36,18 +40,6 @@ class Node extends rpc_server.XmlRpcHandler
   @override
   String nodeName;
   Completer<bool> nodeReady = Completer();
-  Node._(this.nodeName, this.rosMasterURI)
-      : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
-    // TODO: Remove logdir probably
-    // logDir = path.join(homeDir, 'log');
-    _startServers();
-    ProcessSignal.sigint.watch().listen((sig) => shutdown());
-  }
-  Future<void> _startServers() async {
-    await _startTcpRosServer();
-    await _startXmlRpcServer();
-    nodeReady.complete();
-  }
 
   final Map<String, PublisherImpl> _publishers = {};
   final Map<String, SubscriberImpl> _subscribers = {};
@@ -62,6 +54,12 @@ class Node extends rpc_server.XmlRpcHandler
   final String rosMasterURI;
   rpc_server.SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
+
+  Future<void> _startServers() async {
+    await _startTcpRosServer();
+    await _startXmlRpcServer();
+    nodeReady.complete();
+  }
 
   Future<void> shutdown() async {
     log.dartros.info('Shutting node $nodeName down at ${DateTime.now()}');
@@ -84,18 +82,6 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.info('Shutdown XMLRPC server...done');
     log.dartros.info('Shutting $nodeName down completed at ${DateTime.now()}');
     exit(0);
-  }
-
-  void spinOnce() async {
-    await Future.delayed(10.milliseconds);
-    processJobs();
-  }
-
-  void spin() async {
-    while (_ok) {
-      await Future.delayed(1.seconds);
-      processJobs();
-    }
   }
 
   void processJobs() {}
@@ -147,13 +133,12 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   ServiceClient<C, R, T> serviceClient<
-          C extends RosMessage<C>,
-          R extends RosMessage<R>,
-          T extends RosServiceMessage<C, R>>(String service, T messageClass,
-      {bool persist = true, maxQueueSize = -1}) {
-    return ServiceClient<C, R, T>(
-        service, messageClass, persist, maxQueueSize, this);
-  }
+              C extends RosMessage<C>,
+              R extends RosMessage<R>,
+              T extends RosServiceMessage<C, R>>(String service, T messageClass,
+          {bool persist = true, int maxQueueSize = -1}) =>
+      ServiceClient<C, R, T>(
+          service, messageClass, persist, maxQueueSize, this);
 
   Future<void> unadvertise<T>(String topic) async {
     final pub = _publishers[topic];
@@ -180,7 +165,7 @@ class Node extends rpc_server.XmlRpcHandler
       log.superdebug.info('Unadvertising service $service');
       _services[service].disconnect();
       _services.remove(service);
-      return await unregisterService(service);
+      return unregisterService(service);
     }
   }
 
@@ -221,13 +206,13 @@ class Node extends rpc_server.XmlRpcHandler
   Future<void> _startTcpRosServer() async {
     _tcpRosServer = await listenRandomPort(
       10,
-      (port) async => await ServerSocket.bind(
+      (port) => ServerSocket.bind(
         '0.0.0.0',
         0,
       ),
     );
 
-    await _tcpRosServer.listen(
+    _tcpRosServer.listen(
       (connection) async {
         log.superdebug
             .info('Node $nodeName got connection from ${connection.name}');
@@ -277,9 +262,7 @@ class Node extends rpc_server.XmlRpcHandler
     log.superdebug.info('listening on $tcpRosPort');
   }
 
-  void _stopTcpRosServer() {
-    _tcpRosServer.close();
-  }
+  Future<void> _stopTcpRosServer() => _tcpRosServer.close();
 
   ///
   /// Retrieve transport/topic statistics
@@ -382,7 +365,7 @@ class Node extends rpc_server.XmlRpcHandler
   /// [parameterKey] parameter name, globally resolved
   /// [parameterValue] new parameter value
   XMLRPCResponse _handleParamUpdate(
-      String callerID, String parameterKey, dynamic parameterValue) {
+      String callerID, String parameterKey, parameterValue) {
     log.dartros.info(
         'Got param update! $callerID sent parameter $parameterKey: $parameterValue. Not really doing anything with it...');
     return XMLRPCResponse(StatusCode.FAILURE.asInt, 'Not Implemented', 0);
@@ -431,12 +414,12 @@ class Node extends rpc_server.XmlRpcHandler
     if (_publishers.containsKey(topic)) {
       resp = [
         1,
-        'Allocated topic connection on port ' + tcpRosPort.toString(),
+        'Allocated topic connection on port $tcpRosPort',
         ['TCPROS', NetworkUtils.host, tcpRosPort]
       ];
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');
-      resp = [0, 'Unable to allocate topic connection for ' + topic, []];
+      resp = [0, 'Unable to allocate topic connection for $topic', []];
     }
     return XMLRPCResponse(resp[0], resp[1], resp[2]);
   }

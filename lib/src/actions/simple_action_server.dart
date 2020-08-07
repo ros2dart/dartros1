@@ -4,9 +4,9 @@ import 'package:actionlib_msgs/msgs.dart';
 
 import 'package:dartx/dartx.dart';
 
-import '../utils/log/logger.dart';
-import '../node_handle.dart';
 import '../../msg_utils.dart';
+import '../node_handle.dart';
+import '../utils/log/logger.dart';
 import 'action_server.dart';
 import 'goal_handle.dart';
 
@@ -19,20 +19,20 @@ class SimpleActionServer<
         AR extends RosActionResult<R, AR>,
         A extends RosActionMessage<G, AG, F, AF, R, AR>>
     extends ActionServer<G, AG, F, AF, R, AR, A> {
-  Future<void> Function(G) _executeCallback;
-  GoalHandle _currentGoal;
-  GoalHandle _nextGoal;
-  bool _preemptRequested = false;
-  bool _newGoalPreemptRequest = false;
-  Timer _executeLoopTimer;
-
-  bool _shutdown = false;
   SimpleActionServer(String actionServer, NodeHandle node, A actionClass,
       this._executeCallback)
       : super(actionServer, node, actionClass) {
     goalHandle = _handleGoal;
     cancelHandle = _handleCancel;
   }
+
+  final Future<void> Function(G) _executeCallback;
+  GoalHandle _currentGoal;
+  GoalHandle _nextGoal;
+  bool _preemptRequested = false;
+  bool _newGoalPreemptRequest = false;
+  Timer _executeLoopTimer;
+  bool _shutdown = false;
 
   @override
   void start() {
@@ -95,31 +95,15 @@ class SimpleActionServer<
   }
 
   void setAborted(R result, String text) {
-    if (_currentGoal != null) {
-      result ??= actionClass.result();
-
-      _currentGoal.setAborted(result, text: text);
-    }
+    _currentGoal?.setAborted(result ?? actionClass.result(), text: text);
   }
 
-  void setPreempted(result, text) {
-    if (_currentGoal != null) {
-      if (!result) {
-        result = result ??= actionClass.result();
-      }
-
-      _currentGoal.setCanceled(result, text: text);
-    }
+  void setPreempted(R result, String text) {
+    _currentGoal?.setCanceled(result ?? actionClass.result(), text: text);
   }
 
-  void setSucceeded(result, text) {
-    if (_currentGoal != null) {
-      if (!result) {
-        result = result ??= actionClass.result();
-      }
-
-      _currentGoal.setSucceeded(result, text: text);
-    }
+  void setSucceeded(R result, String text) {
+    _currentGoal.setSucceeded(result ?? actionClass.result(), text: text);
   }
 
   void _handleGoal(GoalHandle newGoal) {
@@ -180,6 +164,7 @@ class SimpleActionServer<
         final goal = acceptNewGoal();
         await _executeCallback(goal);
         if (isActive) {
+          // TODO: Fix this
           log.dartros.warn(
               '''Your executeCallback did not set the goal to a terminate status,
               This is a bug in your ActionServer implementation. Fix your code!,

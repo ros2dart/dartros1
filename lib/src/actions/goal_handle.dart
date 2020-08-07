@@ -1,7 +1,7 @@
 import 'package:actionlib_msgs/msgs.dart';
+import '../../msg_utils.dart';
 import '../utils/log/logger.dart';
 
-import '../../msg_utils.dart';
 import 'action_server.dart';
 
 class GoalHandle<
@@ -12,24 +12,18 @@ class GoalHandle<
     R extends RosMessage<R>,
     AR extends RosActionResult<R, AR>,
     A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+  GoalHandle(GoalID id, this.server, int status, this.goal)
+      : _id = id ?? server.generateGoalID,
+        _status = GoalStatus(status: status ?? GoalStatus.PENDING, goal_id: id);
   final GoalID _id;
   String get id => _id.id;
   final G goal;
   GoalStatus _status;
   GoalStatus get status => _status;
   final ActionServer server;
-  RosTime _destructionTime = RosTime.epoch();
-  GoalHandle(GoalID id, this.server, int status, this.goal)
-      : _id = id ?? server.generateGoalID,
-        _status = GoalStatus(status: status ?? GoalStatus.PENDING, goal_id: id);
+  RosTime destructionTime = RosTime.epoch();
   int get statusId => status.status;
   GoalID get goalId => status.goal_id;
-
-  RosTime get destructionTime => _destructionTime;
-
-  set destructionTime(RosTime destructionTime) {
-    _destructionTime = destructionTime;
-  }
 
   void publishFeedback(F feedback) {
     server.publishFeedback(status, feedback);
@@ -41,7 +35,7 @@ class GoalHandle<
       _status.text = text;
     }
     if (_isTerminalState()) {
-      _destructionTime = RosTime.now();
+      destructionTime = RosTime.now();
     }
     server.publishStatus();
   }
@@ -135,15 +129,13 @@ class GoalHandle<
     }
   }
 
-  bool _isTerminalState() {
-    return [
-      GoalStatus.REJECTED,
-      GoalStatus.RECALLED,
-      GoalStatus.PREEMPTED,
-      GoalStatus.ABORTED,
-      GoalStatus.SUCCEEDED
-    ].contains(statusId);
-  }
+  bool _isTerminalState() => [
+        GoalStatus.REJECTED,
+        GoalStatus.RECALLED,
+        GoalStatus.PREEMPTED,
+        GoalStatus.ABORTED,
+        GoalStatus.SUCCEEDED
+      ].contains(statusId);
 
   void _logInvalidTransition(String s, int status) {
     log.dartros.warn('Unable to $s from status $status for goal $id');

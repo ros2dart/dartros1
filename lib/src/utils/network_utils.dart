@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'remapping.dart';
 
-final NetworkUtils = _NetworkUtils();
+final _NetworkUtils NetworkUtils = _NetworkUtils();
 
 class _NetworkUtils {
+  _NetworkUtils();
   String _ip;
   String _hostname;
   String _ros_ip;
@@ -12,7 +13,6 @@ class _NetworkUtils {
   String _host;
   String get host => _host;
 
-  _NetworkUtils();
   void init(Map<String, String> remappings) {
     _ip = remappings[SPECIAL_KEYS.ip];
     _hostname = remappings[SPECIAL_KEYS.hostname];
@@ -22,21 +22,13 @@ class _NetworkUtils {
         _ip ?? _hostname ?? _ros_ip ?? _ros_hostname ?? Platform.localHostname;
   }
 
-  String getAddressFromUri(String uriString) {
-    return Uri.parse(uriString).host;
-  }
+  String getAddressFromUri(String uriString) => Uri.parse(uriString).host;
 
-  Uri getAddressAndPortFromUri(String uriString) {
-    return Uri.parse(uriString);
-  }
+  Uri getAddressAndPortFromUri(String uriString) => Uri.parse(uriString);
 
-  int getPortFromUri(String uriString) {
-    return Uri.parse(uriString).port;
-  }
+  int getPortFromUri(String uriString) => Uri.parse(uriString).port;
 
-  String formatServiceUri(int port) {
-    return 'rosrpc://$host:$port';
-  }
+  String formatServiceUri(int port) => 'rosrpc://$host:$port';
 
   Future<String> getIPAddress({
     String interface,

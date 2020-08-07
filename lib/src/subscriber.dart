@@ -4,14 +4,14 @@ import '../msg_utils.dart';
 import 'impl/subscriber_impl.dart';
 
 class Subscriber<T extends RosMessage<T>> {
-  SubscriberImpl<T> impl;
-  String _topic;
-  String _type;
   Subscriber(this.impl) {
     _topic = impl.topic;
     _type = impl.type;
     impl.registerSubscriber();
   }
+  SubscriberImpl<T> impl;
+  String _topic;
+  String _type;
 
   String get topic => _topic;
   String get type => _type;

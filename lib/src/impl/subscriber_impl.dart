@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
@@ -6,20 +7,28 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/utils/log/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../../msg_utils.dart';
+import '../node.dart';
+import '../utils/client_states.dart';
 import '../utils/network_utils.dart';
 import '../utils/tcpros_utils.dart';
-
-import '../../msg_utils.dart';
-import '../utils/client_states.dart';
-
-import '../node.dart';
-import 'dart:io';
 
 const protocols = [
   ['TCPROS']
 ];
 
 class SubscriberImpl<T extends RosMessage<T>> {
+  SubscriberImpl(
+    this.node,
+    this.topic,
+    this.messageClass,
+    this.queueSize,
+    this.throttleMs,
+    // ignore: avoid_positional_boolean_parameters
+    this.tcpNoDelay,
+  ) {
+    _register();
+  }
   final Node node;
   final String topic;
   int _count = 0;
@@ -31,16 +40,6 @@ class SubscriberImpl<T extends RosMessage<T>> {
   final Map<String, Socket> pubClients = {};
   final Map<String, Socket> pendingClients = {};
   State _state = State.REGISTERING;
-  SubscriberImpl(
-    this.node,
-    this.topic,
-    this.messageClass,
-    this.queueSize,
-    this.throttleMs,
-    this.tcpNoDelay,
-  ) {
-    _register();
-  }
 
   String get spinnerId => 'Subscriber://$topic';
 
@@ -68,7 +67,9 @@ class SubscriberImpl<T extends RosMessage<T>> {
   }
 
   void requestTopicFromPubs(List<String> pubs) {
-    pubs.forEach((uri) => _requestTopicFromPublisher(uri.trim()));
+    for (final uri in pubs) {
+      _requestTopicFromPublisher(uri.trim());
+    }
   }
 
   Future<void> handlePublisherUpdate(List<dynamic> pubs) async {
@@ -92,9 +93,9 @@ class SubscriberImpl<T extends RosMessage<T>> {
     try {
       log.dartros.debug('Requesting topic from uri ${info.host}:${info.port}');
       final resp = await node.requestTopic(
-          'http://' + info.host, info.port, topic, protocols);
+          'http://${info.host}', info.port, topic, protocols);
       await _handleTopicRequestResponse(resp, uri);
-    } catch (e) {
+    } on Exception catch (e) {
       //TODO: Log
     }
   }
@@ -118,7 +119,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
       if (resp.isNotEmpty) {
         requestTopicFromPubs(resp);
       }
-    } catch (e, trace) {
+    } on Exception catch (e, trace) {
       print(e);
       print(trace);
     }
@@ -150,9 +151,9 @@ class SubscriberImpl<T extends RosMessage<T>> {
     pendingClients[uri] = socket;
     try {
       await _handleConnectionHeader(socket, listener, uri);
-    } catch (e) {
+    } on Exception catch (e) {
       log.dartros.error(
-          'Subscriber client socket ${socket.name} on topic ${topic} had error: $e');
+          'Subscriber client socket ${socket.name} on topic $topic had error: $e');
     }
   }
 
@@ -181,7 +182,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
         if (!validated) {
           log.dartros.debug(
-              'Unable to validate subscriber ${topic} connection header $header');
+              'Unable to validate subscriber $topic connection header $header');
           socket.add(writer.toBytes());
           await socket.flush();
           await socket.close();
@@ -212,7 +213,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
         reader.add(message.buffer);
         _streamController.add(messageClass.deserialize(reader));
       }
-    } catch (e) {
+    } on Exception catch (e) {
       log.dartros
           .error('Error while deserializing message on topic $topic, $e');
     }
