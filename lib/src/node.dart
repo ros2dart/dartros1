@@ -68,13 +68,13 @@ class Node extends rpc_server.XmlRpcHandler
     await _stopTcpRosServer();
     _ok = false;
     log.dartros.info('Shutdown subscribers');
-    await Future.wait(_subscribers.values.map((s) => s.shutdown()));
+    await Future.wait(List.of(_subscribers.values).map((s) => s.shutdown()));
     log.dartros.info('Shutdown subscribers...done');
     log.dartros.info('Shutdown publishers');
-    await Future.wait(_publishers.values.map((p) => p.shutdown()));
+    await Future.wait(List.of(_publishers.values).map((p) => p.shutdown()));
     log.dartros.info('Shutdown publishers...done');
     log.dartros.info('Shutdown servers');
-    for (final s in _services.values) {
+    for (final s in List.of(_services.values)) {
       s.shutdown();
     }
     log.dartros.info('Shutdown servers...done');
