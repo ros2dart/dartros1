@@ -1,4 +1,7 @@
 ## 0.0.3+3
+- Attempt to publish with documentation as well as updated dependencies
+
+## 0.0.3+3
 - Added documentation
 
 ## 0.0.3+2
