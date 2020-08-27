@@ -29,3 +29,8 @@ dev_dependencies:
   freezed: any
   build_runner: any
   abide: any
+  derry:
+
+scripts:
+  gen: pub run build_runner build --delete-conflicting-outputs
+  genw: pub run build_runner watch --delete-conflicting-outputs

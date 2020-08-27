@@ -507,7 +507,8 @@ class Node extends rpc_server.XmlRpcHandler
             pubHeader
           ]
         ];
-        _publishers[topic].addUdpSubscriber(resp[2]);
+        _publishers[topic].addUdpSubscriber(_connections,
+            UdpSocketOptions(port, NetworkUtils.host, dgramSize, _connections));
       }
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');

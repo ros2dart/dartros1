@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named
+// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies
 
 part of 'ros_xmlrpc_client.dart';
 
@@ -12,6 +12,7 @@ T _$identity<T>(T value) => value;
 class _$TopicInfoTearOff {
   const _$TopicInfoTearOff();
 
+// ignore: unused_element
   _TopicInfo call(String name, String type) {
     return _TopicInfo(
       name,
@@ -133,11 +134,14 @@ abstract class _TopicInfo implements TopicInfo {
 class _$ProtocolParamsTearOff {
   const _$ProtocolParamsTearOff();
 
-  _ProtocolParams call(String protocol, String address, int port) {
+// ignore: unused_element
+  _ProtocolParams call(
+      String protocol, String address, int port, int connectionId) {
     return _ProtocolParams(
       protocol,
       address,
       port,
+      connectionId,
     );
   }
 }
@@ -149,6 +153,7 @@ mixin _$ProtocolParams {
   String get protocol;
   String get address;
   int get port;
+  int get connectionId;
 
   $ProtocolParamsCopyWith<ProtocolParams> get copyWith;
 }
@@ -157,7 +162,7 @@ abstract class $ProtocolParamsCopyWith<$Res> {
   factory $ProtocolParamsCopyWith(
           ProtocolParams value, $Res Function(ProtocolParams) then) =
       _$ProtocolParamsCopyWithImpl<$Res>;
-  $Res call({String protocol, String address, int port});
+  $Res call({String protocol, String address, int port, int connectionId});
 }
 
 class _$ProtocolParamsCopyWithImpl<$Res>
@@ -173,11 +178,14 @@ class _$ProtocolParamsCopyWithImpl<$Res>
     Object protocol = freezed,
     Object address = freezed,
     Object port = freezed,
+    Object connectionId = freezed,
   }) {
     return _then(_value.copyWith(
       protocol: protocol == freezed ? _value.protocol : protocol as String,
       address: address == freezed ? _value.address : address as String,
       port: port == freezed ? _value.port : port as int,
+      connectionId:
+          connectionId == freezed ? _value.connectionId : connectionId as int,
     ));
   }
 }
@@ -188,7 +196,7 @@ abstract class _$ProtocolParamsCopyWith<$Res>
           _ProtocolParams value, $Res Function(_ProtocolParams) then) =
       __$ProtocolParamsCopyWithImpl<$Res>;
   @override
-  $Res call({String protocol, String address, int port});
+  $Res call({String protocol, String address, int port, int connectionId});
 }
 
 class __$ProtocolParamsCopyWithImpl<$Res>
@@ -206,20 +214,23 @@ class __$ProtocolParamsCopyWithImpl<$Res>
     Object protocol = freezed,
     Object address = freezed,
     Object port = freezed,
+    Object connectionId = freezed,
   }) {
     return _then(_ProtocolParams(
       protocol == freezed ? _value.protocol : protocol as String,
       address == freezed ? _value.address : address as String,
       port == freezed ? _value.port : port as int,
+      connectionId == freezed ? _value.connectionId : connectionId as int,
     ));
   }
 }
 
 class _$_ProtocolParams implements _ProtocolParams {
-  _$_ProtocolParams(this.protocol, this.address, this.port)
+  _$_ProtocolParams(this.protocol, this.address, this.port, this.connectionId)
       : assert(protocol != null),
         assert(address != null),
-        assert(port != null);
+        assert(port != null),
+        assert(connectionId != null);
 
   @override
   final String protocol;
@@ -227,10 +238,12 @@ class _$_ProtocolParams implements _ProtocolParams {
   final String address;
   @override
   final int port;
+  @override
+  final int connectionId;
 
   @override
   String toString() {
-    return 'ProtocolParams(protocol: $protocol, address: $address, port: $port)';
+    return 'ProtocolParams(protocol: $protocol, address: $address, port: $port, connectionId: $connectionId)';
   }
 
   @override
@@ -244,7 +257,10 @@ class _$_ProtocolParams implements _ProtocolParams {
                 const DeepCollectionEquality()
                     .equals(other.address, address)) &&
             (identical(other.port, port) ||
-                const DeepCollectionEquality().equals(other.port, port)));
+                const DeepCollectionEquality().equals(other.port, port)) &&
+            (identical(other.connectionId, connectionId) ||
+                const DeepCollectionEquality()
+                    .equals(other.connectionId, connectionId)));
   }
 
   @override
@@ -252,7 +268,8 @@ class _$_ProtocolParams implements _ProtocolParams {
       runtimeType.hashCode ^
       const DeepCollectionEquality().hash(protocol) ^
       const DeepCollectionEquality().hash(address) ^
-      const DeepCollectionEquality().hash(port);
+      const DeepCollectionEquality().hash(port) ^
+      const DeepCollectionEquality().hash(connectionId);
 
   @override
   _$ProtocolParamsCopyWith<_ProtocolParams> get copyWith =>
@@ -260,7 +277,8 @@ class _$_ProtocolParams implements _ProtocolParams {
 }
 
 abstract class _ProtocolParams implements ProtocolParams {
-  factory _ProtocolParams(String protocol, String address, int port) =
+  factory _ProtocolParams(
+          String protocol, String address, int port, int connectionId) =
       _$_ProtocolParams;
 
   @override
@@ -270,12 +288,15 @@ abstract class _ProtocolParams implements ProtocolParams {
   @override
   int get port;
   @override
+  int get connectionId;
+  @override
   _$ProtocolParamsCopyWith<_ProtocolParams> get copyWith;
 }
 
 class _$SystemStateTearOff {
   const _$SystemStateTearOff();
 
+// ignore: unused_element
   _SystemState call(List<PublisherInfo> publishers,
       List<SubscriberInfo> subscribers, List<ServiceInfo> services) {
     return _SystemState(
@@ -436,6 +457,7 @@ abstract class _SystemState implements SystemState {
 class _$PublisherInfoTearOff {
   const _$PublisherInfoTearOff();
 
+// ignore: unused_element
   _PublisherInfo call(String topic, List<String> publishers) {
     return _PublisherInfo(
       topic,
@@ -566,6 +588,7 @@ abstract class _PublisherInfo implements PublisherInfo {
 class _$SubscriberInfoTearOff {
   const _$SubscriberInfoTearOff();
 
+// ignore: unused_element
   _SubscriberInfo call(String topic, List<String> subscibers) {
     return _SubscriberInfo(
       topic,
@@ -696,6 +719,7 @@ abstract class _SubscriberInfo implements SubscriberInfo {
 class _$ServiceInfoTearOff {
   const _$ServiceInfoTearOff();
 
+// ignore: unused_element
   _ServiceInfo call(String service, List<String> serviceProviders) {
     return _ServiceInfo(
       service,

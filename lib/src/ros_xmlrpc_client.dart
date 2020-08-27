@@ -143,7 +143,8 @@ class SlaveApiClient {
       String topic, List<List<String>> protocols) async {
     final p = await _rpcCall('requestTopic', [nodeName, topic, protocols],
         '$host:$port', client.post);
-    return ProtocolParams(p[0], p[1], p[2] as int);
+    return ProtocolParams(
+        p[0], p[1], p[2] as int, p.length > 3 ? p[3] as int : 0);
   }
 }
 
@@ -332,7 +333,8 @@ abstract class TopicInfo with _$TopicInfo {
 
 @freezed
 abstract class ProtocolParams with _$ProtocolParams {
-  factory ProtocolParams(String protocol, String address, int port) =
+  factory ProtocolParams(
+          String protocol, String address, int port, int connectionId) =
       _ProtocolParams;
 }
 
