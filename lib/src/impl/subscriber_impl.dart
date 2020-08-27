@@ -48,6 +48,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
   final int throttleMs;
   final bool tcpNoDelay;
   int _connectionId;
+  UdpMessage _udpMessage;
   final Map<String, Socket> pubClients = {};
   final Map<String, Socket> pendingClients = {};
   State _state = State.REGISTERING;
@@ -244,6 +245,15 @@ class SubscriberImpl<T extends RosMessage<T>> {
     await _disconnectClient(uri);
   }
 
+  void _handleUdpMessage(ByteDataReader reader) {
+    try {
+      _streamController.add(messageClass.deserialize(reader));
+    } on Exception catch (e) {
+      log.dartros
+          .error('Error while deserializing udp message on topic $topic, $e');
+    }
+  }
+
   void _handleMessage(TCPRosChunk message) {
     log.dartros.debug('Handling message');
     _handleMsgQueue([message]);
@@ -278,11 +288,21 @@ class SubscriberImpl<T extends RosMessage<T>> {
       case 0:
         // No chunking
         if (header.blkN == 1) {
-          // _handleMessage(reader);
+          _handleUdpMessage(reader);
+          _udpMessage = UdpMessage(
+              header.blkN, header.msgId, header.connectionId, reader);
         }
         break;
       case 1:
         // Mutliple data
+        if (header.msgId == _udpMessage.msgId &&
+            connectionId == _udpMessage.connectionId) {
+          reader.read(8);
+          _udpMessage.buffer.add(reader.read(reader.remainingLength));
+          if (_udpMessage.blkN - 1 == header.blkN) {
+            _handleUdpMessage(_udpMessage.buffer);
+          }
+        }
         break;
       case 2:
         log.dartros.error('Error udp ping not implemented');
@@ -292,4 +312,12 @@ class SubscriberImpl<T extends RosMessage<T>> {
         break;
     }
   }
+}
+
+class UdpMessage {
+  const UdpMessage(this.blkN, this.msgId, this.connectionId, this.buffer);
+  final int blkN;
+  final int msgId;
+  final int connectionId;
+  final ByteDataReader buffer;
 }
