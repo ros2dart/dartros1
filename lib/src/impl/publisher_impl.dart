@@ -142,4 +142,6 @@ class PublisherImpl<T extends RosMessage> {
     }
     subClients[connection.name] = connection;
   }
+
+  void addUdpSubscriber(resp) {}
 }

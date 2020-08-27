@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/utils/log/logger.dart';
+import 'package:dartros/src/utils/udpros_utils.dart' as udp;
 import 'package:rxdart/rxdart.dart';
 
 import '../../msg_utils.dart';
@@ -51,6 +52,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
   int get numPublishers => pubClients.length;
   bool get isShutdown => _state == State.SHUTDOWN;
   List<String> get clientUris => pubClients.keys.toList();
+
+  get connectionId => null;
 
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
@@ -229,4 +232,6 @@ class SubscriberImpl<T extends RosMessage<T>> {
       await node.unsubscribe(topic);
     }
   }
+
+  void handleMessageChunk(udp.UDPRosHeader header, ByteDataReader reader) {}
 }

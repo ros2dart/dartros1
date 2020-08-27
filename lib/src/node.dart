@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:buffer/buffer.dart';
 import 'package:dartros/src/publisher.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
@@ -19,6 +21,7 @@ import 'service_server.dart';
 import 'utils/log/logger.dart';
 import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
+import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
@@ -55,10 +58,14 @@ class Node extends rpc_server.XmlRpcHandler
   final String rosMasterURI;
   rpc_server.SimpleXmlRpcServer _xmlRpcServer;
   ServerSocket _tcpRosServer;
+  RawServerSocket _udpRosServer;
+  int get udpRosPort => _udpRosServer.port;
+  int _connections = 0;
 
   Future<void> _startServers() async {
     await _startTcpRosServer();
     await _startXmlRpcServer();
+    await _startUdpRosServer();
     nodeReady.complete();
   }
 
@@ -66,6 +73,7 @@ class Node extends rpc_server.XmlRpcHandler
     log.dartros.info('Shutting node $nodeName down at ${DateTime.now()}');
     log.dartros.info('Shutdown tcprosServer');
     await _stopTcpRosServer();
+    await _stopUdpRosServer();
     _ok = false;
     log.dartros.info('Shutdown subscribers');
     await Future.wait(List.of(_subscribers.values).map((s) => s.shutdown()));
@@ -204,6 +212,47 @@ class Node extends rpc_server.XmlRpcHandler
     await _xmlRpcServer.stop(force: true);
   }
 
+  Future<void> _startUdpRosServer() async {
+    _udpRosServer = await listenRandomPort(
+      10,
+      (port) => RawServerSocket.bind(
+        '0.0.0.0',
+        0,
+      ),
+    );
+
+    _udpRosServer.listen(
+      (connection) async {
+        log.superdebug
+            .info('Node $nodeName got connection from ${connection.name}');
+
+        await for (final _ in connection) {
+          final reader = ByteDataReader(endian: Endian.little);
+          reader.add(connection.read());
+          final header = udp.UDPRosHeader.deserialize(reader);
+          if (header == null) {
+            log.dartros.error('Unable to validate connection header $header');
+            await connection.close();
+            return;
+          }
+          log.superdebug.info('Got connection header $header');
+          final connId = header.connectionId;
+          final topic = _subscribers.keys.firstWhere(
+              (topic) => _subscribers[topic].connectionId == connId,
+              orElse: () => null);
+          if (topic != null) {
+            await _subscribers[topic].handleMessageChunk(header, reader);
+          } else {
+            log.dartros.info('Got connection header for unknown topic $topic');
+          }
+        }
+      },
+      onError: (e) => log.dartros.warn('Error on tcpros server! $e'),
+      onDone: () => log.dartros.info('Closing tcp ros server'),
+    );
+    log.superdebug.info('UDP socket listening on $udpRosPort');
+  }
+
   Future<void> _startTcpRosServer() async {
     _tcpRosServer = await listenRandomPort(
       10,
@@ -264,6 +313,7 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   Future<void> _stopTcpRosServer() => _tcpRosServer.close();
+  Future<void> _stopUdpRosServer() => _udpRosServer.close();
 
   ///
   /// Retrieve transport/topic statistics
@@ -303,10 +353,17 @@ class Node extends rpc_server.XmlRpcHandler
     final resp = [
       for (final sub in _subscribers.values)
         for (final client in sub.clientUris)
-          [++count, client, 'i', 'TCPROS', sub.topic, true],
+          [++count, client, 'i', sub.transport, sub.topic, true],
       for (final pub in _publishers.values)
         for (final client in pub.clientUris)
-          [++count, client, 'o', 'TCPROS', pub.topic, true]
+          [
+            ++count,
+            client,
+            'o',
+            pub.isUdpSubscriber(client) ? 'UDPROS' : 'TCPROS',
+            pub.topic,
+            true
+          ]
     ];
     return XMLRPCResponse(
         StatusCode.SUCCESS.asInt, StatusCode.SUCCESS.asString, resp);
@@ -420,11 +477,38 @@ class Node extends rpc_server.XmlRpcHandler
         'Handling topic request from $callerID for $topic with protocols: $protocols');
     List resp;
     if (_publishers.containsKey(topic)) {
-      resp = [
-        1,
-        'Allocated topic connection on port $tcpRosPort',
-        ['TCPROS', NetworkUtils.host, tcpRosPort]
-      ];
+      if (protocols[2][0][0] == 'TCPROS') {
+        resp = [
+          1,
+          'Allocated topic connection on port $tcpRosPort',
+          ['TCPROS', NetworkUtils.host, tcpRosPort]
+        ];
+      } else {
+        final pub = _publishers[topic];
+        final msgCls = pub.messageClass;
+        final header = udp.UDPRosHeader.parse(protocols[2][0][1]);
+        assert(header.topic == topic);
+        // final host = protocols[2][0][2];
+        final port = protocols[2][0][3];
+        final dgramSize = protocols[2][0][4];
+        final writer = ByteDataWriter(endian: Endian.little);
+        udp.createPubHeader(writer, nodeName, msgCls.md5sum, msgCls.fullType,
+            msgCls.messageDefinition);
+        final pubHeader = writer.toString();
+        resp = [
+          1,
+          '',
+          [
+            'UDPROS',
+            NetworkUtils.host,
+            port,
+            ++_connections,
+            dgramSize,
+            pubHeader
+          ]
+        ];
+        _publishers[topic].addUdpSubscriber(resp[2]);
+      }
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');
       resp = [0, 'Unable to allocate topic connection for $topic', []];
