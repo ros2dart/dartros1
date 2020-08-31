@@ -31,13 +31,17 @@ class Node extends rpc_server.XmlRpcHandler
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
     _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
+    init();
+  }
+  Future<void> init() async {
+    _ipAddress = await NetworkUtils.getIPAddress();
   }
 
   static Node _node;
   static Node get singleton => _node;
-
+  String _ipAddress;
   @override
-  String get xmlRpcUri => 'http://${NetworkUtils.host}:${_xmlRpcServer.port}';
+  String get xmlRpcUri => 'http://${_ipAddress}:${_xmlRpcServer.port}';
   @override
   int get tcpRosPort => _tcpRosServer.port;
   @override
@@ -475,22 +479,25 @@ class Node extends rpc_server.XmlRpcHandler
       String callerID, String topic, List<dynamic> protocols) {
     log.superdebug.info(
         'Handling topic request from $callerID for $topic with protocols: $protocols');
+    print(callerID);
+    print(topic);
     List resp;
     if (_publishers.containsKey(topic)) {
-      if (protocols[2][0][0] == 'TCPROS') {
+      print(protocols);
+      if (protocols[0][0] == 'TCPROS') {
         resp = [
           1,
           'Allocated topic connection on port $tcpRosPort',
-          ['TCPROS', NetworkUtils.host, tcpRosPort]
+          ['TCPROS', _ipAddress, tcpRosPort]
         ];
       } else {
         final pub = _publishers[topic];
         final msgCls = pub.messageClass;
-        final header = udp.UDPRosHeader.parse(protocols[2][0][1]);
+        final header = udp.UDPRosHeader.parse(protocols[0][1]);
         assert(header.topic == topic);
         // final host = protocols[2][0][2];
-        final port = protocols[2][0][3];
-        final dgramSize = protocols[2][0][4];
+        final port = protocols[0][3];
+        final dgramSize = protocols[0][4];
         final writer = ByteDataWriter(endian: Endian.little);
         udp.createPubHeader(writer, nodeName, msgCls.md5sum, msgCls.fullType,
             msgCls.messageDefinition);
@@ -498,22 +505,16 @@ class Node extends rpc_server.XmlRpcHandler
         resp = [
           1,
           '',
-          [
-            'UDPROS',
-            NetworkUtils.host,
-            port,
-            ++_connections,
-            dgramSize,
-            pubHeader
-          ]
+          ['UDPROS', _ipAddress, port, ++_connections, dgramSize, pubHeader]
         ];
         _publishers[topic].addUdpSubscriber(_connections,
-            UdpSocketOptions(port, NetworkUtils.host, dgramSize, _connections));
+            UdpSocketOptions(port, _ipAddress, dgramSize, _connections));
       }
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');
       resp = [0, 'Unable to allocate topic connection for $topic', []];
     }
+    print(resp);
     return XMLRPCResponse(resp[0], resp[1], resp[2]);
   }
 

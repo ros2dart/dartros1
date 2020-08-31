@@ -29,7 +29,9 @@ dev_dependencies:
   freezed: any
   build_runner: any
   abide: any
-  derry:
+  derry: any
+  sensor_msgs:
+    path: ../../devel/share/gendart/ros/sensor_msgs
 
 scripts:
   gen: pub run build_runner build --delete-conflicting-outputs
