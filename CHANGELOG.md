@@ -1,3 +1,6 @@
+## 0.0.3+10
+- Add preliminary UDP support, and use IP address to enable working on local network
+  
 ## 0.0.3+9
 - Fix service server issue with deserializing request
   
