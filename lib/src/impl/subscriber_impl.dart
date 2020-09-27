@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/utils/log/logger.dart';
+import 'package:dartros/src/utils/udpros_utils.dart' as udp;
 import 'package:rxdart/rxdart.dart';
 
 import '../../msg_utils.dart';
@@ -25,18 +26,29 @@ class SubscriberImpl<T extends RosMessage<T>> {
     this.queueSize,
     this.throttleMs,
     // ignore: avoid_positional_boolean_parameters
-    this.tcpNoDelay,
-  ) {
+    this.tcpNoDelay, {
+    this.udpEnabled = false,
+    this.tcpEnabled = true,
+    this.port = 0,
+    this.udpFirst = false,
+    this.dgramSize = 1500,
+  }) {
     _register();
   }
   final Node node;
   final String topic;
+  final bool udpEnabled;
+  final bool tcpEnabled;
+  final int port;
+  final bool udpFirst;
   int _count = 0;
+  final int dgramSize;
   final T messageClass;
   final int queueSize;
   final int throttleMs;
   final bool tcpNoDelay;
-  // TODO: Logger
+  int _connectionId;
+  UdpMessage _udpMessage;
   final Map<String, Socket> pubClients = {};
   final Map<String, Socket> pendingClients = {};
   State _state = State.REGISTERING;
@@ -50,7 +62,11 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
   int get numPublishers => pubClients.length;
   bool get isShutdown => _state == State.SHUTDOWN;
-  List<String> get clientUris => pubClients.keys;
+  List<String> get clientUris => pubClients.keys.toList();
+
+  int get connectionId => _connectionId;
+
+  String get transport => udpFirst && udpEnabled ? 'UDPROS' : 'TCPROS';
 
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
@@ -91,7 +107,17 @@ class SubscriberImpl<T extends RosMessage<T>> {
     final info = NetworkUtils.getAddressAndPortFromUri(uri);
     //TODO: log
     try {
+      final w = ByteDataWriter(endian: Endian.little);
+      udp.createSubHeader(w, node.nodeName, messageClass.md5sum, topic, type);
       log.dartros.debug('Requesting topic from uri ${info.host}:${info.port}');
+      var protocols = [
+        if (tcpEnabled) ['TCPROS'],
+        if (udpEnabled)
+          ['UDPROS', w.toString(), info.host, port, dgramSize ?? 1500]
+      ];
+      if (udpFirst) {
+        protocols = [...protocols.reversed];
+      }
       final resp = await node.requestTopic(
           'http://${info.host}', info.port, topic, protocols);
       await _handleTopicRequestResponse(resp, uri);
@@ -130,6 +156,19 @@ class SubscriberImpl<T extends RosMessage<T>> {
     if (isShutdown) {
       return;
     }
+    if (parms.protocol == 'UDPROS' && udpEnabled) {
+      log.dartros.warn('Handling UDPROS topic request, this is a new feature');
+      await _handleUdpTopicRequestResponse(parms, uri);
+    } else if (parms.protocol == 'TCPROS' && tcpEnabled) {
+      await _handleTcpTopicRequestResponse(parms, uri);
+    } else {
+      log.dartros.warn(
+          'Publisher supports only ${parms.protocol} but it is not enabled');
+    }
+  }
+
+  Future<void> _handleTcpTopicRequestResponse(
+      ProtocolParams parms, String uri) async {
     final socket = await Socket.connect(parms.address, parms.port);
     if (isShutdown) {
       await socket.close();
@@ -155,6 +194,11 @@ class SubscriberImpl<T extends RosMessage<T>> {
       log.dartros.error(
           'Subscriber client socket ${socket.name} on topic $topic had error: $e');
     }
+  }
+
+  Future<void> _handleUdpTopicRequestResponse(
+      ProtocolParams parms, String uri) async {
+    _connectionId = parms.connectionId;
   }
 
   Future<void> _handleConnectionHeader(
@@ -201,6 +245,15 @@ class SubscriberImpl<T extends RosMessage<T>> {
     await _disconnectClient(uri);
   }
 
+  void _handleUdpMessage(ByteDataReader reader) {
+    try {
+      _streamController.add(messageClass.deserialize(reader));
+    } on Exception catch (e) {
+      log.dartros
+          .error('Error while deserializing udp message on topic $topic, $e');
+    }
+  }
+
   void _handleMessage(TCPRosChunk message) {
     log.dartros.debug('Handling message');
     _handleMsgQueue([message]);
@@ -229,4 +282,42 @@ class SubscriberImpl<T extends RosMessage<T>> {
       await node.unsubscribe(topic);
     }
   }
+
+  void handleMessageChunk(udp.UDPRosHeader header, ByteDataReader reader) {
+    switch (header.opCode) {
+      case 0:
+        // No chunking
+        if (header.blkN == 1) {
+          _handleUdpMessage(reader);
+          _udpMessage = UdpMessage(
+              header.blkN, header.msgId, header.connectionId, reader);
+        }
+        break;
+      case 1:
+        // Mutliple data
+        if (header.msgId == _udpMessage.msgId &&
+            connectionId == _udpMessage.connectionId) {
+          reader.read(8);
+          _udpMessage.buffer.add(reader.read(reader.remainingLength));
+          if (_udpMessage.blkN - 1 == header.blkN) {
+            _handleUdpMessage(_udpMessage.buffer);
+          }
+        }
+        break;
+      case 2:
+        log.dartros.error('Error udp ping not implemented');
+        break;
+      case 3:
+        log.dartros.error('Error in handling udp message chunk');
+        break;
+    }
+  }
+}
+
+class UdpMessage {
+  const UdpMessage(this.blkN, this.msgId, this.connectionId, this.buffer);
+  final int blkN;
+  final int msgId;
+  final int connectionId;
+  final ByteDataReader buffer;
 }

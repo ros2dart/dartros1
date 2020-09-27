@@ -63,6 +63,7 @@ class NodeHandle {
           {int queueSize = 1, int throttleMs = 1, bool tcpNoDelay = false}) =>
       node.subscribe<T>(_resolveName(topic), typeClass, callback, queueSize,
           throttleMs, tcpNoDelay);
+  // TODO: Add option to subscribe with UDP
 
   /// Advertises service server with type [messageClass]
   ///

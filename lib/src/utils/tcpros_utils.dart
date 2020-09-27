@@ -260,7 +260,7 @@ class TCPRosHeader<T> {
       info['type'],
       info['md5sum'],
       info['service'],
-      info['callerId'],
+      info['callerid'],
       info['message_definition'],
       info['error'],
       (info['persistent'] ?? '0') != '0',
@@ -362,5 +362,9 @@ abstract class TCPRosChunk with _$TCPRosChunk {
 }
 
 extension NamedSocket on Socket {
+  String get name => '${remoteAddress.address}:$remotePort';
+}
+
+extension NamedRawSocket on RawSocket {
   String get name => '${remoteAddress.address}:$remotePort';
 }

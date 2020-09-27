@@ -48,12 +48,13 @@ class Logger extends logging.Logger {
   Logger._(this.name, {this.logLevel})
       : super(
           filter: RosFilter(name),
+          // TODO: Fix the color & line length problem with flutter
           printer: logging.PrettyPrinter(
             // printTime: true,
             printEmojis: false,
             methodCount: 0,
-            colors: stdout.supportsAnsiEscapes,
-            lineLength: stdout.terminalColumns,
+            colors: true,
+            lineLength: 80,
           ),
           level: logLevel.loggingLevel,
           output: logging.ConsoleOutput(),

@@ -110,7 +110,7 @@ Future<StatusCode> _rpcCallStatus(
 
 mixin XmlRpcClient {
   final http.Client client = http.Client();
-  String get rosMasterUri => 'http://localhost:11311';
+  String get rosMasterURI => 'http://localhost:11311';
   String get nodeName;
   int get tcpRosPort;
   String get xmlRpcUri;
@@ -121,14 +121,14 @@ mixin XmlRpcClient {
     Map<String, String> headers,
     dynamic Function() onError,
   }) =>
-      _rpcCall(methodName, params, rosMasterUri, client.post,
+      _rpcCall(methodName, params, rosMasterURI, client.post,
           headers: headers, onError: onError);
   Future<StatusCode> _callRpc(
     String methodName,
     List<dynamic> params, {
     Map<String, String> headers,
   }) =>
-      _rpcCallStatus(methodName, params, rosMasterUri, client.post,
+      _rpcCallStatus(methodName, params, rosMasterURI, client.post,
           headers: headers);
 }
 
@@ -143,7 +143,8 @@ class SlaveApiClient {
       String topic, List<List<String>> protocols) async {
     final p = await _rpcCall('requestTopic', [nodeName, topic, protocols],
         '$host:$port', client.post);
-    return ProtocolParams(p[0], p[1], p[2] as int);
+    return ProtocolParams(
+        p[0], p[1], p[2] as int, p.length > 3 ? p[3] as int : 0);
   }
 }
 
@@ -332,7 +333,8 @@ abstract class TopicInfo with _$TopicInfo {
 
 @freezed
 abstract class ProtocolParams with _$ProtocolParams {
-  factory ProtocolParams(String protocol, String address, int port) =
+  factory ProtocolParams(
+          String protocol, String address, int port, int connectionId) =
       _ProtocolParams;
 }
 

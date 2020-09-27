@@ -1,13 +1,17 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/utils/tcpros_utils.dart';
+import 'package:dartros/src/utils/udpros_utils.dart' as udp;
 
 import '../../msg_utils.dart';
 import '../node.dart';
 import '../utils/client_states.dart';
 import '../utils/log/logger.dart';
+
+var msgCount = 0;
 
 class PublisherImpl<T extends RosMessage> {
   PublisherImpl(
@@ -33,11 +37,12 @@ class PublisherImpl<T extends RosMessage> {
   final T messageClass;
   State _state = State.REGISTERING;
   final Map<String, Socket> subClients = {};
+  final Map<String, UdpSocketOptions> udpSubClients = {};
 
   String get type => messageClass.fullType;
   String get spinnerId => 'Publisher://$topic';
-  int get numSubscribers => subClients.keys.length;
-  List<String> get clientUris => subClients.keys;
+  int get numSubscribers => subClients.keys.length + udpSubClients.length;
+  List<String> get clientUris => [...subClients.keys, ...udpSubClients.keys];
 
   void registerPublisher() {
     count++;
@@ -75,12 +80,15 @@ class PublisherImpl<T extends RosMessage> {
         final writer = ByteDataWriter(endian: Endian.little);
 
         serializeMessage(writer, msg);
+        final serialized = writer.toBytes();
         for (final client in subClients.values) {
-          client.add(writer.toBytes());
+          client.add(serialized);
         }
+        sendMsgToUdpClients(serialized);
         if (latching) {
           lastSentMsg = msg;
         }
+        msgCount++;
       }
     } on Exception catch (e) {
       log.dartros.error('Error when publishing message on topic $topic: $e');
@@ -142,4 +150,51 @@ class PublisherImpl<T extends RosMessage> {
     }
     subClients[connection.name] = connection;
   }
+
+  void addUdpSubscriber(int client, UdpSocketOptions options) {
+    udpSubClients[client.toString()] = options;
+  }
+
+  bool isUdpSubscriber(String client) {
+    return udpSubClients.keys.contains(client);
+  }
+
+  Future<void> sendMsgToUdpClients(Uint8List serialized) async {
+    for (final client in udpSubClients.values) {
+      final header =
+          udp.UDPRosHeader(client.connId, 0, msgCount, 1, '', '', '', '', '');
+      var w = ByteDataWriter(endian: Endian.little);
+      header.serialize(w);
+      final payloadSize = client.dgramSize - 8;
+      if (serialized.length > payloadSize) {
+        var offset = payloadSize;
+        final chunk = serialized.sublist(0, payloadSize);
+        final sock = await RawSocket.connect(client.host, client.port);
+        w.write(chunk);
+        sock.write(w.toBytes());
+        while (offset < serialized.length) {
+          offset += payloadSize;
+          final chunk = serialized.sublist(
+              offset, min(serialized.length, offset + payloadSize));
+          w = ByteDataWriter(endian: Endian.little);
+          header.serialize(w);
+          w.write(chunk);
+          sock.write(w.toBytes());
+        }
+      } else {
+        final sock = await RawSocket.connect(client.host, client.port);
+        w.write(serialized);
+        sock.write(w.toBytes());
+        await sock.close();
+      }
+    }
+  }
+}
+
+class UdpSocketOptions {
+  const UdpSocketOptions(this.port, this.host, this.dgramSize, this.connId);
+  final int port;
+  final String host;
+  final int dgramSize;
+  final int connId;
 }

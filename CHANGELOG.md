@@ -1,3 +1,24 @@
+## 0.0.3+10
+- Add preliminary UDP support, and use IP address to enable working on local network
+  
+## 0.0.3+9
+- Fix service server issue with deserializing request
+  
+## 0.0.3+8
+- Finish fixing bus info from node via rqt_graph
+  
+## 0.0.3+7
+- Fix exception when getting bus info from node via rqt_graph
+  
+## 0.0.3+6
+- Export NodeHandle class. Still need work on generating action messages
+
+## 0.0.3+5
+- Try to fix a logging problem when used with flutter
+
+## 0.0.3+4
+- Attempt to publish with documentation as well as updated dependencies
+
 ## 0.0.3+3
 - Added documentation
 
