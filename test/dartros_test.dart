@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:async/async.dart';
 import 'package:dartros/dartros.dart';
 import 'package:test/test.dart';
 import 'package:dartx/dartx.dart';
@@ -33,7 +33,7 @@ void main() {
       chatter.publish(StringMessage(data: 'message'));
 
       await Future.delayed(4.seconds);
-      await expectLater(subStream, emits('message'));
+      await expectLater(StreamQueue(subStream), emits('message'));
     });
   });
 }
