@@ -1,27 +1,27 @@
 import '../msg_utils.dart';
 import 'impl/publisher_impl.dart';
+import 'utils/client_states.dart';
 
 class Publisher<T extends RosMessage<T>> {
-  Publisher(this.impl) {
-    _topic = impl.topic;
-    _type = impl.type;
+  Publisher(this.impl)
+      : topic = impl.topic,
+        type = impl.type {
     impl.registerPublisher();
+    _state = State.REGISTERED;
   }
+  State _state = State.REGISTERING;
+  final PublisherImpl<T> impl;
+  final String topic;
+  final String type;
 
-  PublisherImpl<T> impl;
-  String _topic;
-  String _type;
-
-  String get topic => _topic;
-  String get type => _type;
   bool get latching => impl?.latching ?? false;
   int get numSubscribers => impl?.numSubscribers ?? 0;
   Future<void> shutdown() async {
     await impl.unregisterPublisher();
-    impl = null;
+    _state = State.SHUTDOWN;
   }
 
-  bool get isShutdown => impl == null;
+  bool get isShutdown => _state == State.SHUTDOWN;
   void publish(T message, [int throttleMs = 0]) =>
       impl?.publish(message, throttleMs);
 }
