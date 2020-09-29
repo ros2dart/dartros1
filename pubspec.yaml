@@ -25,6 +25,7 @@ dependencies:
 
 dev_dependencies:
   pedantic: ^1.8.0
+  async: any
   test: ^1.6.0
   freezed: any
   build_runner: any
