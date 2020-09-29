@@ -1,18 +1,8 @@
 name: Test dartros
 
-on:
-  push:
-    branches: [ $default-branch ]
-  pull_request:
-    branches: [ $default-branch ]
-
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
-    container:
-      image:  google/dart:latest
+    runs-on: google/dart:latest
 
     steps:
     - uses: actions/checkout@v2
