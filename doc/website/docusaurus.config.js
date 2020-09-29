@@ -4,7 +4,7 @@ module.exports = {
   url: 'https://timwhiting.github.io/',
   baseUrl: '/dartros/',
   onBrokenLinks: 'throw',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/icon.ico',
   organizationName: 'TimWhiting', // Usually your GitHub org/user name.
   projectName: 'dartros', // Usually your repo name.
   themeConfig: {
