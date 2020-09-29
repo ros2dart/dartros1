@@ -1,35 +1,37 @@
 name: Test dartros
 
-
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-  build:
+  test:
+    name: Test
+    defaults:
+      run:
+        shell: bash
     runs-on: ubuntu-latest
-    
+
     container:
       image: osrf/ros:melodic-desktop
-    
-    steps:
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install apt-transport-https wget
-        sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
-        sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_unstable.list > /etc/apt/sources.list.d/dart_unstable.list'
-        sudo apt-get update
-        sudo apt-get install dart
-    - uses: actions/checkout@v1
-    - name: Clone things
-      run: |
-        echo 'HELLO'
-        export PATH="$PATH:/usr/lib/dart/bin"
-        source /opt/ros/melodic/setup.bash
-        dart pub get
-        dart pub run test
 
-    
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install apt-transport-https wget
+          sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
+          sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_unstable.list > /etc/apt/sources.list.d/dart_unstable.list'
+          sudo apt-get update
+          sudo apt-get install dart
+
+      - uses: actions/checkout@v1
+      - name: Clone things
+        run: |
+          echo 'HELLO'
+          export PATH="$PATH:/usr/lib/dart/bin"
+          source /opt/ros/melodic/setup.bash
+          dart pub get
+          dart pub run test
