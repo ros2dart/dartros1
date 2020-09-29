@@ -8,34 +8,26 @@ import styles from './styles.module.css';
 
 const features = [
   {
-    title: 'Easy to Use',
+    title: 'Productivity for UI design',
     imageUrl: 'img/flutter.svg',
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and used to get your website up and running
-        quickly.
+        Using dart and the flutter framework you can build user interfaces for Android, iOS, MacOS, Windows, and Linux.
+        Dart is a fast AOT compiled statically typed scripting language.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Tutorials',
     imageUrl: 'img/robot2.svg',
     description: (
-      <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go ahead and move your docs into the{' '}
-        <code>docs</code> directory.
-      </>
+      <>Learning by example is the best, so I'll be adding some short tutorials to mimic the official ros tutorials.</>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Have Fun doing ROS in dart',
     imageUrl: 'img/robot.svg',
-    description: (
-      <>
-        Extend or customize your website layout by reusing React. Docusaurus can be extended while reusing the same
-        header and footer.
-      </>
-    ),
+    description: <>Enjoy programming your robots to interact with you.</>,
   },
 ];
 
