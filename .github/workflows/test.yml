@@ -26,7 +26,7 @@ jobs:
     - name: Clone things
       run: |
         echo 'HELLO'
-        pub get
-        pub run test
+        dart pub get
+        dart pub run test
 
     
