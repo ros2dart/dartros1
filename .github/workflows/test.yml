@@ -10,14 +10,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
+    container:
+      image: osrf/ros:melodic-desktop
+    
     steps:
-    - uses: actions/checkout@v2
-    - uses: ros-tooling/setup-ros@0.0.25
-      with:
-        required-ros-distributions: melodic
-    - uses: ros-tooling/action-ros-ci@0.0.18
-      with:
-        package-name: my_package
-        target-ros1-distro: melodic
-        vcs-repo-file-url: /deps.repos
+      - sudo apt-get install apt-transport-https
+      - sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
+      - sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list'
+      - sudo apt-get update
+      - sudo apt-get install dart
+    
