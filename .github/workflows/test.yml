@@ -9,7 +9,10 @@ on:
 
 jobs:
   build:
-    runs-on: google/dart:latest
+    runs-on: ubuntu:lastest
+    
+    container:
+      image: google/dart:latest
 
     steps:
     - uses: actions/checkout@v2
