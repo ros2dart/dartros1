@@ -11,8 +11,8 @@ module.exports = {
     navbar: {
       title: 'dartros',
       logo: {
-        alt: 'A logo',
-        src: 'img/logo.svg',
+        alt: 'A robot',
+        src: 'img/icon.svg',
       },
       items: [
         {
@@ -55,6 +55,15 @@ module.exports = {
             {
               label: 'GitHub',
               href: 'https://github.com/TimWhiting/dartros',
+            },
+          ],
+        },
+        {
+          title: 'Credits',
+          items: [
+            {
+              label: 'Icon: "Robot by Rutmer Zijlstra from the Noun Project"',
+              href: 'https://thenounproject.com',
             },
           ],
         },
