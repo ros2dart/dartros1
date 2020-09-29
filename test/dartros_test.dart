@@ -37,10 +37,10 @@ void main() {
   group('Subscriber Tests', () {
     test('Subscriber Works', () async {
       final pub = await Process.start(
-          'rostopic', ['pub', '/chatter', 'std_msgs/String', "data: 'hi'"]);
+          'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"]);
       final nh = await initNode('my_node', []);
-      final chatter = nh.subscribe<StringMessage>(
-          'chatter', std_msgs.StringMessage, (_) {});
+      final chatter =
+          nh.subscribe<StringMessage>('hello', std_msgs.StringMessage, (_) {});
       final subStream =
           chatter.messageStream.asBroadcastStream().map((s) => s.data);
       await expectLater(subStream, emits('hi'));

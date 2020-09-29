@@ -1,0 +1,9 @@
+repositories:
+  dartros:
+    type: git
+    url: git@github.com:TimWhiting/dartros.git
+    version: master
+  gendart:
+    type: git
+    url: git@github.com:TimWhiting/gendart
+    version: kinetic-devel
