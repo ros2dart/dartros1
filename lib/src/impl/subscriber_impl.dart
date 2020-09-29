@@ -110,10 +110,16 @@ class SubscriberImpl<T extends RosMessage<T>> {
       final w = ByteDataWriter(endian: Endian.little);
       udp.createSubHeader(w, node.nodeName, messageClass.md5sum, topic, type);
       log.dartros.debug('Requesting topic from uri ${info.host}:${info.port}');
-      var protocols = [
+      var protocols = <List<String>>[
         if (tcpEnabled) ['TCPROS'],
         if (udpEnabled)
-          ['UDPROS', w.toString(), info.host, port, dgramSize ?? 1500]
+          [
+            'UDPROS',
+            w.toString(),
+            info.host,
+            port.toString(),
+            (dgramSize ?? 1500).toString()
+          ]
       ];
       if (udpFirst) {
         protocols = [...protocols.reversed];

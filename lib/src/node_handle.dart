@@ -58,7 +58,7 @@ class NodeHandle {
   /// Subscribes to [topic] with message type [typeClass]
   ///
   /// [typeClass] must be a [RosMessage]
-  Subscriber subscribe<T extends RosMessage<T>>(
+  Subscriber<T> subscribe<T extends RosMessage<T>>(
           String topic, T typeClass, void Function(T) callback,
           {int queueSize = 1, int throttleMs = 1, bool tcpNoDelay = false}) =>
       node.subscribe<T>(_resolveName(topic), typeClass, callback, queueSize,

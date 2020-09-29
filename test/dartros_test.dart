@@ -19,21 +19,32 @@ void main() {
   });
   group('Publisher Tests', () {
     test('Publisher Works', () async {
-      final sub = await startPythonNode('sub.py');
-
-      await Future.delayed(2.seconds);
+      final sub = await Process.start('rostopic', ['echo', 'chatter']);
       final subStream = sub.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .asBroadcastStream();
-      subStream.listen((m) => print(m));
       final nh = await initNode('my_node', []);
       final chatter =
           nh.advertise<StringMessage>('chatter', std_msgs.StringMessage);
-      chatter.publish(StringMessage(data: 'message'));
+      await Future.delayed(const Duration(seconds: 1));
+      chatter.publish(StringMessage(data: 'message'), 1);
+      await expectLater(subStream, emits('data: "message"'));
+      sub.kill();
+    });
+  });
 
-      await Future.delayed(4.seconds);
-      await expectLater(StreamQueue(subStream), emits('message'));
+  group('Subscriber Tests', () {
+    test('Subscriber Works', () async {
+      final pub = await Process.start(
+          'rostopic', ['pub', '/chatter', 'std_msgs/String', "data: 'hi'"]);
+      final nh = await initNode('my_node', []);
+      final chatter = nh.subscribe<StringMessage>(
+          'chatter', std_msgs.StringMessage, (_) {});
+      final subStream =
+          chatter.messageStream.asBroadcastStream().map((s) => s.data);
+      await expectLater(subStream, emits('hi'));
+      pub.kill();
     });
   });
 }
