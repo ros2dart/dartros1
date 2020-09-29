@@ -19,7 +19,8 @@ void main() {
   });
   group('Publisher Tests', () {
     test('Publisher Works', () async {
-      final sub = await Process.start('rostopic', ['echo', 'chatter']);
+      final sub = await Process.start('rostopic', ['echo', 'chatter'],
+          runInShell: true);
       final subStream = sub.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())
@@ -37,7 +38,8 @@ void main() {
   group('Subscriber Tests', () {
     test('Subscriber Works', () async {
       final pub = await Process.start(
-          'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"]);
+          'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"],
+          runInShell: true);
       final nh = await initNode('my_node', []);
       final chatter =
           nh.subscribe<StringMessage>('hello', std_msgs.StringMessage, (_) {});
