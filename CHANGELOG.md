@@ -1,3 +1,8 @@
+## 0.0.4
+- Fix an issue with added UDP support with subscribers
+- Added type parameter to return value of subscriber
+- Add some tests
+
 ## 0.0.3+10
 - Add preliminary UDP support, and use IP address to enable working on local network
   
