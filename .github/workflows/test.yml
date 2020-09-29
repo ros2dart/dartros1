@@ -24,6 +24,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install dart
     - name: Clone things
-      run: echo 'HELLO'
+      run: |
+        echo 'HELLO'
+        pub get
+        pub run test
 
     

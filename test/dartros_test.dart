@@ -27,7 +27,7 @@ void main() {
       final nh = await initNode('my_node', []);
       final chatter =
           nh.advertise<StringMessage>('chatter', std_msgs.StringMessage);
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 2));
       chatter.publish(StringMessage(data: 'message'), 1);
       await expectLater(subStream, emits('data: "message"'));
       sub.kill();
