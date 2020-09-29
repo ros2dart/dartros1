@@ -19,7 +19,7 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/',
+          to: 'docs/home',
           activeBasePath: 'docs',
           label: 'Docs',
           position: 'left',
@@ -37,7 +37,13 @@ module.exports = {
       links: [
         {
           title: 'Docs',
-          items: [],
+          items: [
+            {
+              label: 'home',
+              to: 'docs/home',
+              activeBasePath: 'docs',
+            },
+          ],
         },
         {
           title: 'ROS Community',

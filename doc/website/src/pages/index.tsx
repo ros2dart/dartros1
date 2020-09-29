@@ -12,8 +12,7 @@ const features = [
     imageUrl: 'img/flutter.svg',
     description: (
       <>
-        Using dart and the flutter framework you can build user interfaces for Android, iOS, MacOS, Windows, and Linux.
-        Dart is a fast AOT compiled statically typed scripting language.
+        Using Dart and the Flutter framework you can build user interfaces for Android, iOS, MacOS, Windows, and Linux.
       </>
     ),
   },
@@ -27,7 +26,12 @@ const features = [
   {
     title: 'Have Fun doing ROS in dart',
     imageUrl: 'img/robot.svg',
-    description: <>Enjoy programming your robots to interact with you.</>,
+    description: (
+      <>
+        Enjoy programming your robots to interact with you. Dart is a fast, AOT compiled, statically-typed, scripting
+        language.
+      </>
+    ),
   },
 ];
 
@@ -61,7 +65,7 @@ function Home() {
           <div className={styles.buttons}>
             <Link
               className={clsx('button button--outline button--secondary button--lg', styles.getStarted)}
-              to={useBaseUrl('docs/')}
+              to={useBaseUrl('docs/home')}
             >
               Get Started
             </Link>
