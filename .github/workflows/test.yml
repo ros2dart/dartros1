@@ -23,10 +23,12 @@ jobs:
         sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list'
         sudo apt-get update
         sudo apt-get install dart
+    - uses: actions/checkout@v1
     - name: Clone things
       run: |
         echo 'HELLO'
-        dart pub get
-        dart pub run test
+        export PATH="$PATH:/usr/lib/dart/bin"
+        pub get
+        pub run test
 
     
