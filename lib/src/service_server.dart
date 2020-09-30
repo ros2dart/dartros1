@@ -53,7 +53,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
         writer, header, service, messageClass.md5sum);
     if (!validated) {
       log.dartros.error(
-          'Error while validating service $service connection header: ${writer.toBytes()}');
+          'Error while validating service $service connection header: ${header.toString()}');
       await connection.close();
       return;
     }

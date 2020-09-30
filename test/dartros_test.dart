@@ -10,9 +10,11 @@ import 'helpers/python_runner.dart';
 
 void main() {
   Process roscore;
+  NodeHandle nh;
   setUpAll(() async {
     roscore = await startRosCore();
     await Future.delayed(2.seconds);
+    nh = await initNode('my_node', []);
   });
   tearDownAll(() async {
     roscore.kill();
@@ -25,7 +27,7 @@ void main() {
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .asBroadcastStream();
-      final nh = await initNode('my_node', []);
+
       final chatter =
           nh.advertise<StringMessage>('chatter', std_msgs.StringMessage);
       await Future.delayed(2.seconds);
@@ -40,7 +42,7 @@ void main() {
       final pub = await Process.start(
           'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"],
           runInShell: true);
-      final nh = await initNode('my_node', []);
+
       final chatter =
           nh.subscribe<StringMessage>('hello', std_msgs.StringMessage, (_) {});
       final subStream =
@@ -52,7 +54,6 @@ void main() {
 
   group('Service Tests', () {
     test('ServerClient Works', () async {
-      final nh = await initNode('my_node', []);
       var first = true;
       final server = nh.advertiseService('/move_bloc', MoveBlock.empty$,
           (MoveBlockRequest req) {
@@ -81,6 +82,33 @@ void main() {
         ..shape = 2);
       expect(response.wasSuccessful, true);
       expect(response.outOfReach, false);
+    });
+
+    test('Rosservice call', () async {
+      var first = true;
+      final server = nh.advertiseService('/move_bloc_2', MoveBlock.empty$,
+          (MoveBlockRequest req) {
+        if (first) {
+          expect(req.color, 0);
+          expect(req.shape, 1);
+          first = false;
+          return MoveBlockResponse(wasSuccessful: false, outOfReach: true);
+        }
+        expect(req.color, 1);
+        expect(req.shape, 2);
+        return MoveBlockResponse(wasSuccessful: true, outOfReach: false);
+      });
+
+      await Future.delayed(2.seconds);
+
+      var response =
+          await Process.run('rosservice', ['call', '/move_bloc_2', '0', '1']);
+      expect(response.stdout, 'wasSuccessful: False\noutOfReach: True\n');
+      expect(response.stderr, '');
+      response =
+          await Process.run('rosservice', ['call', '/move_bloc_2', '1', '2']);
+      expect(response.stdout, 'wasSuccessful: True\noutOfReach: False\n');
+      expect(response.stderr, '');
     });
   });
 }

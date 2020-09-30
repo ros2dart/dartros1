@@ -41,7 +41,7 @@ class Node extends rpc_server.XmlRpcHandler
   static Node get singleton => _node;
   String _ipAddress;
   @override
-  String get xmlRpcUri => 'http://${_ipAddress}:${_xmlRpcServer.port}';
+  String get xmlRpcUri => 'http://$_ipAddress:${_xmlRpcServer.port}';
   @override
   int get tcpRosPort => _tcpRosServer.port;
   @override
@@ -272,42 +272,47 @@ class Node extends rpc_server.XmlRpcHandler
             .info('Node $nodeName got connection from ${connection.name}');
 
         final listener = connection.asBroadcastStream();
-        final message = await listener
-            .transform(TCPRosChunkTransformer().transformer)
-            .first;
+        try {
+          final message = await listener
+              .transform(TCPRosChunkTransformer().transformer)
+              .first;
 
-        final header = parseTcpRosHeader(message);
-        if (header == null) {
-          log.dartros.error('Unable to validate connection header $header');
-          connection.add(
-              serializeString('Unable to validate connection header $message'));
-          await connection.flush();
-          await connection.close();
+          final header = parseTcpRosHeader(message);
+          if (header == null) {
+            log.dartros.error('Unable to validate connection header $header');
+            connection.add(serializeString(
+                'Unable to validate connection header $message'));
+            await connection.flush();
+            await connection.close();
+            return;
+          }
+          log.superdebug.info('Got connection header $header');
+          if (header.topic.isNotNullOrEmpty) {
+            final topic = header.topic;
+            if (_publishers.containsKey(topic)) {
+              await _publishers[topic]
+                  .handleSubscriberConnection(connection, listener, header);
+            } else {
+              log.dartros
+                  .info('Got connection header for unknown topic $topic');
+            }
+          } else if (header.service.isNotNullOrEmpty) {
+            final service = header.service;
+            final serviceServer = _services[service];
+            if (serviceServer != null) {
+              await serviceServer.handleClientConnection(
+                  connection, listener, header);
+            } else {
+              log.dartros.info('Got service connection for unknown service');
+            }
+          } else {
+            connection.add(serializeString(
+                'Connection header $message has neither topic nor service'));
+            await connection.flush();
+            await connection.close();
+          }
+        } on StateError catch (e) {
           return;
-        }
-        log.superdebug.info('Got connection header $header');
-        if (header.topic.isNotNullOrEmpty) {
-          final topic = header.topic;
-          if (_publishers.containsKey(topic)) {
-            await _publishers[topic]
-                .handleSubscriberConnection(connection, listener, header);
-          } else {
-            log.dartros.info('Got connection header for unknown topic $topic');
-          }
-        } else if (header.service.isNotNullOrEmpty) {
-          final service = header.service;
-          final serviceServer = _services[service];
-          if (serviceServer != null) {
-            await serviceServer.handleClientConnection(
-                connection, listener, header);
-          } else {
-            log.dartros.info('Got service connection for unknown service');
-          }
-        } else {
-          connection.add(serializeString(
-              'Connection header $message has neither topic nor service'));
-          await connection.flush();
-          await connection.close();
         }
       },
       onError: (e) => log.dartros.warn('Error on tcpros server! $e'),
@@ -479,11 +484,8 @@ class Node extends rpc_server.XmlRpcHandler
       String callerID, String topic, List<dynamic> protocols) {
     log.superdebug.info(
         'Handling topic request from $callerID for $topic with protocols: $protocols');
-    print(callerID);
-    print(topic);
     List resp;
     if (_publishers.containsKey(topic)) {
-      print(protocols);
       if (protocols[0][0] == 'TCPROS') {
         resp = [
           1,
@@ -514,7 +516,6 @@ class Node extends rpc_server.XmlRpcHandler
       log.dartros.error('Topic $topic does not exist for this ros node');
       resp = [0, 'Unable to allocate topic connection for $topic', []];
     }
-    print(resp);
     return XMLRPCResponse(resp[0], resp[1], resp[2]);
   }
 

@@ -16,7 +16,7 @@ class _NetworkUtils {
   void init(Map<String, String> remappings) {
     _ip = remappings[SPECIAL_KEYS.ip];
     _hostname = remappings[SPECIAL_KEYS.hostname];
-    _ros_ip = Platform.environment['ROS_HOME'];
+    _ros_ip = Platform.environment['ROS_IP'];
     _ros_hostname = Platform.environment['ROS_HOSTNAME'];
     _host =
         _ip ?? _hostname ?? _ros_ip ?? _ros_hostname ?? Platform.localHostname;

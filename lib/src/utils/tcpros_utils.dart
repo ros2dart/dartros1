@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:buffer/buffer.dart';
 import 'package:dartx/dartx.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:logger/logger.dart';
 
+import 'log/logger.dart';
 import 'msg_utils.dart';
 part 'tcpros_utils.freezed.dart';
 
@@ -136,6 +138,7 @@ bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
 
 bool validateServiceClientHeader(
     ByteDataWriter writer, TCPRosHeader header, String service, String md5sum) {
+  // log.dartros.error('Header:, ${header.md5sum} ${header.service}');
   if (header.service.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [service]');
     return false;
@@ -149,7 +152,7 @@ bool validateServiceClientHeader(
         'Got incorrect service [${header.service}] expected [$service]');
     return false;
   }
-  if (header.md5sum != md5sum) {
+  if (header.md5sum != md5sum && header.md5sum != '*') {
     writer.writeString(
         'Got incorrect md5sum [${header.md5sum}] expected [$md5sum]');
     return false;
