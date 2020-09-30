@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Clone things
         run: |
-          mkdir ws/src
+          mkdir -p ws/src
           cp deps.repos ws/src/deps.repos
           cd ws/src
           echo 'getting repos'
