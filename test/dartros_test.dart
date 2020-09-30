@@ -99,15 +99,17 @@ void main() {
         return MoveBlockResponse(wasSuccessful: true, outOfReach: false);
       });
 
-      await Future.delayed(2.seconds);
+      await Future.delayed(1.seconds);
 
       var response =
           await Process.run('rosservice', ['call', '/move_bloc_2', '0', '1']);
-      expect(response.stdout, 'wasSuccessful: False\noutOfReach: True\n');
+      expect(response.stdout, 'wasSuccessful: False\noutOfReach: True\n',
+          reason: response.stderr.toString());
       expect(response.stderr, '');
       response =
           await Process.run('rosservice', ['call', '/move_bloc_2', '1', '2']);
-      expect(response.stdout, 'wasSuccessful: True\noutOfReach: False\n');
+      expect(response.stdout, 'wasSuccessful: True\noutOfReach: False\n',
+          reason: response.stderr.toString());
       expect(response.stderr, '');
     });
   });
