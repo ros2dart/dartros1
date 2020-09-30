@@ -21,11 +21,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install apt-transport-https wget python3-vcstool
+          sudo apt-get install -y apt-transport-https wget python3-vcstool
           sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
           sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_unstable.list > /etc/apt/sources.list.d/dart_unstable.list'
           sudo apt-get update
-          sudo apt-get install dart
+          sudo apt-get install -y dart
 
       - uses: actions/checkout@v1
       - name: Clone things
