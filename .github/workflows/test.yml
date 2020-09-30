@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install apt-transport-https wget
+          sudo apt-get install apt-transport-https wget python3-vcstool
           sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
           sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_unstable.list > /etc/apt/sources.list.d/dart_unstable.list'
           sudo apt-get update
@@ -30,8 +30,22 @@ jobs:
       - uses: actions/checkout@v1
       - name: Clone things
         run: |
+          mkdir ws
+          cp deps.repos ws/deps.repos
+          cd ws
+          echo 'getting repos'
+          vcs import < deps.repos
+      - name: Run catkin make
+        run: |
+          cd ws
+          source /opt/ros/melodic/setup.bash
+          catkin_make
+      - name: Test Things
+        run: |
+          cd ws/src/dartros
           echo 'HELLO'
           export PATH="$PATH:/usr/lib/dart/bin"
           source /opt/ros/melodic/setup.bash
+          source ../../devel/setup.bash
           dart pub get
           dart pub run test
