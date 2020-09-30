@@ -1,9 +1,11 @@
 repositories:
   dartros:
+    local-name: src/dartros
     type: git
     url: https://github.com/TimWhiting/dartros.git
     version: master
   gendart:
+    local-name: src/gendart
     type: git
     url: https://github.com/TimWhiting/gendart
     version: kinetic-devel
