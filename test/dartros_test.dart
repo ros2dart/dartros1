@@ -42,7 +42,7 @@ void main() {
       final pub = await Process.start(
           'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"],
           runInShell: true);
-
+      await Future.delayed(2.seconds);
       final chatter =
           nh.subscribe<StringMessage>('hello', std_msgs.StringMessage, (_) {});
       final subStream =
@@ -69,6 +69,7 @@ void main() {
         return MoveBlockResponse(wasSuccessful: true, outOfReach: false);
       });
       final request = MoveBlockRequest(color: 0, shape: 1);
+      await Future.delayed(2.seconds);
       final moveBloc =
           nh.serviceClient<MoveBlockRequest, MoveBlockResponse, MoveBlock>(
               '/move_bloc', MoveBlock.empty$,
@@ -114,6 +115,6 @@ void main() {
             reason: response.stderr.toString());
         expect(response.stderr, '');
       }
-    });
+    }, skip: true);
   });
 }
