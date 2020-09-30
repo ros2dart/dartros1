@@ -1,10 +1,10 @@
 name: dartros
 description: A Dart implementation of a ROS 1 Client Library
-version: 0.0.4
+version: 0.0.4+1
 repository: https://github.com/TimWhiting/dartros
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: '>=2.7.0 <3.0.0'
 
 dependencies:
   path: ^1.6.0

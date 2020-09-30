@@ -1,3 +1,6 @@
+## 0.0.4+1
+- Fix an issue with rosservice servers
+  
 ## 0.0.4
 - Fix an issue with added UDP support with subscribers
 - Added type parameter to return value of subscriber
