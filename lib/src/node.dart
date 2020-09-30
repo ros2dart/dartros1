@@ -40,8 +40,9 @@ class Node extends rpc_server.XmlRpcHandler
   static Node _node;
   static Node get singleton => _node;
   String _ipAddress;
+  String get ipAddress => _ipAddress;
   @override
-  String get xmlRpcUri => 'http://$_ipAddress:${_xmlRpcServer.port}';
+  String get xmlRpcUri => 'http://$ipAddress:${_xmlRpcServer.port}';
   @override
   int get tcpRosPort => _tcpRosServer.port;
   @override

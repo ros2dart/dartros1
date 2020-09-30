@@ -26,7 +26,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
   final R Function(C) requestCallback;
   State _state = State.REGISTERING;
   List<String> get clientUris => _clients.keys.toList();
-  String get serviceUri => NetworkUtils.formatServiceUri(port);
+  String get serviceUri => NetworkUtils.formatServiceUri(node.ipAddress, port);
 
   void shutdown() {
     node.unregisterService(service);

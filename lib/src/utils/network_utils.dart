@@ -28,7 +28,8 @@ class _NetworkUtils {
 
   int getPortFromUri(String uriString) => Uri.parse(uriString).port;
 
-  String formatServiceUri(int port) => 'rosrpc://$host:$port';
+  String formatServiceUri(String ipAddress, int port) =>
+      'rosrpc://$ipAddress:$port';
 
   Future<String> getIPAddress({
     String interface,
