@@ -23,7 +23,7 @@ const persistentField = 'persistent=1';
 const tcpNoDelayField = 'tcp_nodelay=1';
 
 void serializeStringFields(ByteDataWriter writer, List<String> fields) {
-  final totalLength = fields.map((f) => f.lenInBytes + 4).sum();
+  final totalLength = IterableNumX(fields.map((f) => f.lenInBytes + 4)).sum();
   writer.writeUint32(totalLength, Endian.little);
   fields.forEach(writer.writeString);
 }

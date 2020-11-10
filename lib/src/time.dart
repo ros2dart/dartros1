@@ -14,8 +14,8 @@ class Time {
       if (useSimTime) {
         nh.subscribe(
           '/clock',
-          rosgraph_msgs.Clock,
-          (Clock msg) {
+          Clock.$prototype,
+          (msg) {
             simTime = msg.clock;
           },
           throttleMs: -1,

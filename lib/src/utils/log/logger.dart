@@ -136,7 +136,7 @@ class Logger extends logging.Logger {
   final Set<String> _onceSent = {};
 
   static Future<void> initializeRosLogger() async {
-    _rosLog = nh.advertise<Log>('/rosout', rosgraph_msgs.Log,
+    _rosLog = nh.advertise<Log>('/rosout', Log.$prototype,
         queueSize: 10, latching: true);
   }
 }

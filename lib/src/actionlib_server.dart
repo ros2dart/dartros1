@@ -16,10 +16,10 @@ abstract class ActionLibServer<
         '$actionServer/goal', actionClass.actionGoal, handleGoal,
         queueSize: 50);
     _cancelSub = node.subscribe(
-        '$actionServer/cancel', actionlib_msgs.GoalID, handleCancel,
+        '$actionServer/cancel', GoalID.$prototype, handleCancel,
         queueSize: 50);
     _statusPub = node.advertise(
-        '$actionServer/status', actionlib_msgs.GoalStatusArray,
+        '$actionServer/status', GoalStatusArray.$prototype,
         queueSize: 50);
     _feedbackPub = node.advertise(
         '$actionServer/feedback', actionClass.actionFeedback,

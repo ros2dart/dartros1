@@ -4,8 +4,8 @@ import 'package:dartx/dartx.dart';
 
 Future<void> main(List<String> args) async {
   final node = await initNode('test_node', args, anonymize: true);
-  final sub = node.subscribe<StringMessage>('/chatter', std_msgs.StringMessage,
-      (message) {
+  final sub = node.subscribe<StringMessage>(
+      '/chatter', StringMessage.$prototype, (message) {
     print('Got ${message.data}');
   });
   while (true) {

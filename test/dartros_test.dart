@@ -29,7 +29,7 @@ void main() {
           .asBroadcastStream();
 
       final chatter =
-          nh.advertise<StringMessage>('chatter', std_msgs.StringMessage);
+          nh.advertise<StringMessage>('chatter', StringMessage.$prototype);
       await Future.delayed(2.seconds);
       chatter.publish(StringMessage(data: 'message'), 1);
       await expectLater(subStream, emits('data: "message"'));
@@ -43,8 +43,8 @@ void main() {
           'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"],
           runInShell: true);
       await Future.delayed(2.seconds);
-      final chatter =
-          nh.subscribe<StringMessage>('hello', std_msgs.StringMessage, (_) {});
+      final chatter = nh.subscribe<StringMessage>(
+          'hello', StringMessage.$prototype, (_) {});
       final subStream =
           chatter.messageStream.asBroadcastStream().map((s) => s.data);
       await expectLater(subStream, emits('hi'));

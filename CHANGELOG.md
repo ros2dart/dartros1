@@ -1,3 +1,6 @@
+## 0.0.4+2
+- Update to latest message generation
+  
 ## 0.0.4+1
 - Fix an issue with rosservice servers
   
