@@ -262,8 +262,8 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// Returns the URI of the node
   Future<String> lookupNode(
     String nodeName,
-  ) =>
-      _call('lookupNode', [nodeName, nodeName]);
+  ) async =>
+      await _call('lookupNode', [nodeName, nodeName]);
 
   /// Gets the URI of the master
   ///
@@ -327,7 +327,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   }
 
   /// Gets the URI of the master.
-  Future<String> getMasterUri() => _call('getUri', [nodeName]);
+  Future<String> getMasterUri() async => await _call('getUri', [nodeName]);
 }
 
 @freezed
