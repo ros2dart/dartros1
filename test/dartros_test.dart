@@ -19,6 +19,18 @@ void main() {
   tearDownAll(() async {
     roscore.kill();
   });
+
+  group('Parameter Server Tests', () {
+    test('Can set parameter', () async {
+      final result = await nh.setParam('/foo', 'some value');
+      expect(result, true);
+    });
+    test('Can get parameter', () async {
+      final value = await nh.getParam('/foo');
+      expect(value, 'some value');
+    });
+  });
+
   group('Publisher Tests', () {
     test('Publisher Works', () async {
       final sub = await Process.start('rostopic', ['echo', 'chatter'],
