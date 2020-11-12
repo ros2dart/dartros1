@@ -13,7 +13,7 @@ Future<void> main(List<String> args) async {
       is_bigendian: 0,
       step: 1024 * 4,
       data: List.generate(600 * 1024 * 4, (_) => 255));
-  final pub = node.advertise<Image>('/robot/head_display', sensor_msgs.Image);
+  final pub = node.advertise<Image>('/robot/head_display', Image.$prototype);
   await Future.delayed(2.seconds);
   while (true) {
     pub.publish(img_msg, 1);

@@ -15,7 +15,7 @@ class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
 
   int shape;
 
-  static MoveBlockRequest empty$ = MoveBlockRequest();
+  static MoveBlockRequest $prototype = MoveBlockRequest();
   MoveBlockRequest({
     int color,
     int shape,
@@ -95,7 +95,7 @@ class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
 
   bool outOfReach;
 
-  static MoveBlockResponse empty$ = MoveBlockResponse();
+  static MoveBlockResponse $prototype = MoveBlockResponse();
   MoveBlockResponse({
     bool wasSuccessful,
     bool outOfReach,
@@ -157,11 +157,11 @@ bool outOfReach
 }
 
 class MoveBlock extends RosServiceMessage<MoveBlockRequest, MoveBlockResponse> {
-  static final empty$ = MoveBlock();
+  static final $prototype = MoveBlock();
   @override
-  MoveBlockRequest get request => MoveBlockRequest.empty$;
+  MoveBlockRequest get request => MoveBlockRequest.$prototype;
   @override
-  MoveBlockResponse get response => MoveBlockResponse.empty$;
+  MoveBlockResponse get response => MoveBlockResponse.$prototype;
   @override
   String get md5sum => '5674452fd9a3e6471d92b38af266a35b';
   @override
