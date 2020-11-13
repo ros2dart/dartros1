@@ -1,3 +1,6 @@
+## 0.0.4+4
+- Fix for several issues with shutdown thanks to @knuesel
+  
 ## 0.0.4+3
 - Fix for parameters thanks to @knuesel
   

@@ -1,6 +1,6 @@
 name: dartros
 description: A Dart implementation of a ROS 1 Client Library
-version: 0.0.4+3
+version: 0.0.4+4
 repository: https://github.com/TimWhiting/dartros
 
 environment:
@@ -30,9 +30,8 @@ dev_dependencies:
   derry: any
   freezed: any
   pedantic: ^1.8.0
+  sensor_msgs: ^0.0.3
   test: ^1.6.0
-  # sensor_msgs:
-  #   path: ../../devel/share/gendart/ros/sensor_msgs
 
 scripts:
   gen: pub run build_runner build --delete-conflicting-outputs

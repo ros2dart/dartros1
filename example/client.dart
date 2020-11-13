@@ -9,9 +9,9 @@ Future<void> main(List<String> args) async {
   final request = MoveBlockRequest(color: 0, shape: 1);
   final moveBloc =
       node.serviceClient<MoveBlockRequest, MoveBlockResponse, MoveBlock>(
-          '/move_bloc', MoveBlock.empty$,
+          '/move_bloc', MoveBlock.$prototype,
           persist: true);
-  while (true) {
+  for (;;) {
     final response = await moveBloc(request);
     print(
         'Moving block ${request.color} ${request.shape} was successful: ${response.wasSuccessful}');

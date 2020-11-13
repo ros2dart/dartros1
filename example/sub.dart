@@ -8,7 +8,7 @@ Future<void> main(List<String> args) async {
       '/chatter', StringMessage.$prototype, (message) {
     print('Got ${message.data}');
   });
-  while (true) {
+  for (;;) {
     await Future.delayed(2.seconds);
   }
 }

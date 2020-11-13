@@ -8,7 +8,7 @@ Future<void> main(List<String> args) async {
   final str_msg = StringMessage(data: 'hello');
   final pub =
       node.advertise<StringMessage>('/chatter', StringMessage.$prototype);
-  while (true) {
+  for (;;) {
     pub.publish(str_msg, 1);
     await Future.delayed(2.seconds);
   }

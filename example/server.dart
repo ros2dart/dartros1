@@ -10,7 +10,7 @@ Future<void> main(List<String> args) async {
     print('Moved ${message.color} ${message.shape}');
     return MoveBlockResponse(wasSuccessful: false, outOfReach: true);
   });
-  while (true) {
+  for (;;) {
     await Future.delayed(2.seconds);
   }
 }

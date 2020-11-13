@@ -1,6 +1,6 @@
 A ROS Client Library implementation in Dart
 
-Heavily inspired by the cpp and especially [nodejs](https://github.com/RethinkRobotics-opensource/rosnodejs) implementations*
+Heavily inspired by the cpp and especially [nodejs](https://github.com/RethinkRobotics-opensource/rosnodejs) implementations (see footnote)
 
 See the examples folder for examples, until I have time to create a better Readme and documentation.
 
