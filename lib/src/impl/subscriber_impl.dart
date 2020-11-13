@@ -71,14 +71,10 @@ class SubscriberImpl<T extends RosMessage<T>> {
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
     //TODO: log some things
-    for (final client in pubClients.keys) {
+    // Iterate on copy of keys so we can remove items during the iteration
+    for (final client in [...pubClients.keys, ...pendingClients.keys]) {
       await _disconnectClient(client);
     }
-    pubClients.clear();
-    for (final client in pendingClients.keys) {
-      await _disconnectClient(client);
-    }
-    pendingClients.clear();
     // TODO: spinner thing
   }
 
