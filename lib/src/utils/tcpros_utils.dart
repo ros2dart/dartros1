@@ -364,10 +364,9 @@ abstract class TCPRosChunk with _$TCPRosChunk {
       bool serviceResponseSuccess}) = _TcpRosChunk;
 }
 
-extension NamedSocket on Socket {
-  String get name => '${remoteAddress.address}:$remotePort';
-}
-
-extension NamedRawSocket on RawSocket {
-  String get name => '${remoteAddress.address}:$remotePort';
+class TcpConnection {
+  TcpConnection(this.socket)
+      : name = '${socket.remoteAddress.address}:${socket.remotePort}';
+  final Socket socket;
+  final String name;
 }

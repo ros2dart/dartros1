@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dartros/src/utils/tcpros_utils.dart' as tcp;
@@ -193,4 +194,11 @@ class UDPRosHeader<T> {
     writer.writeUint8(msgId);
     writer.writeUint16(blkN);
   }
+}
+
+class UdpConnection {
+  UdpConnection(this.socket)
+      : name = '${socket.remoteAddress.address}:${socket.remotePort}';
+  final RawSocket socket; // TODO: replace with RawDatagramSocket?
+  final String name;
 }
