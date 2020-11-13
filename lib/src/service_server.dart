@@ -83,7 +83,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
           return;
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _clients.remove(name);
       log.dartros.debug('Service client $name disconnected with error: $e!');
     }
@@ -98,7 +98,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
         return;
       }
       _state = State.REGISTERED;
-    } catch (e) {
+    } on Exception catch (e) {
       log.dartros.error('Error while registering service $service: error: $e');
     }
   }

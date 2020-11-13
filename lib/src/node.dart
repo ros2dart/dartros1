@@ -247,7 +247,7 @@ class Node extends rpc_server.XmlRpcHandler
               (topic) => _subscribers[topic].connectionId == connId,
               orElse: () => null);
           if (topic != null) {
-            await _subscribers[topic].handleMessageChunk(header, reader);
+            _subscribers[topic].handleMessageChunk(header, reader);
           } else {
             log.dartros.info('Got connection header for unknown topic $topic');
           }

@@ -15,7 +15,7 @@ Future<void> main(List<String> args) async {
       data: List.generate(600 * 1024 * 4, (_) => 255));
   final pub = node.advertise<Image>('/robot/head_display', Image.$prototype);
   await Future.delayed(2.seconds);
-  while (true) {
+  for (;;) {
     pub.publish(img_msg, 1);
     await Future.delayed(2.seconds);
   }

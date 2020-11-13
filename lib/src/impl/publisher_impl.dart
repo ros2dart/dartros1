@@ -11,7 +11,7 @@ import '../node.dart';
 import '../utils/client_states.dart';
 import '../utils/log/logger.dart';
 
-var msgCount = 0;
+int msgCount = 0;
 
 class PublisherImpl<T extends RosMessage> {
   PublisherImpl(
@@ -155,9 +155,7 @@ class PublisherImpl<T extends RosMessage> {
     udpSubClients[client.toString()] = options;
   }
 
-  bool isUdpSubscriber(String client) {
-    return udpSubClients.keys.contains(client);
-  }
+  bool isUdpSubscriber(String client) => udpSubClients.keys.contains(client);
 
   Future<void> sendMsgToUdpClients(Uint8List serialized) async {
     for (final client in udpSubClients.values) {

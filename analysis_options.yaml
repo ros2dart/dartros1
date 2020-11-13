@@ -356,7 +356,7 @@ linter:
     # recommendation: optional
     # reason: There are several outstanding bugs with this lint that cause a good deal of noise
     # 0 issues
-    - invariant_booleans
+    # - invariant_booleans
 
     # Invocation of Iterable<E>.contains with references of unrelated types.
     # http://dart-lang.github.io/linter/lints/iterable_contains_unrelated_type.html
