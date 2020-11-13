@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
@@ -20,7 +19,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
   final T messageClass;
   String get type => messageClass.fullType;
   final Node node;
-  Map<String, Socket> _clients = {};
+  Map<String, TcpConnection> _clients = {};
   final bool persist;
   final int port = 0;
   final R Function(C) requestCallback;
@@ -36,17 +35,18 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
   void disconnect() {
     _state = State.SHUTDOWN;
     for (final client in _clients.values) {
-      client.close();
+      client.socket.close();
     }
     _clients = {};
   }
 
   Future<void> handleClientConnection(
-      Socket connection, Stream listener, TCPRosHeader header) async {
+      TcpConnection connection, Stream listener, TCPRosHeader header) async {
     if (isShutdown) {
       return;
     }
     final name = connection.name;
+    final socket = connection.socket;
     log.dartros.debug('Service $service handling new client connection');
     final writer = ByteDataWriter(endian: Endian.little);
     final validated = validateServiceClientHeader(
@@ -54,11 +54,11 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
     if (!validated) {
       log.dartros.error(
           'Error while validating service $service connection header: ${header.toString()}');
-      await connection.close();
+      await socket.close();
       return;
     }
     createServiceServerHeader(writer, node.nodeName, messageClass.md5sum, type);
-    connection.add(writer.toBytes());
+    socket.add(writer.toBytes());
     _clients[name] = connection;
     try {
       await for (final data
@@ -73,12 +73,12 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
         final writer = ByteDataWriter(endian: Endian.little);
         serializeServiceResponse(writer, result, true);
         log.dartros.debug('Serializing service response ${writer.toBytes()}');
-        connection.add(writer.toBytes());
-        await connection.flush();
+        socket.add(writer.toBytes());
+        await socket.flush();
         log.dartros.debug('Flushed service response');
         if (!header.persistent) {
           log.dartros.debug('Closing non-persistent service client');
-          await connection.close();
+          await socket.close();
           _clients.remove(name);
           return;
         }

@@ -228,17 +228,18 @@ class Node extends rpc_server.XmlRpcHandler
     );
 
     _udpRosServer.listen(
-      (connection) async {
+      (socket) async {
+        final connection = udp.UdpConnection(socket);
         log.superdebug
             .info('Node $nodeName got connection from ${connection.name}');
 
-        await for (final _ in connection) {
+        await for (final _ in socket) {
           final reader = ByteDataReader(endian: Endian.little);
-          reader.add(connection.read());
+          reader.add(socket.read());
           final header = udp.UDPRosHeader.deserialize(reader);
           if (header == null) {
             log.dartros.error('Unable to validate connection header $header');
-            await connection.close();
+            await socket.close();
             return;
           }
           log.superdebug.info('Got connection header $header');
@@ -269,11 +270,12 @@ class Node extends rpc_server.XmlRpcHandler
     );
 
     _tcpRosServer.listen(
-      (connection) async {
+      (socket) async {
+        final connection = TcpConnection(socket);
         log.superdebug
             .info('Node $nodeName got connection from ${connection.name}');
 
-        final listener = connection.asBroadcastStream();
+        final listener = socket.asBroadcastStream();
         try {
           final message = await listener
               .transform(TCPRosChunkTransformer().transformer)
@@ -282,10 +284,10 @@ class Node extends rpc_server.XmlRpcHandler
           final header = parseTcpRosHeader(message);
           if (header == null) {
             log.dartros.error('Unable to validate connection header $header');
-            connection.add(serializeString(
+            socket.add(serializeString(
                 'Unable to validate connection header $message'));
-            await connection.flush();
-            await connection.close();
+            await socket.flush();
+            await socket.close();
             return;
           }
           log.superdebug.info('Got connection header $header');
@@ -308,10 +310,10 @@ class Node extends rpc_server.XmlRpcHandler
               log.dartros.info('Got service connection for unknown service');
             }
           } else {
-            connection.add(serializeString(
+            socket.add(serializeString(
                 'Connection header $message has neither topic nor service'));
-            await connection.flush();
-            await connection.close();
+            await socket.flush();
+            await socket.close();
           }
         } on StateError catch (e) {
           return;

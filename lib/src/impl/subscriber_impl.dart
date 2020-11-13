@@ -49,8 +49,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
   final bool tcpNoDelay;
   int _connectionId;
   UdpMessage _udpMessage;
-  final Map<String, Socket> pubClients = {};
-  final Map<String, Socket> pendingClients = {};
+  final Map<String, TcpConnection> pubClients = {};
+  final Map<String, TcpConnection> pendingClients = {};
   State _state = State.REGISTERING;
 
   String get spinnerId => 'Subscriber://$topic';
@@ -135,7 +135,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
   Future<void> _disconnectClient(String id) async {
     final client = pubClients[id] ?? pendingClients[id];
     if (client != null) {
-      await client.close();
+      await client.socket.close();
       pubClients.remove(id);
       pendingClients.remove(id);
     }
@@ -176,6 +176,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
   Future<void> _handleTcpTopicRequestResponse(
       ProtocolParams parms, String uri) async {
     final socket = await Socket.connect(parms.address, parms.port);
+    final connection = TcpConnection(socket);
     if (isShutdown) {
       await socket.close();
       return;
@@ -193,12 +194,12 @@ class SubscriberImpl<T extends RosMessage<T>> {
     );
     socket.add(writer.toBytes());
     // TODO: Some more stuff here, listening for errors and close
-    pendingClients[uri] = socket;
+    pendingClients[uri] = connection;
     try {
-      await _handleConnectionHeader(socket, listener, uri);
+      await _handleConnectionHeader(connection, listener, uri);
     } on Exception catch (e) {
       log.dartros.error(
-          'Subscriber client socket ${socket.name} on topic $topic had error: $e');
+          'Subscriber client ${connection.name} on topic $topic had error: $e');
     }
   }
 
@@ -208,7 +209,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
   }
 
   Future<void> _handleConnectionHeader(
-    Socket socket,
+    TcpConnection connection,
     Stream<Uint8List> listener,
     String uri,
   ) async {
@@ -233,13 +234,14 @@ class SubscriberImpl<T extends RosMessage<T>> {
         if (!validated) {
           log.dartros.debug(
               'Unable to validate subscriber $topic connection header $header');
+          final socket = connection.socket;
           socket.add(writer.toBytes());
           await socket.flush();
           await socket.close();
           await _disconnectClient(uri);
           return;
         }
-        pubClients[uri] = socket;
+        pubClients[uri] = connection;
         pendingClients.remove(uri);
         first = false;
       } else {
@@ -247,7 +249,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
       }
     }
     log.dartros.debug(
-        'Subscriber client socket ${socket.name} on topic $topic disconnected');
+        'Subscriber client ${connection.name} on topic $topic disconnected');
     await _disconnectClient(uri);
   }
 

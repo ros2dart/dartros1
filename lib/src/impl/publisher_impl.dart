@@ -36,7 +36,7 @@ class PublisherImpl<T extends RosMessage> {
   T lastSentMsg;
   final T messageClass;
   State _state = State.REGISTERING;
-  final Map<String, Socket> subClients = {};
+  final Map<String, TcpConnection> subClients = {};
   final Map<String, UdpSocketOptions> udpSubClients = {};
 
   String get type => messageClass.fullType;
@@ -82,7 +82,7 @@ class PublisherImpl<T extends RosMessage> {
         serializeMessage(writer, msg);
         final serialized = writer.toBytes();
         for (final client in subClients.values) {
-          client.add(serialized);
+          client.socket.add(serialized);
         }
         sendMsgToUdpClients(serialized);
         if (latching) {
@@ -98,7 +98,7 @@ class PublisherImpl<T extends RosMessage> {
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
     log.dartros.debug('Shutting down publisher $topic');
-    await Future.wait(subClients.values.map((c) => c.close()));
+    await Future.wait(subClients.values.map((c) => c.socket.close()));
     subClients.clear();
   }
 
@@ -121,32 +121,33 @@ class PublisherImpl<T extends RosMessage> {
   bool get isShutdown => _state == State.SHUTDOWN;
 
   Future<void> handleSubscriberConnection(
-      Socket connection, Stream listener, TCPRosHeader header) async {
+      TcpConnection connection, Stream listener, TCPRosHeader header) async {
+    final socket = connection.socket;
     final writer = ByteDataWriter(endian: Endian.little);
     final validated =
         validateSubHeader(writer, header, topic, type, messageClass.md5sum);
 
     if (!validated) {
-      connection.add(writer.toBytes());
-      await connection.flush();
-      await connection.close();
+      socket.add(writer.toBytes());
+      await socket.flush();
+      await socket.close();
       return;
     }
     createPubHeader(writer, node.nodeName, messageClass.md5sum, type, latching,
         messageClass.messageDefinition);
-    connection.add(writer.toBytes());
+    socket.add(writer.toBytes());
     if (tcpNoDelay || header.tcpNoDelay) {
-      connection.setOption(SocketOption.tcpNoDelay, true);
+      socket.setOption(SocketOption.tcpNoDelay, true);
     }
     listener.listen((_) {}, onError: (e) {
       log.dartros.warn('Error on publisher listener $e');
     }, onDone: () {
       subClients.remove(connection.name);
-      connection.close();
+      socket.close();
     });
     if (lastSentMsg != null) {
       serializeMessage(writer, lastSentMsg);
-      connection.add(writer.toBytes());
+      socket.add(writer.toBytes());
     }
     subClients[connection.name] = connection;
   }
