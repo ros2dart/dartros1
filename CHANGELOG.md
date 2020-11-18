@@ -1,3 +1,6 @@
+## 0.0.4+5
+- Update README.md and link to external documentation website
+  
 ## 0.0.4+4
 - Fix for several issues with shutdown thanks to @knuesel
   
