@@ -1,3 +1,6 @@
+## 0.0.4+6
+- Fix SimpleActionClient and Server thanks to @knuesel
+
 ## 0.0.4+5
 - Update README.md and link to external documentation website
   
