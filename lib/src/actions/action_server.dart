@@ -26,7 +26,7 @@ class ActionServer<
   Timer _statusFreqTimer;
   void Function(GoalHandle) goalHandle;
   void Function(GoalHandle) cancelHandle;
-  final Map<String, int> _pubSeqs = {'result': 0, 'Feedback': 0, 'status': 0};
+  final Map<String, int> _pubSeqs = {'result': 0, 'feedback': 0, 'status': 0};
 
   void start() {
     _started = true;
