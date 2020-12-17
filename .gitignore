@@ -10,3 +10,8 @@ doc/api/
 
 # Directory created by dartdoc
 .vscode
+
+# Temporary editor files
+*~
+*.swp
+*.swo

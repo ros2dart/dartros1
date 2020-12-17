@@ -67,7 +67,8 @@ extension LenInBytes on String {
 extension ByteDataReaderRosDeserializers on ByteDataReader {
   String readString() {
     final len = readUint32();
-    return utf8.decode(read(len));
+    // ByteDataReader.read(0) throws if there is no byte to read
+    return len > 0 ? utf8.decode(read(len)) : '';
   }
 
   RosTime readTime() {

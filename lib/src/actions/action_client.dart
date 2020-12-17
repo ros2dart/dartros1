@@ -1,4 +1,5 @@
 import 'package:actionlib_msgs/msgs.dart';
+import 'package:dartros/src/utils/log/logger.dart';
 
 import '../../msg_utils.dart';
 import '../actionlib_client.dart';
@@ -26,13 +27,20 @@ class ActionClient<
 
   @override
   void handleFeedback(AF feedback) {
-    _goalLookup[feedback.status.goal_id.id].updateFeedback(feedback);
+    // Call updateFeedback if goal still registered (feedback might be received
+    // just after the result, in which case the goal is already deregistered).
+    _goalLookup[feedback.status.goal_id.id]?.updateFeedback(feedback);
   }
 
   @override
   void handleResult(AR result) {
     final id = result.status.goal_id.id;
     final handle = _goalLookup[id];
+    if (handle == null) {
+      log.dartros.warn(
+          'Received result for unknown goal. Do you have several action servers accepting the same goal?');
+      return;
+    }
     _goalLookup.remove(id);
     handle.updateResult(result);
   }
@@ -40,7 +48,9 @@ class ActionClient<
   @override
   void handleStatus(GoalStatusArray status) {
     for (final s in status.status_list) {
-      _goalLookup[s.goal_id.id].updateStatus(s);
+      // Call updateStatus if goal still registered (the goal is deregistered
+      // when the result is received).
+      _goalLookup[s.goal_id.id]?.updateStatus(s);
     }
   }
 

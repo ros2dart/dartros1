@@ -24,7 +24,7 @@ class SimpleActionClient<
   void Function() _activeCallback;
   void Function(SimpleGoalState, R) _doneCallback;
 
-  Future<void> waitForServer([int timeoutMs = 0]) =>
+  Future<bool> waitForServer([int timeoutMs = 0]) =>
       waitForActionServerToStart(timeoutMs);
 
   void sendSimpleGoal(
@@ -98,7 +98,7 @@ class SimpleActionClient<
     const WAIT_TIME_MS = 10;
 
     final now = RosTime.now();
-    if (timeoutTime && timeoutTime < now) {
+    if (timeoutTime < now) {
       return _state == SimpleGoalState.DONE;
     } else if (_state == SimpleGoalState.DONE) {
       return true;
@@ -284,5 +284,6 @@ class SimpleActionClient<
   void _setSimpleState(SimpleGoalState newState) {
     log.dartros
         .debug('Transitioning SimpleState from [$_state] to [$newState]');
+    _state = newState;
   }
 }

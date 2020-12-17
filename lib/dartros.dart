@@ -3,6 +3,8 @@
 /// More dartdocs go here.
 library dartros;
 
+export 'src/actions/simple_action_client.dart';
+export 'src/actions/simple_action_server.dart';
 export 'src/actionlib_client.dart';
 export 'src/actionlib_server.dart';
 export 'src/dartros.dart';
