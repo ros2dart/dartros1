@@ -1,3 +1,6 @@
+## 0.0.4+7
+- Update dependencies
+
 ## 0.0.4+6
 - Fix SimpleActionClient and Server thanks to @knuesel
 
