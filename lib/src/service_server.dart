@@ -9,14 +9,13 @@ import 'utils/log/logger.dart';
 import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
 
-class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>,
-    T extends RosServiceMessage<C, R>> {
+class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>> {
   ServiceServer(this.service, this.messageClass, this.node, this.persist,
       this.requestCallback) {
     _register();
   }
   final String service;
-  final T messageClass;
+  final RosServiceMessage<C, R> messageClass;
   String get type => messageClass.fullType;
   final Node node;
   Map<String, TcpConnection> _clients = {};

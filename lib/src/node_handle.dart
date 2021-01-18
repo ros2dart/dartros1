@@ -68,18 +68,19 @@ class NodeHandle {
   /// Advertises service server with type [messageClass]
   ///
   /// [messageClass] must be a [RosServiceMessage]
-  ServiceServer<C, R, T> advertiseService<C extends RosMessage<C>,
-              R extends RosMessage<R>, T extends RosServiceMessage<C, R>>(
-          String service, T messageClass, R Function(C) callback) =>
-      node.advertiseService(_resolveName(service), messageClass, callback);
+  ServiceServer<C, R>
+      advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
+              String service,
+              RosServiceMessage<C, R> messageClass,
+              R Function(C) callback) =>
+          node.advertiseService(_resolveName(service), messageClass, callback);
 
-  ServiceClient<C, R, T> serviceClient<
-              C extends RosMessage<C>,
-              R extends RosMessage<R>,
-              T extends RosServiceMessage<C, R>>(String service, T messageClass,
-          {bool persist = true, int maxQueueSize = -1}) =>
-      node.serviceClient(_resolveName(service), messageClass,
-          persist: persist, maxQueueSize: maxQueueSize);
+  ServiceClient<C, R>
+      serviceClient<C extends RosMessage<C>, R extends RosMessage<R>>(
+              String service, RosServiceMessage<C, R> messageClass,
+              {bool persist = true, int maxQueueSize = -1}) =>
+          node.serviceClient(_resolveName(service), messageClass,
+              persist: persist, maxQueueSize: maxQueueSize);
 
   void unadvertise(String topic) {
     node.unadvertise(_resolveName(topic));

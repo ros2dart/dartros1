@@ -67,8 +67,7 @@ void main() {
   group('Service Tests', () {
     test('ServerClient Works', () async {
       var first = true;
-      final server = nh.advertiseService('/move_bloc', MoveBlock.empty$,
-          (MoveBlockRequest req) {
+      final server = nh.advertiseService('/move_bloc', MoveBlock.empty$, (req) {
         if (first) {
           expect(req.color, 0);
           expect(req.shape, 1);
@@ -83,9 +82,7 @@ void main() {
       final request = MoveBlockRequest(color: 0, shape: 1);
       await Future.delayed(2.seconds);
       final moveBloc =
-          nh.serviceClient<MoveBlockRequest, MoveBlockResponse, MoveBlock>(
-              '/move_bloc', MoveBlock.empty$,
-              persist: true);
+          nh.serviceClient('/move_bloc', MoveBlock.empty$, persist: true);
 
       var response = await moveBloc(request);
       expect(response.wasSuccessful, false);
@@ -99,8 +96,7 @@ void main() {
 
     test('Rosservice call', () async {
       var first = true;
-      final server = nh.advertiseService('/move_bloc_2', MoveBlock.empty$,
-          (MoveBlockRequest req) {
+      final _ = nh.advertiseService('/move_bloc_2', MoveBlock.empty$, (req) {
         if (first) {
           expect(req.color, 0);
           expect(req.shape, 1);

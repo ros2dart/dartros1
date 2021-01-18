@@ -13,10 +13,10 @@ class ActionServer<
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
         R extends RosMessage<R>,
-        AR extends RosActionResult<R, AR>,
-        A extends RosActionMessage<G, AG, F, AF, R, AR>>
-    extends ActionLibServer<G, AG, F, AF, R, AR, A> {
-  ActionServer(String actionServer, NodeHandle node, A actionClass)
+        AR extends RosActionResult<R, AR>>
+    extends ActionLibServer<G, AG, F, AF, R, AR> {
+  ActionServer(String actionServer, NodeHandle node,
+      RosActionMessage<G, AG, F, AF, R, AR> actionClass)
       : super(actionServer, node, actionClass);
   final List<GoalHandle> _goalHandleList = [];
   final Map<String, GoalHandle> _goalHandleCache = {};
@@ -79,8 +79,7 @@ class ActionServer<
       }
     }
     if (id != '' && !idFound) {
-      final handle = GoalHandle<G, AG, F, AF, R, AR, A>(
-          msg, this, GoalStatus.RECALLING, null);
+      final handle = GoalHandle<G, F, R>(msg, this, GoalStatus.RECALLING, null);
       _goalHandleList.add(handle);
       _goalHandleCache[handle.id] = handle;
     }
@@ -103,8 +102,8 @@ class ActionServer<
       handle.destructionTime = goal.goal_id.stamp;
       return false;
     }
-    handle = GoalHandle<G, AG, F, AF, R, AR, A>(
-        goal.goal_id, this, GoalStatus.PENDING, goal.goal);
+    handle =
+        GoalHandle<G, F, R>(goal.goal_id, this, GoalStatus.PENDING, goal.goal);
     _goalHandleList.add(handle);
     _goalHandleCache[handle.id] = handle;
     final goalStamp = goal.goal_id.stamp;

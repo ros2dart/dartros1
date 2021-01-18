@@ -13,10 +13,10 @@ class SimpleActionClient<
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
         R extends RosMessage<R>,
-        AR extends RosActionResult<R, AR>,
-        A extends RosActionMessage<G, AG, F, AF, R, AR>>
-    extends ActionClient<G, AG, F, AF, R, AR, A> {
-  SimpleActionClient(String actionServer, NodeHandle node, A actionClass)
+        AR extends RosActionResult<R, AR>>
+    extends ActionClient<G, AG, F, AF, R, AR> {
+  SimpleActionClient(String actionServer, NodeHandle node,
+      RosActionMessage<G, AG, F, AF, R, AR> actionClass)
       : super(actionServer, node, actionClass);
   SimpleGoalState _state = SimpleGoalState.PENDING;
   ClientGoalHandle _handle;

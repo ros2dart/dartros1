@@ -9,8 +9,7 @@ abstract class ActionLibServer<
     F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>,
     R extends RosMessage<R>,
-    AR extends RosActionResult<R, AR>,
-    A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+    AR extends RosActionResult<R, AR>> {
   ActionLibServer(this.actionServer, this.node, this.actionClass) {
     _goalSub = node.subscribe(
         '$actionServer/goal', actionClass.actionGoal, handleGoal,
@@ -29,7 +28,7 @@ abstract class ActionLibServer<
         queueSize: 50);
   }
   final NodeHandle node;
-  final A actionClass;
+  final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
   Subscriber<AG> _goalSub;
   Subscriber<GoalID> _cancelSub;
   Publisher<GoalStatusArray> _statusPub;

@@ -16,11 +16,10 @@ class SimpleActionServer<
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
         R extends RosMessage<R>,
-        AR extends RosActionResult<R, AR>,
-        A extends RosActionMessage<G, AG, F, AF, R, AR>>
-    extends ActionServer<G, AG, F, AF, R, AR, A> {
-  SimpleActionServer(String actionServer, NodeHandle node, A actionClass,
-      this._executeCallback)
+        AR extends RosActionResult<R, AR>>
+    extends ActionServer<G, AG, F, AF, R, AR> {
+  SimpleActionServer(String actionServer, NodeHandle node,
+      RosActionMessage<G, AG, F, AF, R, AR> actionClass, this._executeCallback)
       : super(actionServer, node, actionClass) {
     goalHandle = _handleGoal;
     cancelHandle = _handleCancel;

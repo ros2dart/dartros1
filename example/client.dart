@@ -8,9 +8,7 @@ Future<void> main(List<String> args) async {
   final node = await initNode('test_node', args);
   final request = MoveBlockRequest(color: 0, shape: 1);
   final moveBloc =
-      node.serviceClient<MoveBlockRequest, MoveBlockResponse, MoveBlock>(
-          '/move_bloc', MoveBlock.$prototype,
-          persist: true);
+      node.serviceClient('/move_bloc', MoveBlock.$prototype, persist: true);
   for (;;) {
     final response = await moveBloc(request);
     print(

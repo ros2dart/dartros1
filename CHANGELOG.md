@@ -1,3 +1,6 @@
+## 0.0.5
+- Update Actions and Services to not require as many type parameters especially when creating them
+
 ## 0.0.4+7
 - Update dependencies
 

@@ -11,8 +11,7 @@ abstract class ActionLibClient<
     F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>,
     R extends RosMessage<R>,
-    AR extends RosActionResult<R, AR>,
-    A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+    AR extends RosActionResult<R, AR>> {
   ActionLibClient(this.actionServer, this.node, this.actionClass) {
     _goalPub = node.advertise<AG>('$actionServer/goal', actionClass.actionGoal,
         queueSize: 10, latching: false);
@@ -28,7 +27,7 @@ abstract class ActionLibClient<
         '$actionServer/result', actionClass.actionResult, handleResult,
         queueSize: 1);
   }
-  final A actionClass;
+  final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
   Publisher<AG> _goalPub;
   Publisher<GoalID> _cancelPub;
   Subscriber<GoalStatusArray> _statusSub;

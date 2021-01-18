@@ -11,8 +11,7 @@ class ClientGoalHandle<
     F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>,
     R extends RosMessage<R>,
-    AR extends RosActionResult<R, AR>,
-    A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+    AR extends RosActionResult<R, AR>> {
   ClientGoalHandle(
       actionGoal, this._actionClient, this.feedback, this.transition) {
     _goal = actionGoal;

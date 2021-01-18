@@ -13,17 +13,16 @@ class ActionClient<
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
         R extends RosMessage<R>,
-        AR extends RosActionResult<R, AR>,
-        A extends RosActionMessage<G, AG, F, AF, R, AR>>
-    extends ActionLibClient<G, AG, F, AF, R, AR, A> {
+        AR extends RosActionResult<R, AR>>
+    extends ActionLibClient<G, AG, F, AF, R, AR> {
   ActionClient(
     String actionServer,
     NodeHandle node,
-    A actionClass,
+    RosActionMessage<G, AG, F, AF, R, AR> actionClass,
   ) : super(actionServer, node, actionClass);
 
   bool _shutdown = false;
-  final Map<String, ClientGoalHandle<G, AG, F, AF, R, AR, A>> _goalLookup = {};
+  final Map<String, ClientGoalHandle<G, AG, F, AF, R, AR>> _goalLookup = {};
 
   @override
   void handleFeedback(AF feedback) {
@@ -63,7 +62,7 @@ class ActionClient<
     await super.shutdown();
   }
 
-  ClientGoalHandle<G, AG, F, AF, R, AR, A> sendGoal(G goal,
+  ClientGoalHandle<G, AG, F, AF, R, AR> sendGoal(G goal,
       void Function(AF) feedbackCallback, void Function() transitionCallback) {
     final ag = actionClass.actionGoal();
     final now = RosTime.now();
@@ -73,7 +72,7 @@ class ActionClient<
     ag.goal_id.id = idStr;
     ag.goal = goal;
     sendActionGoal(ag);
-    final handle = ClientGoalHandle<G, AG, F, AF, R, AR, A>(
+    final handle = ClientGoalHandle<G, AG, F, AF, R, AR>(
         ag, this, feedbackCallback, transitionCallback);
     _goalLookup[idStr] = handle;
     return handle;

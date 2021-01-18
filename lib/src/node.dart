@@ -133,27 +133,27 @@ class Node extends rpc_server.XmlRpcHandler
     return sub;
   }
 
-  ServiceServer<C, R, T> advertiseService<C extends RosMessage<C>,
-          R extends RosMessage<R>, T extends RosServiceMessage<C, R>>(
-      String service, T messageClass, R Function(C) callback) {
+  ServiceServer<C, R>
+      advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
+          String service,
+          RosServiceMessage<C, R> messageClass,
+          R Function(C) callback) {
     if (_services.containsKey(service)) {
       log.dartros.warn(
           'Tried to advertise a service that is already advertised in this node [$service]');
       return null;
     } else {
       _services[service] =
-          ServiceServer<C, R, T>(service, messageClass, this, true, callback);
+          ServiceServer<C, R>(service, messageClass, this, true, callback);
       return _services[service];
     }
   }
 
-  ServiceClient<C, R, T> serviceClient<
-              C extends RosMessage<C>,
-              R extends RosMessage<R>,
-              T extends RosServiceMessage<C, R>>(String service, T messageClass,
+  ServiceClient<C, R> serviceClient<C extends RosMessage<C>,
+              R extends RosMessage<R>>(
+          String service, RosServiceMessage<C, R> messageClass,
           {bool persist = true, int maxQueueSize = -1}) =>
-      ServiceClient<C, R, T>(
-          service, messageClass, persist, maxQueueSize, this);
+      ServiceClient<C, R>(service, messageClass, persist, maxQueueSize, this);
 
   Future<void> unadvertise<T>(String topic) async {
     final pub = _publishers[topic];

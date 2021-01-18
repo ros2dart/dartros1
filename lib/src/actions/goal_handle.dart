@@ -4,14 +4,8 @@ import '../utils/log/logger.dart';
 
 import 'action_server.dart';
 
-class GoalHandle<
-    G extends RosMessage<G>,
-    AG extends RosActionGoal<G, AG>,
-    F extends RosMessage<F>,
-    AF extends RosActionFeedback<F, AF>,
-    R extends RosMessage<R>,
-    AR extends RosActionResult<R, AR>,
-    A extends RosActionMessage<G, AG, F, AF, R, AR>> {
+class GoalHandle<G extends RosMessage<G>, F extends RosMessage<F>,
+    R extends RosMessage<R>> {
   GoalHandle(GoalID id, this.server, int status, this.goal)
       : _id = id ?? server.generateGoalID,
         _status = GoalStatus(status: status ?? GoalStatus.PENDING, goal_id: id);

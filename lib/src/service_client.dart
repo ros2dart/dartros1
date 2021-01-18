@@ -21,12 +21,11 @@ class ServiceCall<C extends RosMessage<C>, R extends RosMessage<R>,
   Stream<TCPRosChunk> _clientStream;
 }
 
-class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>,
-    T extends RosServiceMessage<C, R>> {
+class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
   ServiceClient(this.service, this.serviceClass, this.persist,
       this.maxQueueSize, this.node);
   final String service;
-  final T serviceClass;
+  final RosServiceMessage<C, R> serviceClass;
   final bool persist;
   final int maxQueueSize;
   final Node node;
