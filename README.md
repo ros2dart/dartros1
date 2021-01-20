@@ -68,10 +68,6 @@ At a high level the things that have been tested are:
 Not tested:
 * Publish and Subscribe (UDP)
 
-Still in the works:
-* Actions and ActionServers, needs action message generation work, and then some updates to the action server implementation.
-
-
 ### Notes
 
 Heavily inspired by the cpp and especially [nodejs](https://github.com/RethinkRobotics-opensource/rosnodejs) implementation
