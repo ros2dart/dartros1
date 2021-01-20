@@ -10,7 +10,7 @@ I will be starting to add some more documentation on [this website](https://timw
 Message generation is implemented for dartros. You will need to clone [this ROS package](https://github.com/TimWhiting/gendart)
 into your catkin workspace for messages to be generated. I'm not quite sure how to get this into the default ROS message generation pipeline, and not sure if it is stable or efficient enough yet to warrant that.
 
-Essentially the basics are to clone the gendart repository into your catkin workspace, and then run catkin_make. As long as some catkin package depends on message generation it should generate messages. I'm trying to remember if there was anything else I needed to make it work.
+Essentially the basics are to clone the gendart repository into your catkin workspace, and then run catkin_make. As long as some catkin package depends on message generation it should generate messages.
 
 The generated messages will be in the devel folder of your workspace more specifically: `devel/share/gendart/ros/{name_of_msg_package}`.
 
@@ -39,7 +39,7 @@ Future<void> main(List<String> args) async {
       is_bigendian: 0,
       step: 1024 * 4,
       data: List.generate(600 * 1024 * 4, (_) => 255));
-  final pub = node.advertise<Image>('/robot/head_display', Image.$prototype);
+  final pub = node.advertise('/robot/head_display', Image.$prototype);
   await Future.delayed(2.seconds);
   while (true) {
     pub.publish(img_msg, 1);
