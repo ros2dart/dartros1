@@ -19,7 +19,7 @@ class SimpleActionClient<
       RosActionMessage<G, AG, F, AF, R, AR> actionClass)
       : super(actionServer, node, actionClass);
   SimpleGoalState _state = SimpleGoalState.PENDING;
-  ClientGoalHandle _handle;
+  ClientGoalHandle<G, AG, F, AF, R, AR> _handle;
   void Function(AF) _feedbackCallback;
   void Function() _activeCallback;
   void Function(SimpleGoalState, R) _doneCallback;
@@ -39,8 +39,7 @@ class SimpleActionClient<
     _feedbackCallback = feedbackCallback;
     _activeCallback = activeCallback;
     _doneCallback = doneCallback;
-    final gh = sendGoal(goal, _handleFeedback, _handleTransition);
-    _handle = gh;
+    _handle = sendGoal(goal, _handleFeedback, _handleTransition);
   }
 
   Future<void> sendGoalAndWait(

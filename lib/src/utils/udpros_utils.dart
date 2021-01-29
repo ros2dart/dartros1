@@ -152,7 +152,7 @@ class UDPRosHeader<T> {
   factory UDPRosHeader.parse(String header) {
     final reader = ByteDataReader(endian: Endian.little);
     reader.add(header.toUtf8());
-    final info = <String, String>{};
+    final info = <String/*!*/, String>{};
     final regex = RegExp(r'(\w+)=([\s\S]*)');
     final fields = deserializeStringFields(reader);
     // print(fields);

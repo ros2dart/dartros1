@@ -9,12 +9,12 @@ import 'goal_id_generator.dart';
 
 class ActionClient<
         G extends RosMessage<G>,
-        AG extends RosActionGoal<G, AG>,
+        AG extends RosActionGoal<G, AG>/*!*/,
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
         R extends RosMessage<R>,
         AR extends RosActionResult<R, AR>>
-    extends ActionLibClient<G, AG, F, AF, R, AR> {
+    extends ActionLibClient<G, AG/*!*/, F, AF, R, AR> {
   ActionClient(
     String actionServer,
     NodeHandle node,

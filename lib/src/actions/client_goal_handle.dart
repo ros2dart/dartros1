@@ -10,12 +10,11 @@ class ClientGoalHandle<
     AG extends RosActionGoal<G, AG>,
     F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>,
-    R extends RosMessage<R>,
+    R extends RosMessage<R /*!*/ > /*!*/,
     AR extends RosActionResult<R, AR>> {
   ClientGoalHandle(
-      actionGoal, this._actionClient, this.feedback, this.transition) {
-    _goal = actionGoal;
-    _state = CommState.WAITING_FOR_GOAL_ACK;
+      this._goal, this._actionClient, this.feedback, this.transition)
+      : _state = CommState.WAITING_FOR_GOAL_ACK {
     _goalStatus = null;
     _result = null;
   }
@@ -23,16 +22,15 @@ class ClientGoalHandle<
   CommState _state;
   bool _active = true;
   AR _result;
-  AG _goal;
+  final AG _goal;
   GoalStatus _goalStatus;
   GoalStatus get goalStatus => _goalStatus;
-  ActionClient _actionClient;
+  final ActionClient _actionClient;
   void Function(AF) feedback;
   void Function() transition;
 
   void reset() {
     _active = false;
-    _actionClient = null;
   }
 
   void resend() {
@@ -111,7 +109,8 @@ class ClientGoalHandle<
           log.dartros.error('Unknown goal status: ${_goalStatus.status}');
       }
     }
-    return _goalStatus.status;
+    // TODO: Why is this return here if _goalStatus == null
+    return _goalStatus?.status;
   }
 
   CommState getCommState() => _state;
@@ -142,7 +141,7 @@ class ClientGoalHandle<
     }
   }
 
-  void updateStatus(GoalStatus status) {
+  void updateStatus(GoalStatus /*?*/ status) {
     // it's apparently possible to receive old GoalStatus messages, even after
     // transitioning to a terminal state.
     if (_state == CommState.DONE) {

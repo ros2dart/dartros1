@@ -21,8 +21,8 @@ dependencies:
   std_msgs: ^0.0.3
   string_validator: ^0.2.0-nullsafety.0
   xml: ^5.0.0-nullsafety.1
-  xml_rpc: 
-    path: ../../../dart/dart-xmlrpc/
+  xml_rpc:
+    path: ../dart-xmlrpc/
 
 dev_dependencies:
   abide: any

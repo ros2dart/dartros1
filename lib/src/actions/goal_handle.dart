@@ -4,15 +4,15 @@ import '../utils/log/logger.dart';
 
 import 'action_server.dart';
 
-class GoalHandle<G extends RosMessage<G>, F extends RosMessage<F>,
-    R extends RosMessage<R>> {
+class GoalHandle<G extends RosMessage<G> /*!*/, F extends RosMessage<F>,
+    R extends RosMessage<R /*!*/ > /*!*/ > {
   GoalHandle(GoalID id, this.server, int status, this.goal)
       : _id = id ?? server.generateGoalID,
         _status = GoalStatus(status: status ?? GoalStatus.PENDING, goal_id: id);
   final GoalID _id;
   String get id => _id.id;
-  final G goal;
-  GoalStatus _status;
+  final G/*!*/ goal;
+  final GoalStatus _status;
   GoalStatus get status => _status;
   final ActionServer server;
   RosTime destructionTime = RosTime.epoch();
@@ -38,7 +38,7 @@ class GoalHandle<G extends RosMessage<G>, F extends RosMessage<F>,
     server.publishResult(status, result);
   }
 
-  void setCanceled(R result, {String text = ''}) {
+  void setCanceled(R/*!*/ result, {String text = ''}) {
     switch (statusId) {
       case GoalStatus.PENDING:
       case GoalStatus.RECALLING:
@@ -83,7 +83,7 @@ class GoalHandle<G extends RosMessage<G>, F extends RosMessage<F>,
     }
   }
 
-  void setAborted(R result, {String text = ''}) {
+  void setAborted(R/*!*/ result, {String text = ''}) {
     switch (statusId) {
       case GoalStatus.PREEMPTING:
       case GoalStatus.ACTIVE:

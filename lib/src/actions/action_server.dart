@@ -12,14 +12,14 @@ class ActionServer<
         AG extends RosActionGoal<G, AG>,
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
-        R extends RosMessage<R>,
+        R extends RosMessage<R /*!*/ > /*!*/,
         AR extends RosActionResult<R, AR>>
     extends ActionLibServer<G, AG, F, AF, R, AR> {
   ActionServer(String actionServer, NodeHandle node,
       RosActionMessage<G, AG, F, AF, R, AR> actionClass)
       : super(actionServer, node, actionClass);
-  final List<GoalHandle> _goalHandleList = [];
-  final Map<String, GoalHandle> _goalHandleCache = {};
+  final List<GoalHandle<G, F, R>> _goalHandleList = [];
+  final Map<String, GoalHandle<G, F, R>> _goalHandleCache = {};
   RosTime _lastCancelStamp = RosTime.epoch();
   final _statusListTimeout = const RosTime(secs: 5, nsecs: 0);
   bool _started = false;
@@ -50,7 +50,7 @@ class ActionServer<
     await super.shutdown();
   }
 
-  GoalHandle getGoalHandle(String id) => _goalHandleCache[id];
+  GoalHandle<G, F, R> getGoalHandle(String id) => _goalHandleCache[id];
 
   @override
   void handleCancel(GoalID msg) {
@@ -97,7 +97,7 @@ class ActionServer<
     var handle = getGoalHandle(id);
     if (handle != null) {
       if (handle.statusId == GoalStatus.RECALLING) {
-        handle.setCanceled(actionClass.actionResult());
+        handle.setCanceled(actionClass.result());
       }
       handle.destructionTime = goal.goal_id.stamp;
       return false;
@@ -108,7 +108,7 @@ class ActionServer<
     _goalHandleCache[handle.id] = handle;
     final goalStamp = goal.goal_id.stamp;
     if (goalStamp.isZeroTime() && goalStamp < _lastCancelStamp) {
-      handle.setCanceled(actionClass.actionResult());
+      handle.setCanceled(actionClass.result());
       return false;
     } else {
       goalHandle != null

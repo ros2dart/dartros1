@@ -5,7 +5,7 @@ mixin RosParamServerClient on XmlRpcClient {
       await _call('getParam', [nodeName, key], onError: () => defaultValue)
           as T;
 
-  Future<List<String>> getParamNames() async =>
+  Future<List<String>/*!*/> getParamNames() async =>
       await _call('getParamNames', [nodeName]);
 
   Future<String> searchParam(String key) async =>

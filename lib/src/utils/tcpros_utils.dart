@@ -88,7 +88,7 @@ void createServiceServerHeader(
 TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final reader = ByteDataReader(endian: Endian.little);
   reader.add(header.buffer);
-  final info = <String, String>{};
+  final info = <String /*!*/, String>{};
   final regex = RegExp(r'(\w+)=([\s\S]*)');
   final fields = deserializeStringFields(reader);
   // print(fields);
@@ -96,9 +96,11 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
-      return null;
+      throw Exception(
+          'Error: Invalid connection header while parsing field $field');
     }
     final match = regex.allMatches(field).toList()[0];
+    // TODO: Assert group not empty
     info[match.group(1)] = match.group(2);
   }
   // print(info);
@@ -258,7 +260,7 @@ class TCPRosHeader<T> {
       this.tcpNoDelay,
       this.latching);
 
-  factory TCPRosHeader.fromMap(Map<String, String> info) => TCPRosHeader(
+  factory TCPRosHeader.fromMap(Map<String /*!*/, String> info) => TCPRosHeader(
       info['topic'],
       info['type'],
       info['md5sum'],
@@ -293,7 +295,8 @@ class TCPRosChunkTransformer {
   bool _serviceRespSuccess;
 
   StreamTransformer<Uint8List, TCPRosChunk> _transformer;
-  StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
+  StreamTransformer<Uint8List, TCPRosChunk> /*!*/ get transformer =>
+      _transformer;
 
   void _handleData(Uint8List data, sink) {
     // print(data);
@@ -360,7 +363,7 @@ class TCPRosChunkTransformer {
 @freezed
 abstract class TCPRosChunk with _$TCPRosChunk {
   factory TCPRosChunk(List<int> buffer,
-      {@Default(false) bool serviceResponse,
+      {@Default(false) bool /*?*/ serviceResponse,
       bool serviceResponseSuccess}) = _TcpRosChunk;
 }
 

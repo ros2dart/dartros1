@@ -25,7 +25,7 @@ import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
-  factory Node(String name, String rosMasterURI) =>
+  factory Node(String name, String/*!*/ rosMasterURI) =>
       _node ??= Node._(name, rosMasterURI);
   Node._(this.nodeName, this.rosMasterURI)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
@@ -38,10 +38,10 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   static Node _node;
-  static Node get singleton => _node;
+  static Node/*!*/ get singleton => _node;
   String _ipAddress;
   @override
-  String get ipAddress => _ipAddress;
+  String/*!*/ get ipAddress => _ipAddress;
   @override
   String get xmlRpcUri => 'http://$ipAddress:${_xmlRpcServer.port}';
   @override

@@ -23,7 +23,7 @@ class XMLRPCResponse {
       : statusCode = status.asStatusCode;
 
   final StatusCode statusCode;
-  final String statusMessage;
+  final String/*!*/ statusMessage;
   final dynamic value;
 
   bool get success => statusCode == StatusCode.SUCCESS;

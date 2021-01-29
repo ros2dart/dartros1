@@ -87,11 +87,11 @@ Future _rpcCall(
 
 Future<StatusCode> _rpcCallStatus(
   String methodName,
-  List<dynamic> params,
+  List<Object> params,
   String rosMasterUri,
   rpc.HttpPost post, {
   Map<String, String> headers,
-  dynamic Function() onError,
+  Object Function() onError,
 }) async {
   final result = await rpc.call(
     Uri.parse(rosMasterUri),
@@ -116,9 +116,9 @@ mixin XmlRpcClient {
   String get xmlRpcUri;
   String get ipAddress;
 
-  Future<dynamic> _call(
+  Future<Object> _call(
     String methodName,
-    List<dynamic> params, {
+    List<Object> params, {
     Map<String, String> headers,
     dynamic Function() onError,
   }) =>
@@ -126,7 +126,7 @@ mixin XmlRpcClient {
           headers: headers, onError: onError);
   Future<StatusCode> _callRpc(
     String methodName,
-    List<dynamic> params, {
+    List<Object> params, {
     Map<String, String> headers,
   }) =>
       _rpcCallStatus(methodName, params, rosMasterURI, client.post,
@@ -260,7 +260,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [nodeName] is the name of the node to lookup
   ///
   /// Returns the URI of the node
-  Future<String> lookupNode(
+  Future<String /*!*/ > lookupNode(
     String nodeName,
   ) async =>
       await _call('lookupNode', [nodeName, nodeName]);
@@ -270,10 +270,10 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [service] is the fully qualified name of the service
   ///
   /// Return service URL (address and port). Fails if there is no provider.
-  Future<String> lookupService(
+  Future<String /*!*/ > lookupService(
     String service,
   ) async =>
-      await _call('lookupService', [nodeName, service]) as String;
+      await _call('lookupService', [nodeName, service]) as String/*!*/;
 
   /// Get list of topics that can be subscribed to.
   ///
@@ -283,18 +283,18 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// [subgraph] is for restricting topic names to match within the specified subgraph.
   /// Subgraph namespace is resolved relative to the caller's namespace.
   /// Use empty string to specify all names.
-  Future<List<TopicInfo>> getPublishedTopics(
+  Future<List<TopicInfo> /*!*/ > getPublishedTopics(
     String subgraph,
   ) async =>
-      (await _call('getPublishedTopics', [nodeName, subgraph]))
+      (await _call('getPublishedTopics', [nodeName, subgraph]) as List)
           .map((t) => TopicInfo(t[0], t[1]))
           .toList();
 
   /// Retrieve list topic names and their types.
   ///
   /// Returns a list of (topicName, topicType) pairs (lists)
-  Future<List<TopicInfo>> getTopicTypes() async =>
-      (await _call('getTopicTypes', [nodeName]))
+  Future<List<TopicInfo> /*!*/ > getTopicTypes() async =>
+      (await _call('getTopicTypes', [nodeName]) as List)
           .map((t) => TopicInfo(t[0], t[1]))
           .toList();
 
@@ -309,7 +309,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
   /// services is of the form
   /// `[ [service1, [service1Provider1...service1ProviderN]] ... ]`
   Future<SystemState> getSystemState() async {
-    final resp = await _call('getSystemState', [nodeName]);
+    final resp = await _call('getSystemState', [nodeName]) as List;
     return SystemState(
       [
         for (final pubInfo in resp[0])
@@ -327,7 +327,8 @@ mixin RosXmlRpcClient on XmlRpcClient {
   }
 
   /// Gets the URI of the master.
-  Future<String> getMasterUri() async => await _call('getUri', [nodeName]);
+  Future<String /*!*/ > getMasterUri() async =>
+      await _call('getUri', [nodeName]);
 }
 
 @freezed

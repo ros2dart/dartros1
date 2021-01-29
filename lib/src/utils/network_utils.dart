@@ -11,7 +11,7 @@ class _NetworkUtils {
   String _ros_ip;
   String _ros_hostname;
   String _host;
-  String get host => _host;
+  String/*!*/ get host => _host;
 
   void init(Map<String, String> remappings) {
     _ip = remappings[SPECIAL_KEYS.ip];
@@ -28,7 +28,7 @@ class _NetworkUtils {
 
   int getPortFromUri(String uriString) => Uri.parse(uriString).port;
 
-  String formatServiceUri(String ipAddress, int port) =>
+  String formatServiceUri(String/*!*/ ipAddress, int port) =>
       'rosrpc://$ipAddress:$port';
 
   Future<String> getIPAddress({
