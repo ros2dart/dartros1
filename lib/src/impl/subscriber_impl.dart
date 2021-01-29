@@ -36,7 +36,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
     _register();
   }
   final Node node;
-  final String topic;
+  final String/*!*/ topic;
   final bool udpEnabled;
   final bool tcpEnabled;
   final int port;

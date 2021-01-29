@@ -24,7 +24,7 @@ class NodeHandle {
   }
 
   bool get isShutdown => node.isShutdown;
-  String get nodeName => node.nodeName;
+  String/*!*/ get nodeName => node.nodeName;
 
   // Server API stuff
   Future<String> getMasterUri() => node.getMasterUri();

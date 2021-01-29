@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:logger/logger.dart' as logging;
 import 'package:rosgraph_msgs/msgs.dart';
 import 'package:std_msgs/msgs.dart';
@@ -67,7 +65,7 @@ class Logger extends logging.Logger {
   static final Map<String, Logger> _loggers = {};
   static Publisher<Log> _rosLog;
 
-  void initializeNodeLogger(String nodeName, {Level level}) {
+  void initializeNodeLogger(String /*!*/ nodeName, {Level level}) {
     getChildLogger(SUPERDEBUG, level: Level.fatal);
     getChildLogger(DARTROS, level: Level.warn);
     getChildLogger(MASTERAPI, level: Level.warn);
@@ -80,7 +78,7 @@ class Logger extends logging.Logger {
   Logger get masterapi => log.getChildLogger(MASTERAPI);
   Logger get params => log.getChildLogger(PARAMS);
 
-  Logger getChildLogger(String childName, {Level level}) {
+  Logger /*!*/ getChildLogger(String childName, {Level level}) {
     final newName = '$name.$childName';
     if (!_loggers.containsKey(newName)) {
       _loggers[newName] = Logger._(newName, logLevel: level);

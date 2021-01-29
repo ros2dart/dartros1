@@ -27,7 +27,7 @@ class PublisherImpl<T extends RosMessage> {
     _register();
   }
   final Node node;
-  final String topic;
+  final String/*!*/ topic;
   final bool latching;
   final int queueSize;
   final bool tcpNoDelay;

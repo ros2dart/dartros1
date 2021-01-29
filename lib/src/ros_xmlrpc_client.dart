@@ -63,7 +63,7 @@ Future _rpcCall(
   dynamic Function() onError,
 }) async {
   final result = await rpc.call(
-    rosMasterUri,
+    Uri.parse(rosMasterUri),
     methodName,
     params,
     headers: headers,
@@ -94,7 +94,7 @@ Future<StatusCode> _rpcCallStatus(
   dynamic Function() onError,
 }) async {
   final result = await rpc.call(
-    rosMasterUri,
+    Uri.parse(rosMasterUri),
     methodName,
     params,
     headers: headers,

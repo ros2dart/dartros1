@@ -8,30 +8,34 @@ environment:
 
 dependencies:
   actionlib_msgs: ^0.0.3
-  buffer: ^1.0.6
-  collection: ^1.14.13
+  buffer: ^1.1.0-nullsafety.0
+  collection: ^1.15.0-nullsafety.5
   dartx: ^0.5.0
-  freezed_annotation: ">0.11.0 <1.0.0"
-  http: ^0.12.1
-  logger: ^0.9.1
-  meta: ^1.2.4
-  path: ^1.6.0
+  freezed_annotation: ^0.13.0-nullsafety.0
+  http: ^0.13.0-nullsafety.0
+  logger: ^1.0.0-nullsafety.0
+  meta: ^1.3.0-nullsafety.6
+  path: ^1.8.0-nullsafety.3
   rosgraph_msgs: ^0.0.3
-  rxdart: ^0.25.0
+  rxdart: ^0.26.0-nullsafety.1
   std_msgs: ^0.0.3
-  string_validator: ^0.1.4
-  xml: ^4.1.0
-  xml_rpc: ^0.3.0
+  string_validator: ^0.2.0-nullsafety.0
+  xml: ^5.0.0-nullsafety.1
+  xml_rpc: 
+    path: ../../../dart/dart-xmlrpc/
 
 dev_dependencies:
   abide: any
-  async: any
+  async: ^2.5.0-nullsafety.3
   build_runner: any
   derry: any
-  freezed: any
-  pedantic: ^1.8.0
+  freezed: ^0.13.0-nullsafety.2
+  pedantic: ^1.10.0-nullsafety.3
   sensor_msgs: ^0.0.3
-  test: ^1.6.0
+  test: ^1.16.0-nullsafety.17
+
+dependency_overrides:
+  shelf: 1.0.0-nullsafety.0
 
 scripts:
   gen: pub run build_runner build --delete-conflicting-outputs
