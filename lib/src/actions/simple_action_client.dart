@@ -20,9 +20,12 @@ class SimpleActionClient<
       : super(actionServer, node, actionClass);
   SimpleGoalState _state = SimpleGoalState.PENDING;
   ClientGoalHandle<G, AG, F, AF, R, AR> _handle;
-  void Function(AF) _feedbackCallback;
-  void Function() _activeCallback;
-  void Function(SimpleGoalState, R) _doneCallback;
+  // ignore: prefer_function_declarations_over_variables
+  void Function(AF) _feedbackCallback = (_) {};
+  // ignore: prefer_function_declarations_over_variables
+  void Function() _activeCallback = () {};
+  // ignore: prefer_function_declarations_over_variables
+  void Function(SimpleGoalState, R) _doneCallback = (_, __) {};
 
   Future<bool> waitForServer([int timeoutMs = 0]) =>
       waitForActionServerToStart(timeoutMs);
@@ -207,9 +210,8 @@ class SimpleActionClient<
           case SimpleGoalState.PENDING:
             _setSimpleState(SimpleGoalState.ACTIVE);
 
-            if (_activeCallback != null) {
-              _activeCallback();
-            }
+            _activeCallback();
+
             break;
           case SimpleGoalState.ACTIVE:
             break;
@@ -236,9 +238,8 @@ class SimpleActionClient<
         switch (_state) {
           case SimpleGoalState.PENDING:
             _setSimpleState(SimpleGoalState.ACTIVE);
-            if (_activeCallback != null) {
-              _activeCallback();
-            }
+            _activeCallback();
+
             break;
           case SimpleGoalState.ACTIVE:
             break;
@@ -257,9 +258,8 @@ class SimpleActionClient<
           case SimpleGoalState.PENDING:
           case SimpleGoalState.ACTIVE:
             _setSimpleState(SimpleGoalState.DONE);
-            if (_doneCallback != null) {
-              _doneCallback(_state, _handle.getResult());
-            }
+            _doneCallback(_state, _handle.getResult());
+
             break;
           case SimpleGoalState.DONE:
             log.dartros.error('BUG: Got a second transition to DONE');
@@ -275,9 +275,7 @@ class SimpleActionClient<
   }
 
   void _handleFeedback(AF feedback) {
-    if (_feedbackCallback != null) {
-      _feedbackCallback(feedback);
-    }
+    _feedbackCallback(feedback);
   }
 
   void _setSimpleState(SimpleGoalState newState) {

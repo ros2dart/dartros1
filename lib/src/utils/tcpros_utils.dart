@@ -5,9 +5,8 @@ import 'dart:typed_data';
 import 'package:buffer/buffer.dart';
 import 'package:dartx/dartx.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:logger/logger.dart';
 
-import 'log/logger.dart';
+import 'error_utils.dart';
 import 'msg_utils.dart';
 part 'tcpros_utils.freezed.dart';
 
@@ -96,8 +95,8 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
-      throw Exception(
-          'Error: Invalid connection header while parsing field $field');
+      throw HeaderParseException(
+          info, 'Error: Invalid connection header while parsing field $field');
     }
     final match = regex.allMatches(field).toList()[0];
     // TODO: Assert group not empty
@@ -191,7 +190,7 @@ Uint8List serializeString(String message) {
   return writer.toBytes();
 }
 
-Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
+Uint8List serializeMessage(ByteDataWriter writer, RosMessage message,
     {bool prependMessageLength = true}) {
   final msgSize = message.getMessageSize();
   if (prependMessageLength) {
@@ -202,7 +201,7 @@ Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
 }
 
 Uint8List serializeServiceResponse(
-    ByteDataWriter writer, dynamic message, bool success,
+    ByteDataWriter writer, RosMessage message, bool success,
     {bool prependResponseInfo = true}) {
   final msgSize = message.getMessageSize();
   if (prependResponseInfo) {
@@ -223,7 +222,7 @@ T deserializeMessage<T extends RosMessage>(
     messageClass.deserialize(reader);
 
 Uint8List serializeResponse(
-  dynamic response,
+  RosMessage response,
   bool success, {
   bool prependResponseInfo = true,
 }) {

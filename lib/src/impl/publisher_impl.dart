@@ -192,8 +192,8 @@ class PublisherImpl<T extends RosMessage> {
 
 class UdpSocketOptions {
   const UdpSocketOptions(this.port, this.host, this.dgramSize, this.connId);
-  final int port;
-  final String host;
-  final int dgramSize;
+  final int/*!*/ port;
+  final String/*!*/ host;
+  final int/*!*/ dgramSize;
   final int connId;
 }

@@ -24,7 +24,7 @@ class NodeHandle {
   }
 
   bool get isShutdown => node.isShutdown;
-  String/*!*/ get nodeName => node.nodeName;
+  String /*!*/ get nodeName => node.nodeName;
 
   // Server API stuff
   Future<String> getMasterUri() => node.getMasterUri();
@@ -47,7 +47,7 @@ class NodeHandle {
   /// Advertises [topic] with message type [typeClass]
   ///
   /// [typeClass] must be a [RosMessage]
-  Publisher advertise<T extends RosMessage<T>>(String topic, T typeClass,
+  Publisher<T> advertise<T extends RosMessage<T>>(String topic, T typeClass,
           {bool latching = false,
           bool tcpNoDelay = false,
           int queueSize = 1,

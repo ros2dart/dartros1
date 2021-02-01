@@ -3,8 +3,7 @@ import 'package:dartx/dartx.dart';
 
 enum StatusCode { SUCCESS, FAILURE, ERROR }
 
-Future<dynamic> listenRandomPort(
-    int limit, Future<dynamic> Function(int) create) async {
+Future<T> listenRandomPort<T>(int limit, Future<T> Function(int) create) async {
   final random = Random();
   for (final _ in 0.rangeTo(limit)) {
     try {
@@ -23,8 +22,8 @@ class XMLRPCResponse {
       : statusCode = status.asStatusCode;
 
   final StatusCode statusCode;
-  final String/*!*/ statusMessage;
-  final dynamic value;
+  final String /*!*/ statusMessage;
+  final Object/*!*/ value;
 
   bool get success => statusCode == StatusCode.SUCCESS;
   bool get failure => statusCode == StatusCode.FAILURE;

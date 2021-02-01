@@ -18,12 +18,12 @@ class SimpleActionServer<
         R extends RosMessage<R>,
         AR extends RosActionResult<R, AR>>
     extends ActionServer<G, AG, F, AF, R, AR> {
-  SimpleActionServer(String actionServer, NodeHandle node,
-      RosActionMessage<G, AG, F, AF, R, AR> actionClass, this._executeCallback)
-      : super(actionServer, node, actionClass) {
-    goalHandle = _handleGoal;
-    cancelHandle = _handleCancel;
-  }
+  SimpleActionServer(
+    String actionServer,
+    NodeHandle node,
+    RosActionMessage<G, AG, F, AF, R, AR> actionClass,
+    this._executeCallback,
+  ) : super(actionServer, node, actionClass);
 
   final Future<void> Function(G) _executeCallback;
   GoalHandle _currentGoal;
@@ -36,9 +36,7 @@ class SimpleActionServer<
   @override
   void start() {
     super.start();
-    if (_executeCallback != null) {
-      _runExecuteLoop();
-    }
+    _runExecuteLoop();
   }
 
   bool get isActive {
@@ -105,7 +103,8 @@ class SimpleActionServer<
     _currentGoal.setSucceeded(result ?? actionClass.result(), text: text);
   }
 
-  void _handleGoal(GoalHandle newGoal) {
+  @override
+  void goalHandle(GoalHandle gh) {
     final hasGoal = isActive;
     var acceptGoal = false;
     if (!hasGoal) {
@@ -114,7 +113,7 @@ class SimpleActionServer<
       final stamp = _nextGoal != null
           ? _nextGoal.goalId.stamp
           : _currentGoal.goalId.stamp;
-      final newStamp = newGoal.goalId.stamp;
+      final newStamp = gh.goalId.stamp;
       acceptGoal = stamp < newStamp;
     }
 
@@ -126,7 +125,7 @@ class SimpleActionServer<
                 'This goal was canceled because another goal was received by the simple action server');
       }
 
-      _nextGoal = newGoal;
+      _nextGoal = gh;
       _newGoalPreemptRequest = false;
 
       if (hasGoal) {
@@ -140,11 +139,12 @@ class SimpleActionServer<
     }
   }
 
-  void _handleCancel(GoalHandle goal) {
-    if (_currentGoal != null && _currentGoal.id == goal.id) {
+  @override
+  void cancelHandle(GoalHandle gh) {
+    if (_currentGoal != null && _currentGoal.id == gh.id) {
       _preemptRequested = true;
       // emit('preempt');
-    } else if (_nextGoal != null && _nextGoal.id == goal.id) {
+    } else if (_nextGoal != null && _nextGoal.id == gh.id) {
       _newGoalPreemptRequest = true;
     }
   }

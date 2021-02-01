@@ -18,6 +18,7 @@ import 'impl/subscriber_impl.dart';
 import 'ros_xmlrpc_common.dart';
 import 'service_client.dart';
 import 'service_server.dart';
+import 'utils/error_utils.dart';
 import 'utils/log/logger.dart';
 import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
@@ -25,7 +26,7 @@ import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
-  factory Node(String name, String/*!*/ rosMasterURI) =>
+  factory Node(String name, String /*!*/ rosMasterURI) =>
       _node ??= Node._(name, rosMasterURI);
   Node._(this.nodeName, this.rosMasterURI)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
@@ -38,10 +39,10 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   static Node _node;
-  static Node/*!*/ get singleton => _node;
+  static Node /*!*/ get singleton => _node;
   String _ipAddress;
   @override
-  String/*!*/ get ipAddress => _ipAddress;
+  String /*!*/ get ipAddress => _ipAddress;
   @override
   String get xmlRpcUri => 'http://$ipAddress:${_xmlRpcServer.port}';
   @override
@@ -235,22 +236,26 @@ class Node extends rpc_server.XmlRpcHandler
 
         await for (final _ in socket) {
           final reader = ByteDataReader(endian: Endian.little);
-          reader.add(socket.read());
-          final header = udp.UDPRosHeader.deserialize(reader);
-          if (header == null) {
-            log.dartros.error('Unable to validate connection header $header');
+          final data = socket.read();
+          reader.add(data);
+          try {
+            final header = udp.UDPRosHeader.deserialize(reader);
+            log.superdebug.info('Got connection header $header');
+            final connId = header.connectionId;
+            final topic = _subscribers.keys.firstWhere(
+                (topic) => _subscribers[topic].connectionId == connId,
+                orElse: () => null);
+            if (topic != null) {
+              _subscribers[topic].handleMessageChunk(header, reader);
+            } else {
+              log.dartros
+                  .info('Got connection header for unknown topic $topic');
+            }
+          } on Exception catch (e, st) {
+            log.dartros
+                .error('Unable to validate connection header $data $e\n$st');
             await socket.close();
             return;
-          }
-          log.superdebug.info('Got connection header $header');
-          final connId = header.connectionId;
-          final topic = _subscribers.keys.firstWhere(
-              (topic) => _subscribers[topic].connectionId == connId,
-              orElse: () => null);
-          if (topic != null) {
-            _subscribers[topic].handleMessageChunk(header, reader);
-          } else {
-            log.dartros.info('Got connection header for unknown topic $topic');
           }
         }
       },
@@ -276,20 +281,13 @@ class Node extends rpc_server.XmlRpcHandler
             .info('Node $nodeName got connection from ${connection.name}');
 
         final listener = socket.asBroadcastStream();
+        TCPRosChunk message;
         try {
-          final message = await listener
+          message = await listener
               .transform(TCPRosChunkTransformer().transformer)
               .first;
-
           final header = parseTcpRosHeader(message);
-          if (header == null) {
-            log.dartros.error('Unable to validate connection header $header');
-            socket.add(serializeString(
-                'Unable to validate connection header $message'));
-            await socket.flush();
-            await socket.close();
-            return;
-          }
+
           log.superdebug.info('Got connection header $header');
           if (header.topic.isNotNullOrEmpty) {
             final topic = header.topic;
@@ -315,6 +313,12 @@ class Node extends rpc_server.XmlRpcHandler
             await socket.flush();
             await socket.close();
           }
+        } on HeaderParseException catch (e) {
+          log.dartros.error('Unable to validate connection header $e');
+          socket.add(
+              serializeString('Unable to validate connection header $message'));
+          await socket.flush();
+          await socket.close();
         } on StateError catch (e) {
           return;
         }

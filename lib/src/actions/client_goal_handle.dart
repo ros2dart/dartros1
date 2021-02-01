@@ -72,11 +72,7 @@ class ClientGoalHandle<
     if (!_active) {
       log.dartros.error('Trying to getResult on an inactive ClientGoalHandle!');
     }
-
-    if (_result != null) {
-      return _result.result;
-    }
-    return null;
+    return _result?.result;
   }
 
   int getTerminalState() {
@@ -88,15 +84,16 @@ class ClientGoalHandle<
     if (_state != CommState.DONE) {
       log.dartros.warn('Asking for terminal state when we\'re in $_state');
     }
+    final gs = _goalStatus;
 
-    if (_goalStatus != null) {
-      switch (_goalStatus.status) {
+    if (gs != null) {
+      switch (gs.status) {
         case GoalStatus.PENDING:
         case GoalStatus.ACTIVE:
         case GoalStatus.PREEMPTING:
         case GoalStatus.RECALLING:
           log.dartros.error(
-              'Asking for terminal state, but latest goal status is ${_goalStatus.status}');
+              'Asking for terminal state, but latest goal status is ${gs.status}');
           return GoalStatus.LOST;
         case GoalStatus.PREEMPTED:
         case GoalStatus.SUCCEEDED:
@@ -104,13 +101,13 @@ class ClientGoalHandle<
         case GoalStatus.REJECTED:
         case GoalStatus.RECALLED:
         case GoalStatus.LOST:
-          return _goalStatus.status;
+          return gs.status;
         default:
-          log.dartros.error('Unknown goal status: ${_goalStatus.status}');
+          log.dartros.error('Unknown goal status: ${gs.status}');
+          throw Exception('Unknown goal status: ${gs.status}');
       }
     }
-    // TODO: Why is this return here if _goalStatus == null
-    return _goalStatus?.status;
+    throw Exception('Goal status is null: $gs');
   }
 
   CommState getCommState() => _state;
@@ -141,7 +138,7 @@ class ClientGoalHandle<
     }
   }
 
-  void updateStatus(GoalStatus /*?*/ status) {
+  void updateStatus(GoalStatus/*?*/ status) {
     // it's apparently possible to receive old GoalStatus messages, even after
     // transitioning to a terminal state.
     if (_state == CommState.DONE) {

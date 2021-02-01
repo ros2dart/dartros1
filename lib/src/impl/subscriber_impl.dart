@@ -36,7 +36,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
     _register();
   }
   final Node node;
-  final String/*!*/ topic;
+  final String /*!*/ topic;
   final bool udpEnabled;
   final bool tcpEnabled;
   final int port;
@@ -75,7 +75,6 @@ class SubscriberImpl<T extends RosMessage<T>> {
     for (final client in [...pubClients.keys, ...pendingClients.keys]) {
       await _disconnectClient(client);
     }
-    // TODO: spinner thing
   }
 
   void requestTopicFromPubs(List<String> pubs) {
@@ -320,8 +319,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
 class UdpMessage {
   const UdpMessage(this.blkN, this.msgId, this.connectionId, this.buffer);
-  final int blkN;
-  final int msgId;
-  final int connectionId;
+  final int/*!*/ blkN;
+  final int/*!*/ msgId;
+  final int/*!*/ connectionId;
   final ByteDataReader buffer;
 }

@@ -10,7 +10,9 @@ abstract class RosMessage<T> implements Function {
   String get fullType;
   String get messageDefinition;
   String get md5sum;
+  int getMessageSize();
   T deserialize(ByteDataReader reader);
+  void serialize(ByteDataWriter writer);
   T call();
 }
 
@@ -26,21 +28,21 @@ abstract class RosActionGoal<G extends RosMessage<G>,
     AG extends RosActionGoal<G, AG> /*!*/ > extends RosMessage<AG> {
   Header header;
   GoalID goal_id;
-  G/*!*/ goal;
+  G /*!*/ goal;
 }
 
 abstract class RosActionFeedback<F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>> extends RosMessage<AF> {
   Header header;
   GoalStatus status;
-  F/*!*/ feedback;
+  F /*!*/ feedback;
 }
 
 abstract class RosActionResult<R extends RosMessage<R> /*!*/,
     AR extends RosActionResult<R, AR>> extends RosMessage<AR> {
   Header header;
   GoalStatus /*!*/ status;
-  R/*!*/ result;
+  R /*!*/ result;
 }
 
 abstract class RosActionMessage<

@@ -4,7 +4,6 @@ import 'package:dartx/dartx.dart';
 import 'service_message_example.dart';
 
 Future<void> main(List<String> args) async {
-  //TODO: Change to node handle
   final node = await initNode('test_node', args);
   final request = MoveBlockRequest(color: 0, shape: 1);
   final moveBloc =

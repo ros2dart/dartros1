@@ -11,7 +11,7 @@ class GoalHandle<G extends RosMessage<G> /*!*/, F extends RosMessage<F>,
         _status = GoalStatus(status: status ?? GoalStatus.PENDING, goal_id: id);
   final GoalID _id;
   String get id => _id.id;
-  final G/*!*/ goal;
+  final G goal;
   final GoalStatus _status;
   GoalStatus get status => _status;
   final ActionServer server;
@@ -83,7 +83,7 @@ class GoalHandle<G extends RosMessage<G> /*!*/, F extends RosMessage<F>,
     }
   }
 
-  void setAborted(R/*!*/ result, {String text = ''}) {
+  void setAborted(R /*!*/ result, {String text = ''}) {
     switch (statusId) {
       case GoalStatus.PREEMPTING:
       case GoalStatus.ACTIVE:

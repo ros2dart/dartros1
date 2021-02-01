@@ -38,7 +38,7 @@ abstract class ActionLibServer<
   final String actionServer;
 
   bool handleGoal(AG goal);
-  void handleCancel(GoalID id);
+  void handleCancel(GoalID goalID);
   void publishActionResult(AR result) {
     _resultPub.publish(result);
   }
