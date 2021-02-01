@@ -37,12 +37,12 @@ Future<NodeHandle> initNode(
   names.init(remappings, nodeName.namespace);
   // If the node has already been created return that node or an error
   if (Node.singleton != null) {
-    if (nodeName.name == Node.singleton.nodeName) {
+    if (nodeName.name == (Node.singleton!.nodeName)) {
       return nh;
     } else {
       // Node name doesn't match, can't init another node with a different name in the same process
       throw Exception(
-          'Unable to initialize ${nodeName.name} - node ${Node.singleton.nodeName} already exists');
+          'Unable to initialize ${nodeName.name} - node ${Node.singleton!.nodeName} already exists');
     }
   }
   log.initializeNodeLogger(nodeName.name);
@@ -56,9 +56,9 @@ Future<NodeHandle> initNode(
   return NodeHandle(node);
 }
 
-NodeHandle get nh => NodeHandle(Node.singleton);
+NodeHandle get nh => NodeHandle(Node.singleton!);
 NodeHandle getNodeHandle(String namespace) =>
-    NodeHandle(Node.singleton, namespace);
+    NodeHandle(Node.singleton!, namespace);
 
 NodeName _resolveNodeName(
     String nodeName, Map<String, String> remappings, bool anonymize) {

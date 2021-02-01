@@ -40,7 +40,7 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   static Node? _node;
-  static Node get singleton => _node!;
+  static Node? get singleton => _node;
   String? _ipAddress;
   @override
   String get ipAddress => _ipAddress!;
