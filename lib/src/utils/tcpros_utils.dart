@@ -108,15 +108,15 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
 
 bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
     String type, String md5sum) {
-  if (header.topic!.isNullOrEmpty) {
+  if (header.topic.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [topic]');
     return false;
   }
-  if (header.type!.isNullOrEmpty) {
+  if (header.type.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [type]');
     return false;
   }
-  if (header.md5sum!.isNullOrEmpty) {
+  if (header.md5sum.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -140,11 +140,11 @@ bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
 bool validateServiceClientHeader(
     ByteDataWriter writer, TCPRosHeader header, String service, String md5sum) {
   // log.dartros.error('Header:, ${header.md5sum} ${header.service}');
-  if (header.service!.isNullOrEmpty) {
+  if (header.service.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [service]');
     return false;
   }
-  if (header.md5sum!.isNullOrEmpty) {
+  if (header.md5sum.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -163,11 +163,11 @@ bool validateServiceClientHeader(
 
 bool validatePubHeader(
     ByteDataWriter writer, TCPRosHeader header, String type, String md5sum) {
-  if (header.type!.isNullOrEmpty) {
+  if (header.type.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [type]');
     return false;
   }
-  if (header.md5sum!.isNullOrEmpty) {
+  if (header.md5sum.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }

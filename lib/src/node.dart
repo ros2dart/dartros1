@@ -289,7 +289,7 @@ class Node extends rpc_server.XmlRpcHandler
           final header = parseTcpRosHeader(message);
 
           log.superdebug.info('Got connection header $header');
-          if (header.topic!.isNotNullOrEmpty) {
+          if (header.topic.isNotNullOrEmpty) {
             final topic = header.topic;
             if (_publishers.containsKey(topic)) {
               await _publishers[topic!]!
@@ -298,7 +298,7 @@ class Node extends rpc_server.XmlRpcHandler
               log.dartros
                   .info('Got connection header for unknown topic $topic');
             }
-          } else if (header.service!.isNotNullOrEmpty) {
+          } else if (header.service.isNotNullOrEmpty) {
             final service = header.service;
             final serviceServer = _services[service!];
             if (serviceServer != null) {

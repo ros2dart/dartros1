@@ -167,7 +167,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
       final msg = await _call._clientStream!.first;
       if (!transformer.deserializeServiceResponse) {
         final header = parseTcpRosHeader(msg);
-        if (header.error!.isNotNullOrEmpty) {
+        if (header.error.isNotNullOrEmpty) {
           _call.completer.completeError(header.error!);
         }
         transformer.deserializeServiceResponse = true;
