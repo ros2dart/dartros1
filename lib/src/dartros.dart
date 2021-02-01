@@ -22,7 +22,7 @@ Future<NodeHandle> initNode(
   String name,
   List<String> args, {
   bool anonymize = false,
-  String rosMasterUri,
+  String? rosMasterUri,
 }) async {
   if (name.isEmpty) {
     throw Exception('Name must not be empty.');
@@ -48,7 +48,7 @@ Future<NodeHandle> initNode(
   log.initializeNodeLogger(nodeName.name);
   final masterUri = rosMasterUri ??
       remappings['__master'] ??
-      Platform.environment['ROS_MASTER_URI'];
+      Platform.environment['ROS_MASTER_URI']!;
   final node = Node(nodeName.name, masterUri);
   await node.nodeReady.future;
   await Logger.initializeRosLogger();

@@ -29,17 +29,17 @@ abstract class ActionLibClient<
         queueSize: 1);
   }
   final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
-  Publisher<AG> _goalPub;
-  Publisher<GoalID> _cancelPub;
-  Subscriber<GoalStatusArray> _statusSub;
-  Subscriber<AF> _feedbackSub;
-  Subscriber<AR> _resultSub;
+  late Publisher<AG> _goalPub;
+  late Publisher<GoalID> _cancelPub;
+  late Subscriber<GoalStatusArray> _statusSub;
+  late Subscriber<AF> _feedbackSub;
+  late Subscriber<AR> _resultSub;
   NodeHandle node;
   final String actionServer;
   bool hasStatus = false;
 
   String get type => actionClass.fullType;
-  void cancel(String id, [RosTime stamp]) {
+  void cancel(String? id, [RosTime? stamp]) {
     stamp ??= RosTime.now();
     final cancelGoal = GoalID(stamp: stamp);
     cancelGoal.id = id ?? cancelGoal.id;
@@ -94,5 +94,5 @@ abstract class ActionLibClient<
     return false;
   }
 
-  String generateGoalID([RosTime now]) => GoalIDGenerator.generateGoalID(now);
+  String generateGoalID([RosTime? now]) => GoalIDGenerator.generateGoalID(now);
 }

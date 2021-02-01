@@ -1,15 +1,14 @@
 part of 'ros_xmlrpc_client.dart';
 
 mixin RosParamServerClient on XmlRpcClient {
-  Future<T> getParam<T>(String key, {T defaultValue}) async =>
-      await _call('getParam', [nodeName, key], onError: () => defaultValue)
-          as T;
+  Future<T> getParam<T extends Object>(String key, {T? defaultValue}) async =>
+      _call('getParam', [nodeName, key], onError: () => defaultValue) as T;
 
-  Future<List<String>/*!*/> getParamNames() async =>
-      await _call('getParamNames', [nodeName]);
+  Future<List<String>> getParamNames() async =>
+      _call('getParamNames', [nodeName]);
 
   Future<String> searchParam(String key) async =>
-      await _call('searchParam', [nodeName, key]);
+      _call('searchParam', [nodeName, key]);
 
   Future<bool> hasParam(String key) async =>
       (await _call('hasParam', [nodeName, key])) == 1;

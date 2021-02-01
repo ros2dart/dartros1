@@ -4,7 +4,7 @@ final Names names = Names();
 
 class Names {
   Names();
-  Map<String /*!*/, String> remappings = {};
+  Map<String, String> remappings = {};
   String namespace = '';
   void init(Map<String, String> remaps, String namespace) {
     this.namespace = namespace;
@@ -12,7 +12,7 @@ class Names {
       if (!left.startsWith('_')) {
         final right = remaps[left];
         final resolvedLeft = resolve([left, false]);
-        final resolvedRight = resolve([right, false]);
+        final resolvedRight = resolve([right!, false]);
         remappings[resolvedLeft] = resolvedRight;
       }
     }
@@ -55,9 +55,9 @@ class Names {
 
   String remap(String name) => resolve([name, true]);
 
-  String resolve(List<Object/*!*/> args) {
+  String resolve(List<Object> args) {
     final a = _parseResolveArgs(args);
-    final ns = a[0] as String /*!*/;
+    final ns = a[0] as String;
     var name = a[1] as String;
     final remap = a[2] as bool;
 
@@ -115,24 +115,24 @@ class Names {
 
   String _remap(name) => remappings[name] ?? name;
 
-  List<Object> _parseResolveArgs(List<Object/*!*/> args) {
-    String/*!*/ name = namespace;
-    String/*!*/ ns = namespace;
-    bool/*!*/ remap = true;
+  List<Object> _parseResolveArgs(List<Object> args) {
+    String name = namespace;
+    String ns = namespace;
+    bool remap = true;
     switch (args.length) {
       case 0:
         name = '';
         break;
       case 1:
-        name = args[0];
+        name = args[0] as String;
         break;
       case 2:
         if (args[1] is String) {
-          ns = args[0];
-          name = args[1];
+          ns = args[0] as String;
+          name = args[1] as String;
         } else {
-          name = args[0];
-          remap = args[1];
+          name = args[0] as String;
+          remap = args[1] as bool;
         }
         break;
       default:

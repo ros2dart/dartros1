@@ -29,11 +29,11 @@ abstract class ActionLibServer<
   }
   final NodeHandle node;
   final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
-  Subscriber<AG> _goalSub;
-  Subscriber<GoalID> _cancelSub;
-  Publisher<GoalStatusArray> _statusPub;
-  Publisher<AF> _feedbackPub;
-  Publisher<AR> _resultPub;
+  late Subscriber<AG> _goalSub;
+  late Subscriber<GoalID> _cancelSub;
+  late Publisher<GoalStatusArray> _statusPub;
+  late Publisher<AF> _feedbackPub;
+  late Publisher<AR> _resultPub;
   int _goalCount = 0;
   final String actionServer;
 

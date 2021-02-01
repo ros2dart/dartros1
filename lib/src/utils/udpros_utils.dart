@@ -60,15 +60,15 @@ void createPubHeader(ByteDataWriter writer, String callerId, String md5sum,
 
 bool validateSubHeader(ByteDataWriter writer, tcp.TCPRosHeader header,
     String topic, String type, String md5sum) {
-  if (header.topic.isNullOrEmpty) {
+  if (header.topic!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [topic]');
     return false;
   }
-  if (header.type.isNullOrEmpty) {
+  if (header.type!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [type]');
     return false;
   }
-  if (header.md5sum.isNullOrEmpty) {
+  if (header.md5sum!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -91,11 +91,11 @@ bool validateSubHeader(ByteDataWriter writer, tcp.TCPRosHeader header,
 
 bool validatePubHeader(ByteDataWriter writer, tcp.TCPRosHeader header,
     String type, String md5sum) {
-  if (header.type.isNullOrEmpty) {
+  if (header.type!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [type]');
     return false;
   }
-  if (header.md5sum.isNullOrEmpty) {
+  if (header.md5sum!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -155,7 +155,7 @@ class UDPRosHeader<T> {
   factory UDPRosHeader.parse(String header) {
     final reader = ByteDataReader(endian: Endian.little);
     reader.add(header.toUtf8());
-    final info = <String /*!*/, String>{};
+    final Map<String?, String?> info = <String, String?>{};
     final regex = RegExp(r'(\w+)=([\s\S]*)');
     final fields = deserializeStringFields(reader);
     // print(fields);
@@ -182,21 +182,21 @@ class UDPRosHeader<T> {
       info['message_definition'],
     );
   }
-  final String callerId;
-  final String md5;
-  final String topic;
-  final String type;
-  final String messageDefinition;
-  final int opCode;
-  final int connectionId;
-  final int msgId;
-  final int blkN;
+  final String? callerId;
+  final String? md5;
+  final String? topic;
+  final String? type;
+  final String? messageDefinition;
+  final int? opCode;
+  final int? connectionId;
+  final int? msgId;
+  final int? blkN;
 
   void serialize(ByteDataWriter writer) {
-    writer.writeUint32(connectionId);
-    writer.writeUint8(opCode);
-    writer.writeUint8(msgId);
-    writer.writeUint16(blkN);
+    writer.writeUint32(connectionId!);
+    writer.writeUint8(opCode!);
+    writer.writeUint8(msgId!);
+    writer.writeUint16(blkN!);
   }
 }
 

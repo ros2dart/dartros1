@@ -5,7 +5,7 @@ const int int64MaxValue = 9223372036854775807;
 
 class GoalIDGenerator {
   static int GOAL_COUNT = 0;
-  static String generateGoalID([RosTime now]) {
+  static String generateGoalID([RosTime? now]) {
     now ??= RosTime.now();
     GOAL_COUNT++;
     if (GOAL_COUNT > int64MaxValue) {

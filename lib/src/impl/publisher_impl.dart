@@ -27,13 +27,13 @@ class PublisherImpl<T extends RosMessage> {
     _register();
   }
   final Node node;
-  final String/*!*/ topic;
+  final String topic;
   final bool latching;
   final int queueSize;
   final bool tcpNoDelay;
   final int throttleMs;
   int count = 0;
-  T lastSentMsg;
+  T? lastSentMsg;
   final T messageClass;
   State _state = State.REGISTERING;
   final Map<String, TcpConnection> subClients = {};
@@ -55,7 +55,7 @@ class PublisherImpl<T extends RosMessage> {
     }
   }
 
-  void publish(T message, [int ms]) {
+  void publish(T message, [int? ms]) {
     if (isShutdown) {
       log.dartros.debug('Shutdown, not sending any more messages');
       return;
@@ -146,7 +146,7 @@ class PublisherImpl<T extends RosMessage> {
       socket.close();
     });
     if (lastSentMsg != null) {
-      serializeMessage(writer, lastSentMsg);
+      serializeMessage(writer, lastSentMsg!);
       socket.add(writer.toBytes());
     }
     subClients[connection.name] = connection;
@@ -192,8 +192,8 @@ class PublisherImpl<T extends RosMessage> {
 
 class UdpSocketOptions {
   const UdpSocketOptions(this.port, this.host, this.dgramSize, this.connId);
-  final int/*!*/ port;
-  final String/*!*/ host;
-  final int/*!*/ dgramSize;
+  final int port;
+  final String host;
+  final int dgramSize;
   final int connId;
 }

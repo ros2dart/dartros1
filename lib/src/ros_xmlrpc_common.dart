@@ -22,8 +22,8 @@ class XMLRPCResponse {
       : statusCode = status.asStatusCode;
 
   final StatusCode statusCode;
-  final String /*!*/ statusMessage;
-  final Object/*!*/ value;
+  final String statusMessage;
+  final Object value;
 
   bool get success => statusCode == StatusCode.SUCCESS;
   bool get failure => statusCode == StatusCode.FAILURE;

@@ -12,7 +12,7 @@ final XmlRpcResponseCodec xmlRpcResponseCodec = XmlRpcResponseCodec();
 
 class XmlRpcResponseCodec implements rpc.Codec<XMLRPCResponse> {
   @override
-  XmlNode encode(Object value, rpc.XmlCodecEncodeSignature encode) {
+  XmlNode encode(Object? value, rpc.XmlCodecEncodeSignature? encode) {
     // print('trying xmlrpc response codec');
     if (value is XMLRPCResponse) {
       // print('encoding');
@@ -24,7 +24,7 @@ class XmlRpcResponseCodec implements rpc.Codec<XMLRPCResponse> {
         value.value
       ]) {
         // print('$e');
-        values.add(XmlElement(XmlName('value'), [], [encode?.call(e)]));
+        values.add(XmlElement(XmlName('value'), [], [encode!(e)]));
       }
       final data = XmlElement(XmlName('data'), [], values);
       // print(data);
@@ -35,11 +35,11 @@ class XmlRpcResponseCodec implements rpc.Codec<XMLRPCResponse> {
   }
 
   @override
-  XMLRPCResponse decode(XmlNode node, rpc.XmlCodecDecodeSignature decode) {
+  XMLRPCResponse decode(XmlNode? node, rpc.XmlCodecDecodeSignature? decode) {
     if (!(node is XmlElement && node.name.local == 'array')) {
       throw ArgumentError();
     }
-    final list = (node as XmlElement)
+    final list = node
         .findElements('data')
         .first
         .findElements('value')
@@ -47,21 +47,21 @@ class XmlRpcResponseCodec implements rpc.Codec<XMLRPCResponse> {
         .map((el) => decode?.call(el))
         .toList();
 
-    return XMLRPCResponse(list[0], list[1], list[2]);
+    return XMLRPCResponse(list[0] as int, list[1] as String, list[2]!);
   }
 }
 
-XmlNode getValueContent(XmlElement valueElt) =>
+XmlNode? getValueContent(XmlElement valueElt) =>
     valueElt.children.firstWhereOrNull((e) => e is XmlElement) ??
     valueElt.firstChild;
 
-Future<T /*!*/ > _rpcCall<T extends Object /*!*/ >(
+Future<T> _rpcCall<T extends Object>(
   String methodName,
   List<Object> params,
   String rosMasterUri,
   rpc.HttpPost post, {
-  Map<String, String> headers,
-  T Function() onError,
+  Map<String, String>? headers,
+  T? Function()? onError,
 }) async {
   final result = await rpc.call(
     Uri.parse(rosMasterUri),
@@ -76,13 +76,13 @@ Future<T /*!*/ > _rpcCall<T extends Object /*!*/ >(
   final resp = XMLRPCResponse(result[0] as int, result[1] as String, result[2]);
 
   if (resp.success) {
-    return resp.value;
+    return resp.value as T;
   } else {
     if (onError == null) {
       throw Exception(
           'Failed to execute RPC call $methodName, args: $params, result: $result');
     }
-    return onError();
+    return onError()!;
   }
 }
 
@@ -91,7 +91,7 @@ Future<StatusCode> _rpcCallStatus<T extends Object>(
   List<Object> params,
   String rosMasterUri,
   rpc.HttpPost post, {
-  Map<String, String> headers,
+  Map<String, String>? headers,
 }) async {
   final result = await rpc.call(
     Uri.parse(rosMasterUri),
@@ -116,18 +116,18 @@ mixin XmlRpcClient {
   String get xmlRpcUri;
   String get ipAddress;
 
-  Future<T> _call<T extends Object /*!*/ >(
+  Future<T> _call<T extends Object>(
     String methodName,
     List<Object> params, {
-    Map<String, String> headers,
-    T Function() onError,
+    Map<String, String>? headers,
+    T? Function()? onError,
   }) =>
       _rpcCall(methodName, params, rosMasterURI, client.post,
           headers: headers, onError: onError);
   Future<StatusCode> _callRpc(
     String methodName,
     List<Object> params, {
-    Map<String, String> headers,
+    Map<String, String>? headers,
   }) =>
       _rpcCallStatus(methodName, params, rosMasterURI, client.post,
           headers: headers);

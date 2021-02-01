@@ -10,7 +10,7 @@ class ClientGoalHandle<
     AG extends RosActionGoal<G, AG>,
     F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>,
-    R extends RosMessage<R /*!*/ > /*!*/,
+    R extends RosMessage<R >,
     AR extends RosActionResult<R, AR>> {
   ClientGoalHandle(
       this._goal, this._actionClient, this.feedback, this.transition)
@@ -21,10 +21,10 @@ class ClientGoalHandle<
 
   CommState _state;
   bool _active = true;
-  AR _result;
+  AR? _result;
   final AG _goal;
-  GoalStatus _goalStatus;
-  GoalStatus get goalStatus => _goalStatus;
+  GoalStatus? _goalStatus;
+  GoalStatus? get goalStatus => _goalStatus;
   final ActionClient _actionClient;
   void Function(AF) feedback;
   void Function() transition;
@@ -68,7 +68,7 @@ class ClientGoalHandle<
     _transition(CommState.WAITING_FOR_CANCEL_ACK);
   }
 
-  R getResult() {
+  R? getResult() {
     if (!_active) {
       log.dartros.error('Trying to getResult on an inactive ClientGoalHandle!');
     }
@@ -138,7 +138,7 @@ class ClientGoalHandle<
     }
   }
 
-  void updateStatus(GoalStatus/*?*/ status) {
+  void updateStatus(GoalStatus? status) {
     // it's apparently possible to receive old GoalStatus messages, even after
     // transitioning to a terminal state.
     if (_state == CommState.DONE) {
@@ -154,7 +154,7 @@ class ClientGoalHandle<
           _state != CommState.WAITING_FOR_RESULT &&
           _state != CommState.DONE) {
         log.dartros.warn('Transitioning goal to LOST');
-        _goalStatus.status = GoalStatus.LOST;
+        _goalStatus!.status = GoalStatus.LOST;
         _transition(CommState.DONE);
       }
       return;

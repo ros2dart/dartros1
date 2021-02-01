@@ -25,12 +25,12 @@ class SimpleActionServer<
     this._executeCallback,
   ) : super(actionServer, node, actionClass);
 
-  final Future<void> Function(G) _executeCallback;
-  GoalHandle _currentGoal;
-  GoalHandle _nextGoal;
+  final Future<void> Function(G?) _executeCallback;
+  GoalHandle? _currentGoal;
+  GoalHandle? _nextGoal;
   bool _preemptRequested = false;
   bool _newGoalPreemptRequest = false;
-  Timer _executeLoopTimer;
+  Timer? _executeLoopTimer;
   bool _shutdown = false;
 
   @override
@@ -41,7 +41,7 @@ class SimpleActionServer<
 
   bool get isActive {
     if (_currentGoal != null) {
-      final status = _currentGoal.statusId;
+      final status = _currentGoal!.statusId;
       return status == GoalStatus.ACTIVE || status == GoalStatus.PREEMPTING;
     }
     return false;
@@ -60,7 +60,7 @@ class SimpleActionServer<
     await super.shutdown();
   }
 
-  G acceptNewGoal() {
+  G? acceptNewGoal() {
     if (_nextGoal == null) {
       log.dartros.error(
           'Attempting to accept the next goal when a new goal is not available');
@@ -70,7 +70,7 @@ class SimpleActionServer<
     if (isActive) {
       final result = actionClass.result();
 
-      _currentGoal.setCanceled(result,
+      _currentGoal!.setCanceled(result,
           text:
               'This goal was canceled because another goal was received by the simple action server');
     }
@@ -81,17 +81,17 @@ class SimpleActionServer<
     _preemptRequested = _newGoalPreemptRequest;
     _newGoalPreemptRequest = false;
 
-    _currentGoal.setAccepted(
+    _currentGoal!.setAccepted(
         text: 'This goal has been accepted by the simple action server');
 
-    return _currentGoal.goal;
+    return _currentGoal!.goal as G?;
   }
 
   void publishFeedbackForGoal(F feedback) {
     _currentGoal?.publishFeedback(feedback);
   }
 
-  void setAborted(R result, String text) {
+  void setAborted(R? result, String text) {
     _currentGoal?.setAborted(result ?? actionClass.result(), text: text);
   }
 
@@ -100,7 +100,7 @@ class SimpleActionServer<
   }
 
   void setSucceeded(R result, String text) {
-    _currentGoal.setSucceeded(result ?? actionClass.result(), text: text);
+    _currentGoal!.setSucceeded(result ?? actionClass.result(), text: text);
   }
 
   @override
@@ -111,16 +111,16 @@ class SimpleActionServer<
       acceptGoal = true;
     } else {
       final stamp = _nextGoal != null
-          ? _nextGoal.goalId.stamp
-          : _currentGoal.goalId.stamp;
+          ? _nextGoal!.goalId.stamp
+          : _currentGoal!.goalId.stamp;
       final newStamp = gh.goalId.stamp;
       acceptGoal = stamp < newStamp;
     }
 
     if (acceptGoal) {
       if (_nextGoal != null) {
-        final result = actionClass.result();
-        _nextGoal.setCanceled(result,
+        final R result = actionClass.result();
+        _nextGoal!.setCanceled(result,
             text:
                 'This goal was canceled because another goal was received by the simple action server');
       }
@@ -141,10 +141,10 @@ class SimpleActionServer<
 
   @override
   void cancelHandle(GoalHandle gh) {
-    if (_currentGoal != null && _currentGoal.id == gh.id) {
+    if (_currentGoal != null && _currentGoal!.id == gh.id) {
       _preemptRequested = true;
       // emit('preempt');
-    } else if (_nextGoal != null && _nextGoal.id == gh.id) {
+    } else if (_nextGoal != null && _nextGoal!.id == gh.id) {
       _newGoalPreemptRequest = true;
     }
   }

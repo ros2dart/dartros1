@@ -12,7 +12,7 @@ class ActionServer<
         AG extends RosActionGoal<G, AG>,
         F extends RosMessage<F>,
         AF extends RosActionFeedback<F, AF>,
-        R extends RosMessage<R /*!*/ > /*!*/,
+        R extends RosMessage<R>,
         AR extends RosActionResult<R, AR>>
     extends ActionLibServer<G, AG, F, AF, R, AR> {
   ActionServer(
@@ -25,7 +25,7 @@ class ActionServer<
   RosTime _lastCancelStamp = RosTime.epoch();
   final _statusListTimeout = const RosTime(secs: 5, nsecs: 0);
   bool _started = false;
-  Timer _statusFreqTimer;
+  Timer? _statusFreqTimer;
   void goalHandle(GoalHandle gh) {
     log.dartros.debug('Goal Handler is empty!');
     throw UnimplementedError('Goal Handler is empty!');
@@ -60,7 +60,7 @@ class ActionServer<
     await super.shutdown();
   }
 
-  GoalHandle<G, F, R> getGoalHandle(String id) => _goalHandleCache[id];
+  GoalHandle<G, F, R>? getGoalHandle(String id) => _goalHandleCache[id];
 
   @override
   void handleCancel(GoalID goalID) {
@@ -164,5 +164,5 @@ class ActionServer<
     publishStatus();
   }
 
-  int _getAndIncrementSeq(String type) => _pubSeqs[type]++;
+  int _getAndIncrementSeq(String type) => _pubSeqs[type] = _pubSeqs[type]! + 1;
 }

@@ -17,8 +17,8 @@ class ServiceCall<C extends RosMessage<C>, R extends RosMessage<R>,
   ServiceCall(this.request, this.completer);
   final C request;
   final Completer<R> completer;
-  Socket _client;
-  Stream<TCPRosChunk> _clientStream;
+  Socket? _client;
+  Stream<TCPRosChunk>? _clientStream;
 }
 
 class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
@@ -30,11 +30,11 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
   final int maxQueueSize;
   final Node node;
   final List<ServiceCall> _callQueue = [];
-  ServiceCall _currentCall;
+  ServiceCall? _currentCall;
   bool _callInProgress = false;
   bool get callInProgress => _callInProgress;
-  Socket _client;
-  Stream _clientStream;
+  Socket? _client;
+  Stream? _clientStream;
   State _state = State.REGISTERED;
 
   String get type => serviceClass.fullType;
@@ -47,7 +47,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
   void shutdown() {
     _state = State.SHUTDOWN;
     if (_currentCall != null) {
-      _currentCall.completer.completeError('SHUTDOWN');
+      _currentCall!.completer.completeError('SHUTDOWN');
     }
   }
 
@@ -114,17 +114,17 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
       }
     } else {
       _call._client = _client;
-      _call._clientStream = _clientStream;
+      _call._clientStream = _clientStream as Stream<TCPRosChunk>?;
     }
   }
 
   Future<R> _sendRequest(ServiceCall _call) async {
     final writer = ByteDataWriter(endian: Endian.little);
     final serializedRequest = serializeMessage(writer, _call.request);
-    _call._client.add(serializedRequest);
+    _call._client!.add(serializedRequest);
     try {
-      final result = await _call._clientStream.first;
-      if (result.serviceResponseSuccess) {
+      final result = await _call._clientStream!.first;
+      if (result.serviceResponseSuccess!) {
         final reader = ByteDataReader()..add(result.buffer);
 
         return serviceClass.response.deserialize(reader);
@@ -144,7 +144,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
       _call._client = await Socket.connect(uri.host, uri.port);
       final transformer = TCPRosChunkTransformer();
       _call._clientStream =
-          _call._client.transform(transformer.transformer).asBroadcastStream();
+          _call._client!.transform(transformer.transformer).asBroadcastStream();
       if (persist) {
         _clientStream = _call._clientStream;
       }
@@ -152,11 +152,11 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
       final writer = ByteDataWriter(endian: Endian.little);
       createServiceClientHeader(
           writer, node.nodeName, service, serviceClass.md5sum, type, persist);
-      _call._client.add(writer.toBytes());
+      _call._client!.add(writer.toBytes());
       if (persist) {
         _client = _call._client;
       }
-      _call._clientStream.listen((_) {}, onDone: () {
+      _call._clientStream!.listen((_) {}, onDone: () {
         _call._client = null;
         _call._clientStream = null;
         if (persist) {
@@ -164,11 +164,11 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
           _clientStream = null;
         }
       });
-      final msg = await _call._clientStream.first;
+      final msg = await _call._clientStream!.first;
       if (!transformer.deserializeServiceResponse) {
         final header = parseTcpRosHeader(msg);
-        if (header.error.isNotNullOrEmpty) {
-          _call.completer.completeError(header.error);
+        if (header.error!.isNotNullOrEmpty) {
+          _call.completer.completeError(header.error!);
         }
         transformer.deserializeServiceResponse = true;
       }

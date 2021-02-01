@@ -5,8 +5,8 @@ import 'utils/time_utils.dart';
 export 'utils/time_utils.dart';
 
 class Time {
-  static RosTime /*!*/ simTime = const RosTime(secs: 0, nsecs: 0);
-  static bool /*!*/ useSimTime = false;
+  static RosTime simTime = const RosTime(secs: 0, nsecs: 0);
+  static bool useSimTime = false;
   static Future<void> initializeRosTime() async {
     try {
       useSimTime =

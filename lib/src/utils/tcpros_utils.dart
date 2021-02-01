@@ -87,7 +87,7 @@ void createServiceServerHeader(
 TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final reader = ByteDataReader(endian: Endian.little);
   reader.add(header.buffer);
-  final info = <String /*!*/, String>{};
+  final Map<String?, String?> info = <String, String?>{};
   final regex = RegExp(r'(\w+)=([\s\S]*)');
   final fields = deserializeStringFields(reader);
   // print(fields);
@@ -103,20 +103,20 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
     info[match.group(1)] = match.group(2);
   }
   // print(info);
-  return TCPRosHeader.fromMap(info);
+  return TCPRosHeader.fromMap(info as Map<String, String?>);
 }
 
 bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
     String type, String md5sum) {
-  if (header.topic.isNullOrEmpty) {
+  if (header.topic!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [topic]');
     return false;
   }
-  if (header.type.isNullOrEmpty) {
+  if (header.type!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [type]');
     return false;
   }
-  if (header.md5sum.isNullOrEmpty) {
+  if (header.md5sum!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -140,11 +140,11 @@ bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
 bool validateServiceClientHeader(
     ByteDataWriter writer, TCPRosHeader header, String service, String md5sum) {
   // log.dartros.error('Header:, ${header.md5sum} ${header.service}');
-  if (header.service.isNullOrEmpty) {
+  if (header.service!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [service]');
     return false;
   }
-  if (header.md5sum.isNullOrEmpty) {
+  if (header.md5sum!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -163,11 +163,11 @@ bool validateServiceClientHeader(
 
 bool validatePubHeader(
     ByteDataWriter writer, TCPRosHeader header, String type, String md5sum) {
-  if (header.type.isNullOrEmpty) {
+  if (header.type!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [type]');
     return false;
   }
-  if (header.md5sum.isNullOrEmpty) {
+  if (header.md5sum!.isNullOrEmpty) {
     writer.writeString('Connection header missing expected field [md5sum]');
     return false;
   }
@@ -259,7 +259,7 @@ class TCPRosHeader<T> {
       this.tcpNoDelay,
       this.latching);
 
-  factory TCPRosHeader.fromMap(Map<String /*!*/, String> info) => TCPRosHeader(
+  factory TCPRosHeader.fromMap(Map<String, String?> info) => TCPRosHeader(
       info['topic'],
       info['type'],
       info['md5sum'],
@@ -270,13 +270,13 @@ class TCPRosHeader<T> {
       (info['persistent'] ?? '0') != '0',
       (info['tcp_nodelay'] ?? '0') != '0',
       (info['latching'] ?? '0') != '0');
-  final String topic;
-  final String type;
-  final String md5sum;
-  final String service;
-  final String callerId;
-  final String messageDefinition;
-  final String error;
+  final String? topic;
+  final String? type;
+  final String? md5sum;
+  final String? service;
+  final String? callerId;
+  final String? messageDefinition;
+  final String? error;
   final bool persistent;
   final bool tcpNoDelay;
   final bool latching;
@@ -291,11 +291,10 @@ class TCPRosChunkTransformer {
   int _messageLen = -1;
   List<int> _buffer = [];
   bool deserializeServiceResponse = false;
-  bool _serviceRespSuccess;
+  bool? _serviceRespSuccess;
 
-  StreamTransformer<Uint8List, TCPRosChunk> _transformer;
-  StreamTransformer<Uint8List, TCPRosChunk> /*!*/ get transformer =>
-      _transformer;
+  late StreamTransformer<Uint8List, TCPRosChunk> _transformer;
+  StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
 
   void _handleData(Uint8List data, sink) {
     // print(data);
@@ -362,8 +361,8 @@ class TCPRosChunkTransformer {
 @freezed
 abstract class TCPRosChunk with _$TCPRosChunk {
   factory TCPRosChunk(List<int> buffer,
-      {@Default(false) bool /*?*/ serviceResponse,
-      bool serviceResponseSuccess}) = _TcpRosChunk;
+      {@Default(false) bool? serviceResponse,
+      bool? serviceResponseSuccess}) = _TcpRosChunk;
 }
 
 class TcpConnection {

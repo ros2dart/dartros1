@@ -25,24 +25,24 @@ abstract class RosServiceMessage<C extends RosMessage<C>,
 }
 
 abstract class RosActionGoal<G extends RosMessage<G>,
-    AG extends RosActionGoal<G, AG> /*!*/ > extends RosMessage<AG> {
-  Header header;
-  GoalID goal_id;
-  G /*!*/ goal;
+    AG extends RosActionGoal<G, AG>> extends RosMessage<AG> {
+  late Header header;
+  late GoalID goal_id;
+  late G goal;
 }
 
 abstract class RosActionFeedback<F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>> extends RosMessage<AF> {
-  Header header;
-  GoalStatus status;
-  F /*!*/ feedback;
+  late Header header;
+  late GoalStatus status;
+  late F feedback;
 }
 
-abstract class RosActionResult<R extends RosMessage<R> /*!*/,
+abstract class RosActionResult<R extends RosMessage<R>,
     AR extends RosActionResult<R, AR>> extends RosMessage<AR> {
-  Header header;
-  GoalStatus /*!*/ status;
-  R /*!*/ result;
+  late Header header;
+  late GoalStatus status;
+  late R result;
 }
 
 abstract class RosActionMessage<
@@ -79,7 +79,7 @@ extension ByteDataReaderRosDeserializers on ByteDataReader {
     return RosTime(secs: secs, nsecs: nsecs);
   }
 
-  List<T> readArray<T>(T Function() func, {int arrayLen}) {
+  List<T> readArray<T>(T Function() func, {int? arrayLen}) {
     var len = arrayLen;
     if (len == null || len < 0) {
       len = readUint32();
@@ -100,7 +100,8 @@ extension ByteDataReaderRosSerializers on ByteDataWriter {
     writeUint32(time.nsecs);
   }
 
-  void writeArray<T>(List<T> array, void Function(T) func, {int specArrayLen}) {
+  void writeArray<T>(List<T> array, void Function(T) func,
+      {int? specArrayLen}) {
     final arrayLen = array.length;
     if (specArrayLen == null || specArrayLen < 0) {
       writeUint32(arrayLen);

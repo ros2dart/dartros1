@@ -36,7 +36,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
     _register();
   }
   final Node node;
-  final String /*!*/ topic;
+  final String topic;
   final bool udpEnabled;
   final bool tcpEnabled;
   final int port;
@@ -47,8 +47,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
   final int queueSize;
   final int throttleMs;
   final bool tcpNoDelay;
-  int _connectionId;
-  UdpMessage _udpMessage;
+  int? _connectionId;
+  late UdpMessage _udpMessage;
   final Map<String, TcpConnection> pubClients = {};
   final Map<String, TcpConnection> pendingClients = {};
   State _state = State.REGISTERING;
@@ -64,7 +64,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
   bool get isShutdown => _state == State.SHUTDOWN;
   List<String> get clientUris => pubClients.keys.toList();
 
-  int get connectionId => _connectionId;
+  int? get connectionId => _connectionId;
 
   String get transport => udpFirst && udpEnabled ? 'UDPROS' : 'TCPROS';
 
@@ -293,7 +293,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
         if (header.blkN == 1) {
           _handleUdpMessage(reader);
           _udpMessage = UdpMessage(
-              header.blkN, header.msgId, header.connectionId, reader);
+              header.blkN!, header.msgId!, header.connectionId!, reader);
         }
         break;
       case 1:
@@ -319,8 +319,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
 class UdpMessage {
   const UdpMessage(this.blkN, this.msgId, this.connectionId, this.buffer);
-  final int/*!*/ blkN;
-  final int/*!*/ msgId;
-  final int/*!*/ connectionId;
+  final int blkN;
+  final int msgId;
+  final int connectionId;
   final ByteDataReader buffer;
 }

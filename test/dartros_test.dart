@@ -9,8 +9,8 @@ import 'helpers/messages.dart';
 import 'helpers/python_runner.dart';
 
 void main() {
-  Process roscore;
-  NodeHandle nh;
+  late Process roscore;
+  late NodeHandle nh;
   setUpAll(() async {
     roscore = await startRosCore();
     await Future.delayed(2.seconds);

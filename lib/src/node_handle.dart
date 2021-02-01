@@ -24,7 +24,7 @@ class NodeHandle {
   }
 
   bool get isShutdown => node.isShutdown;
-  String /*!*/ get nodeName => node.nodeName;
+  String get nodeName => node.nodeName;
 
   // Server API stuff
   Future<String> getMasterUri() => node.getMasterUri();
@@ -35,10 +35,10 @@ class NodeHandle {
 
   // Param stuff
   Future<bool> hasParam(String param) => node.hasParam(param);
-  Future<T> getParam<T>(String param, {T defaultValue}) =>
+  Future<T> getParam<T extends Object>(String param, {T? defaultValue}) =>
       node.getParam<T>(param, defaultValue: defaultValue);
   Future<bool> setParam(String param, Object value) =>
-      node.setParam(param, value);
+      node.setParam(param, value as String);
   Future<bool> deleteParam(String param) => node.deleteParam(param);
   Future<String> searchParam(String param) => node.searchParam(param);
 
@@ -68,7 +68,7 @@ class NodeHandle {
   /// Advertises service server with type [messageClass]
   ///
   /// [messageClass] must be a [RosServiceMessage]
-  ServiceServer<C, R>
+  ServiceServer<C, R>?
       advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
               String service,
               RosServiceMessage<C, R> messageClass,
