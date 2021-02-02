@@ -1,3 +1,6 @@
+## 0.0.5+1
+- Fix an issue with home directory on Android and an issue with dependencies
+
 ## 0.0.5
 - Update Actions and Services to not require as many type parameters especially when creating them
 
