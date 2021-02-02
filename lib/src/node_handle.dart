@@ -1,3 +1,5 @@
+import 'package:dartros_msgutils/msg_utils.dart';
+
 import 'names.dart';
 import 'node.dart';
 import 'publisher.dart';
@@ -5,7 +7,6 @@ import 'ros_xmlrpc_client.dart';
 import 'service_client.dart';
 import 'service_server.dart';
 import 'subscriber.dart';
-import 'utils/msg_utils.dart';
 
 class NodeHandle {
   NodeHandle(this.node, [ns = '']) {

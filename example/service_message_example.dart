@@ -1,13 +1,10 @@
 // Auto-generated. Do not edit!
 
-
-// @dart=2.9
-
 // (in-package common_msgs.srv)
 
 import 'dart:convert';
 import 'package:buffer/buffer.dart';
-import 'package:dartros/msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 
 //-----------------------------------------------------------
 

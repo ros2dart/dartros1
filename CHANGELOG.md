@@ -1,3 +1,9 @@
+## 0.1.0-nullsafety.1
+- Fix nullable type in simple action server
+
+## 0.1.0-nullsafety.0
+- Update to nullsafety
+
 ## 0.0.5
 - Update Actions and Services to not require as many type parameters especially when creating them
 

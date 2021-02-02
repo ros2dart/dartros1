@@ -1,5 +1,5 @@
 import 'package:actionlib_msgs/msgs.dart';
-import '../../msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import '../utils/log/logger.dart';
 
 import 'action_client.dart';
@@ -10,7 +10,7 @@ class ClientGoalHandle<
     AG extends RosActionGoal<G, AG>,
     F extends RosMessage<F>,
     AF extends RosActionFeedback<F, AF>,
-    R extends RosMessage<R >,
+    R extends RosMessage<R>,
     AR extends RosActionResult<R, AR>> {
   ClientGoalHandle(
       this._goal, this._actionClient, this.feedback, this.transition)

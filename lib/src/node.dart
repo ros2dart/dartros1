@@ -8,7 +8,7 @@ import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dartros/src/publisher.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
-import 'package:dartros/src/utils/msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;

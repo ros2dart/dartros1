@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import '../msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
+
 import 'impl/subscriber_impl.dart';
 import 'utils/client_states.dart';
 
@@ -16,7 +17,7 @@ class Subscriber<T extends RosMessage<T>> {
   final String topic;
   final String type;
 
-  int get numPublishers => impl?.numPublishers ?? 0;
+  int get numPublishers => impl.numPublishers;
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
     await impl.unregisterSubscriber();

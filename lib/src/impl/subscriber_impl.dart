@@ -6,9 +6,9 @@ import 'package:buffer/buffer.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/utils/log/logger.dart';
 import 'package:dartros/src/utils/udpros_utils.dart' as udp;
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../../msg_utils.dart';
 import '../node.dart';
 import '../utils/client_states.dart';
 import '../utils/network_utils.dart';
@@ -113,7 +113,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
             w.toString(),
             info.host,
             port.toString(),
-            (dgramSize ?? 1500).toString()
+            dgramSize.toString()
           ]
       ];
       if (udpFirst) {

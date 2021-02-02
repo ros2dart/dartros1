@@ -3,12 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 
 import 'node.dart';
 import 'utils/client_states.dart';
 import 'utils/log/logger.dart';
-import 'utils/msg_utils.dart';
 import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
 
@@ -89,7 +89,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
         log.dartros.error('Error during service $service call $e\n$stack');
       }
       _callInProgress = false;
-      _call?.completer?.completeError('$e');
+      _call.completer.completeError('$e');
       _currentCall = null;
       _scheduleNextCall();
     }

@@ -1,3 +1,4 @@
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:logger/logger.dart' as logging;
 import 'package:rosgraph_msgs/msgs.dart';
 import 'package:std_msgs/msgs.dart';

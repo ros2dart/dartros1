@@ -1,7 +1,7 @@
 import 'package:actionlib_msgs/msgs.dart';
 import 'package:dartros/src/utils/log/logger.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 
-import '../../msg_utils.dart';
 import '../actionlib_client.dart';
 import '../node_handle.dart';
 import 'client_goal_handle.dart';

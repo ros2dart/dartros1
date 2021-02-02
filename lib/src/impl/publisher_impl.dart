@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:buffer/buffer.dart';
 import 'package:dartros/src/utils/tcpros_utils.dart';
 import 'package:dartros/src/utils/udpros_utils.dart' as udp;
+import 'package:dartros_msgutils/msg_utils.dart';
 
-import '../../msg_utils.dart';
 import '../node.dart';
 import '../utils/client_states.dart';
 import '../utils/log/logger.dart';

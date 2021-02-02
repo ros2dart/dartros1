@@ -1,9 +1,9 @@
 import 'package:actionlib_msgs/msgs.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import '../dartros.dart';
 import 'actions/goal_id_generator.dart';
 import 'node_handle.dart';
-import 'utils/msg_utils.dart';
 
 abstract class ActionLibClient<
     G extends RosMessage<G>,
@@ -29,11 +29,11 @@ abstract class ActionLibClient<
         queueSize: 1);
   }
   final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
-  late Publisher<AG> _goalPub;
-  late Publisher<GoalID> _cancelPub;
-  late Subscriber<GoalStatusArray> _statusSub;
-  late Subscriber<AF> _feedbackSub;
-  late Subscriber<AR> _resultSub;
+  late final Publisher<AG> _goalPub;
+  late final Publisher<GoalID> _cancelPub;
+  late final Subscriber<GoalStatusArray> _statusSub;
+  late final Subscriber<AF> _feedbackSub;
+  late final Subscriber<AR> _resultSub;
   NodeHandle node;
   final String actionServer;
   bool hasStatus = false;

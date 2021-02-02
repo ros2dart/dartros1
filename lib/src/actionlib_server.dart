@@ -1,7 +1,7 @@
 import 'package:actionlib_msgs/msgs.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import '../dartros.dart';
 import 'node_handle.dart';
-import 'utils/msg_utils.dart';
 
 abstract class ActionLibServer<
     G extends RosMessage<G>,
@@ -29,11 +29,11 @@ abstract class ActionLibServer<
   }
   final NodeHandle node;
   final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
-  late Subscriber<AG> _goalSub;
-  late Subscriber<GoalID> _cancelSub;
-  late Publisher<GoalStatusArray> _statusPub;
-  late Publisher<AF> _feedbackPub;
-  late Publisher<AR> _resultPub;
+  late final Subscriber<AG> _goalSub;
+  late final Subscriber<GoalID> _cancelSub;
+  late final Publisher<GoalStatusArray> _statusPub;
+  late final Publisher<AF> _feedbackPub;
+  late final Publisher<AR> _resultPub;
   int _goalCount = 0;
   final String actionServer;
 

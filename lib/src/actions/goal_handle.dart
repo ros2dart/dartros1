@@ -1,13 +1,13 @@
 import 'package:actionlib_msgs/msgs.dart';
-import '../../msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import '../utils/log/logger.dart';
 
 import 'action_server.dart';
 
 class GoalHandle<G extends RosMessage<G>, F extends RosMessage<F>,
-    R extends RosMessage<R > > {
-  GoalHandle(GoalID id, this.server, int status, this.goal)
-      : _id = id ?? server.generateGoalID as GoalID,
+    R extends RosMessage<R>> {
+  GoalHandle(GoalID? id, this.server, int? status, this.goal)
+      : _id = id ?? server.generateGoalID(),
         _status = GoalStatus(status: status ?? GoalStatus.PENDING, goal_id: id);
   final GoalID _id;
   String get id => _id.id;

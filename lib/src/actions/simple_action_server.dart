@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:actionlib_msgs/msgs.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 
 import 'package:dartx/dartx.dart';
 
-import '../../msg_utils.dart';
 import '../node_handle.dart';
 import '../utils/log/logger.dart';
 import 'action_server.dart';
@@ -95,12 +95,12 @@ class SimpleActionServer<
     _currentGoal?.setAborted(result ?? actionClass.result(), text: text);
   }
 
-  void setPreempted(R result, String text) {
+  void setPreempted(R? result, String text) {
     _currentGoal?.setCanceled(result ?? actionClass.result(), text: text);
   }
 
   void setSucceeded(R result, String text) {
-    _currentGoal!.setSucceeded(result ?? actionClass.result(), text: text);
+    _currentGoal!.setSucceeded(result, text: text);
   }
 
   @override
