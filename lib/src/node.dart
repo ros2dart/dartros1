@@ -57,7 +57,7 @@ class Node extends rpc_server.XmlRpcHandler
   bool get ok => _ok;
   bool get isShutdown => !ok;
   String homeDir = Platform.environment['ROS_HOME'] ??
-      path.join(Platform.environment['HOME'], '.ros');
+      path.join(Platform.environment['HOME'] ?? '', '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
   String logDir;
   @override
