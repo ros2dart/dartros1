@@ -1,3 +1,6 @@
+## 0.0.5+2
+- Try making web compatible (as a package in dependencies - not actually run on web)
+
 ## 0.0.5+1
 - Fix an issue with home directory on Android and an issue with dependencies
 
