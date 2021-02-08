@@ -1,7 +1,8 @@
 import '../dartros.dart';
+import '../utils/max_int.dart'
+    if (dart.library.io) '../utils/max_int_io.dart'
+    if (dart.library.html) '../utils/max_int_web.dart';
 import '../utils/time_utils.dart';
-
-const int int64MaxValue = identical(0, 0.0) ? 9007199254740991 : 9223372036854775807;
 
 class GoalIDGenerator {
   static int GOAL_COUNT = 0;

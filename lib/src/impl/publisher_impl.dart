@@ -133,6 +133,7 @@ class PublisherImpl<T extends RosMessage> {
       await socket.close();
       return;
     }
+    log.dartros.warn('Connection from ${connection.name}');
     createPubHeader(writer, node.nodeName, messageClass.md5sum, type, latching,
         messageClass.messageDefinition);
     socket.add(writer.toBytes());

@@ -7,6 +7,7 @@ import 'package:dartx/dartx.dart';
 import 'package:std_msgs/msgs.dart' hide Duration;
 import 'helpers/messages.dart';
 import 'helpers/python_runner.dart';
+import 'package:dartros/src/utils/log/logger.dart';
 
 void main() {
   Process roscore;
@@ -112,7 +113,7 @@ void main() {
 
       var response =
           await Process.run('rosservice', ['call', '/move_bloc_2', '0', '1']);
-      // Temporarily ignore errors in CI because of type definitions
+      // Temporarily ignore errors in CI because of type definitions in python nonexistant
       if (response.stderr.contains('Unable to load type')) {
         expect(response.stdout, 'wasSuccessful: False\noutOfReach: True\n',
             reason: response.stderr.toString());

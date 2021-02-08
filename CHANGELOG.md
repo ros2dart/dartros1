@@ -1,4 +1,4 @@
-## 0.0.5+2
+## 0.0.5+3
 - Try making web compatible (as a package in dependencies - not actually run on web)
 
 ## 0.0.5+1
