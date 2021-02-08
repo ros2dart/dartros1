@@ -48,5 +48,4 @@ jobs:
           source /opt/ros/melodic/setup.bash
           source ../../devel/setup.bash
           dart pub get
-          dart test test/dartros_test.dart
-          dart test test/dartros_uri_test.dart
+          dart test
