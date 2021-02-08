@@ -1,3 +1,6 @@
+## 0.0.5+4
+- Adjust ROS_MASTER_URI logic slightly and add tests
+
 ## 0.0.5+3
 - Try making web compatible (as a package in dependencies - not actually run on web)
 
