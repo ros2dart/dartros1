@@ -110,7 +110,7 @@ Future<StatusCode> _rpcCallStatus<T extends Object>(
 
 mixin XmlRpcClient {
   final http.Client client = http.Client();
-  String get rosMasterURI => 'http://localhost:11311';
+  String get rosMasterURI;
   String get nodeName;
   int get tcpRosPort;
   String get xmlRpcUri;

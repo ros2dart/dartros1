@@ -11,11 +11,15 @@ import 'helpers/python_runner.dart';
 void main() {
   late Process roscore;
   late NodeHandle nh;
-  group('Regular Master URI', () {
+
+  group('Different MASTER URI', () {
+    const rosMasterURI = 'http://localhost:6001';
+    final env = {'ROS_MASTER_URI': rosMasterURI};
     setUpAll(() async {
-      roscore = await startRosCore();
+      roscore = await startRosCore2();
+
       await Future.delayed(2.seconds);
-      nh = await initNode('my_node', []);
+      nh = await initNode('my_node2', [], rosMasterUri: rosMasterURI);
     });
     tearDownAll(() async {
       roscore.kill();
@@ -35,7 +39,7 @@ void main() {
     group('Publisher Tests', () {
       test('Publisher Works', () async {
         final sub = await Process.start('rostopic', ['echo', 'chatter'],
-            runInShell: true);
+            runInShell: true, environment: env);
         final subStream = sub.stdout
             .transform(utf8.decoder)
             .transform(const LineSplitter())
@@ -54,7 +58,7 @@ void main() {
       test('Subscriber Works', () async {
         final pub = await Process.start(
             'rostopic', ['pub', '/hello', 'std_msgs/String', "data: 'hi'"],
-            runInShell: true);
+            runInShell: true, environment: env);
         await Future.delayed(2.seconds);
         final chatter = nh.subscribe<StringMessage>(
             'hello', StringMessage.$prototype, (_) {});
@@ -95,38 +99,6 @@ void main() {
         expect(response.wasSuccessful, true);
         expect(response.outOfReach, false);
       });
-
-      test('Rosservice call', () async {
-        var first = true;
-        final _ = nh.advertiseService<MoveBlockRequest, MoveBlockResponse>(
-            '/move_bloc_2', MoveBlock.empty$, (req) {
-          if (first) {
-            expect(req.color, 0);
-            expect(req.shape, 1);
-            first = false;
-            return MoveBlockResponse(wasSuccessful: false, outOfReach: true);
-          }
-          expect(req.color, 1);
-          expect(req.shape, 2);
-          return MoveBlockResponse(wasSuccessful: true, outOfReach: false);
-        });
-
-        await Future.delayed(1.seconds);
-
-        var response =
-            await Process.run('rosservice', ['call', '/move_bloc_2', '0', '1']);
-        // Temporarily ignore errors in CI because of type definitions in python nonexistant
-        if (response.stderr.contains('Unable to load type')) {
-          expect(response.stdout, 'wasSuccessful: False\noutOfReach: True\n',
-              reason: response.stderr.toString());
-          expect(response.stderr, '');
-          response = await Process.run(
-              'rosservice', ['call', '/move_bloc_2', '1', '2']);
-          expect(response.stdout, 'wasSuccessful: True\noutOfReach: False\n',
-              reason: response.stderr.toString());
-          expect(response.stderr, '');
-        }
-      }, skip: true);
     });
   });
 }

@@ -1,8 +1,9 @@
 import 'package:dartros_msgutils/msg_utils.dart';
 
 import '../dartros.dart';
-
-const int int64MaxValue = 9223372036854775807;
+import '../utils/max_int.dart'
+    if (dart.library.io) '../utils/max_int_io.dart'
+    if (dart.library.html) '../utils/max_int_web.dart';
 
 class GoalIDGenerator {
   static int GOAL_COUNT = 0;
