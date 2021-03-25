@@ -1,3 +1,6 @@
+## 0.0.5+5
+- Allow setting manual ROS_IP
+
 ## 0.0.5+4
 - Adjust ROS_MASTER_URI logic slightly and add tests
 
