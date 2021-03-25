@@ -1,3 +1,6 @@
+## 0.1.0+1
+- Allow setting manual ROS_IP
+
 ## 0.1.0
 - Stable null-safe release
 
@@ -7,6 +10,9 @@
 ## 0.1.0-nullsafety.0
 - Update to nullsafety
 
+## 0.0.5+5
+- Allow setting manual ROS_IP
+
 ## 0.0.5+4
 - Adjust ROS_MASTER_URI logic slightly and add tests
 
@@ -15,7 +21,7 @@
 
 ## 0.0.5+1
 - Fix an issue with home directory on Android and an issue with dependencies
-- 
+
 ## 0.0.5
 - Update Actions and Services to not require as many type parameters especially when creating them
 
