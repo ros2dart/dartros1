@@ -23,6 +23,7 @@ Future<NodeHandle> initNode(
   List<String> args, {
   bool anonymize = false,
   String rosMasterUri,
+  InternetAddress rosIP,
 }) async {
   if (name.isEmpty) {
     throw Exception('Name must not be empty.');
@@ -50,7 +51,7 @@ Future<NodeHandle> initNode(
       remappings['__master'] ??
       Platform.environment['ROS_MASTER_URI'] ??
       'http://localhost:11311';
-  final node = Node(nodeName.name, masterUri);
+  final node = Node(nodeName.name, masterUri, rosIP: rosIP);
   await node.nodeReady.future;
   await Logger.initializeRosLogger();
   await Time.initializeRosTime();

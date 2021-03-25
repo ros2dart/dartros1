@@ -35,6 +35,12 @@ class _NetworkUtils {
     String interface,
     InternetAddressType type = InternetAddressType.IPv4,
   }) async {
+    if (_ip != null) {
+      return _ip;
+    }
+    if (_ros_ip != null) {
+      return _ros_ip;
+    }
     final ifaces = await NetworkInterface.list(type: type);
 
     for (final iface in ifaces) {

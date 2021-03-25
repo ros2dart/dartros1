@@ -25,16 +25,16 @@ import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
-  factory Node(String name, String rosMasterURI) =>
-      _node ??= Node._(name, rosMasterURI);
-  Node._(this.nodeName, this.rosMasterURI)
+  factory Node(String name, String rosMasterURI, {InternetAddress rosIP}) =>
+      _node ??= Node._(name, rosMasterURI, rosIP);
+  Node._(this.nodeName, this.rosMasterURI, InternetAddress rosIP)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
     _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
-    init();
+    init(rosIP: rosIP);
   }
-  Future<void> init() async {
-    _ipAddress = await NetworkUtils.getIPAddress();
+  Future<void> init({InternetAddress rosIP}) async {
+    _ipAddress = rosIP.address ?? await NetworkUtils.getIPAddress();
   }
 
   static Node _node;
