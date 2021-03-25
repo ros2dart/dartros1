@@ -34,7 +34,7 @@ class Node extends rpc_server.XmlRpcHandler
     init(rosIP: rosIP);
   }
   Future<void> init({InternetAddress rosIP}) async {
-    _ipAddress = rosIP.address ?? await NetworkUtils.getIPAddress();
+    _ipAddress = rosIP?.address ?? await NetworkUtils.getIPAddress();
   }
 
   static Node _node;
