@@ -1,3 +1,15 @@
+## 0.1.0+1
+- Allow setting manual ROS_IP
+
+## 0.1.0
+- Stable null-safe release
+
+## 0.1.0-nullsafety.1
+- Fix nullable type in simple action server
+
+## 0.1.0-nullsafety.0
+- Update to nullsafety
+
 ## 0.0.5+5
 - Allow setting manual ROS_IP
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:actionlib_msgs/msgs.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
-import '../../msg_utils.dart';
 import '../actionlib_server.dart';
 import '../node_handle.dart';
 import '../utils/log/logger.dart';
@@ -15,17 +15,27 @@ class ActionServer<
         R extends RosMessage<R>,
         AR extends RosActionResult<R, AR>>
     extends ActionLibServer<G, AG, F, AF, R, AR> {
-  ActionServer(String actionServer, NodeHandle node,
-      RosActionMessage<G, AG, F, AF, R, AR> actionClass)
-      : super(actionServer, node, actionClass);
-  final List<GoalHandle> _goalHandleList = [];
-  final Map<String, GoalHandle> _goalHandleCache = {};
+  ActionServer(
+    String actionServer,
+    NodeHandle node,
+    RosActionMessage<G, AG, F, AF, R, AR> actionClass,
+  ) : super(actionServer, node, actionClass);
+  final List<GoalHandle<G, F, R>> _goalHandleList = [];
+  final Map<String, GoalHandle<G, F, R>> _goalHandleCache = {};
   RosTime _lastCancelStamp = RosTime.epoch();
   final _statusListTimeout = const RosTime(secs: 5, nsecs: 0);
   bool _started = false;
-  Timer _statusFreqTimer;
-  void Function(GoalHandle) goalHandle;
-  void Function(GoalHandle) cancelHandle;
+  Timer? _statusFreqTimer;
+  void goalHandle(GoalHandle gh) {
+    log.dartros.debug('Goal Handler is empty!');
+    throw UnimplementedError('Goal Handler is empty!');
+  }
+
+  void cancelHandle(GoalHandle gh) {
+    log.dartros.debug('Cancel Requested, but no cancel handle to call');
+    throw UnimplementedError('Cancel Requested, but no cancel handle to call');
+  }
+
   final Map<String, int> _pubSeqs = {'result': 0, 'feedback': 0, 'status': 0};
 
   void start() {
@@ -50,15 +60,15 @@ class ActionServer<
     await super.shutdown();
   }
 
-  GoalHandle getGoalHandle(String id) => _goalHandleCache[id];
+  GoalHandle<G, F, R>? getGoalHandle(String id) => _goalHandleCache[id];
 
   @override
-  void handleCancel(GoalID msg) {
+  void handleCancel(GoalID goalID) {
     if (!_started) {
       return;
     }
-    final id = msg.id;
-    final stamp = msg.stamp;
+    final id = goalID.id;
+    final stamp = goalID.stamp;
     final isZero = stamp.isZeroTime();
     final shouldCancelEverything = id == '' && isZero;
     var idFound = false;
@@ -71,15 +81,13 @@ class ActionServer<
           idFound = true;
         }
         if (handle.setCancelRequested()) {
-          cancelHandle != null
-              ? cancelHandle(handle)
-              : log.dartros
-                  .debug('Cancel Requested, but no cancel handle to call');
+          cancelHandle(handle);
         }
       }
     }
     if (id != '' && !idFound) {
-      final handle = GoalHandle<G, F, R>(msg, this, GoalStatus.RECALLING, null);
+      final handle =
+          GoalHandle<G, F, R>(goalID, this, GoalStatus.RECALLING, null);
       _goalHandleList.add(handle);
       _goalHandleCache[handle.id] = handle;
     }
@@ -94,26 +102,24 @@ class ActionServer<
       return false;
     }
     final id = goal.goal_id.id;
-    var handle = getGoalHandle(id);
+    final handle = getGoalHandle(id);
     if (handle != null) {
       if (handle.statusId == GoalStatus.RECALLING) {
-        handle.setCanceled(actionClass.actionResult());
+        handle.setCanceled(actionClass.result());
       }
       handle.destructionTime = goal.goal_id.stamp;
       return false;
     }
-    handle =
+    final newHandle =
         GoalHandle<G, F, R>(goal.goal_id, this, GoalStatus.PENDING, goal.goal);
-    _goalHandleList.add(handle);
-    _goalHandleCache[handle.id] = handle;
+    _goalHandleList.add(newHandle);
+    _goalHandleCache[newHandle.id] = newHandle;
     final goalStamp = goal.goal_id.stamp;
     if (goalStamp.isZeroTime() && goalStamp < _lastCancelStamp) {
-      handle.setCanceled(actionClass.actionResult());
+      newHandle.setCanceled(actionClass.result());
       return false;
     } else {
-      goalHandle != null
-          ? goalHandle(handle)
-          : log.dartros.debug('Goal Handler is empty!');
+      goalHandle(newHandle);
     }
     return true;
   }
@@ -158,5 +164,5 @@ class ActionServer<
     publishStatus();
   }
 
-  int _getAndIncrementSeq(String type) => _pubSeqs[type]++;
+  int _getAndIncrementSeq(String type) => _pubSeqs[type] = _pubSeqs[type]! + 1;
 }

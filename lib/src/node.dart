@@ -4,10 +4,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dartros/src/publisher.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
-import 'package:dartros/src/utils/msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
@@ -18,6 +19,7 @@ import 'impl/subscriber_impl.dart';
 import 'ros_xmlrpc_common.dart';
 import 'service_client.dart';
 import 'service_server.dart';
+import 'utils/error_utils.dart';
 import 'utils/log/logger.dart';
 import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
@@ -25,23 +27,23 @@ import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
-  factory Node(String name, String rosMasterURI, {InternetAddress rosIP}) =>
+  factory Node(String name, String rosMasterURI, {InternetAddress? rosIP}) =>
       _node ??= Node._(name, rosMasterURI, rosIP);
-  Node._(this.nodeName, this.rosMasterURI, InternetAddress rosIP)
+  Node._(this.nodeName, this.rosMasterURI, InternetAddress? rosIP)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
     _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
     init(rosIP: rosIP);
   }
-  Future<void> init({InternetAddress rosIP}) async {
+  Future<void> init({InternetAddress? rosIP}) async {
     _ipAddress = rosIP?.address ?? await NetworkUtils.getIPAddress();
   }
 
-  static Node _node;
-  static Node get singleton => _node;
-  String _ipAddress;
+  static Node? _node;
+  static Node? get singleton => _node;
+  String? _ipAddress;
   @override
-  String get ipAddress => _ipAddress;
+  String get ipAddress => _ipAddress!;
   @override
   String get xmlRpcUri => 'http://$ipAddress:${_xmlRpcServer.port}';
   @override
@@ -59,12 +61,12 @@ class Node extends rpc_server.XmlRpcHandler
   String homeDir = Platform.environment['ROS_HOME'] ??
       path.join(Platform.environment['HOME'] ?? '', '.ros');
   String namespace = Platform.environment['ROS_NAMESPACE'] ?? '';
-  String logDir;
+  String? logDir;
   @override
   final String rosMasterURI;
-  rpc_server.SimpleXmlRpcServer _xmlRpcServer;
-  ServerSocket _tcpRosServer;
-  RawServerSocket _udpRosServer;
+  late rpc_server.SimpleXmlRpcServer _xmlRpcServer;
+  late ServerSocket _tcpRosServer;
+  late RawServerSocket _udpRosServer;
   int get udpRosPort => _udpRosServer.port;
   int _connections = 0;
 
@@ -72,7 +74,7 @@ class Node extends rpc_server.XmlRpcHandler
     await _startTcpRosServer();
     await _startXmlRpcServer();
     await _startUdpRosServer();
-    nodeReady.complete();
+    nodeReady.complete(true);
   }
 
   Future<void> shutdown() async {
@@ -113,7 +115,7 @@ class Node extends rpc_server.XmlRpcHandler
       _publishers[topic] = PublisherImpl<T>(
           this, topic, typeClass, latching, tcpNoDelay, queueSize, throttleMs);
     }
-    return Publisher<T>(_publishers[topic]);
+    return Publisher<T>(_publishers[topic] as PublisherImpl<T>);
   }
 
   Subscriber<T> subscribe<T extends RosMessage<T>>(
@@ -128,12 +130,12 @@ class Node extends rpc_server.XmlRpcHandler
       _subscribers[topic] = SubscriberImpl<T>(
           this, topic, typeClass, queueSize, throttleMs, tcpNoDelay);
     }
-    final sub = Subscriber<T>(_subscribers[topic]);
+    final sub = Subscriber<T>(_subscribers[topic] as SubscriberImpl<T>);
     sub.messageStream.listen(callback);
     return sub;
   }
 
-  ServiceServer<C, R>
+  ServiceServer<C, R>?
       advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
           String service,
           RosServiceMessage<C, R> messageClass,
@@ -145,7 +147,7 @@ class Node extends rpc_server.XmlRpcHandler
     } else {
       _services[service] =
           ServiceServer<C, R>(service, messageClass, this, true, callback);
-      return _services[service];
+      return _services[service] as ServiceServer<C, R>?;
     }
   }
 
@@ -178,7 +180,7 @@ class Node extends rpc_server.XmlRpcHandler
   Future<void> unadvertiseService(String service) async {
     if (_services.containsKey(service)) {
       log.superdebug.info('Unadvertising service $service');
-      _services[service].disconnect();
+      _services[service]!.disconnect();
       _services.remove(service);
       return unregisterService(service);
     }
@@ -235,22 +237,25 @@ class Node extends rpc_server.XmlRpcHandler
 
         await for (final _ in socket) {
           final reader = ByteDataReader(endian: Endian.little);
-          reader.add(socket.read());
-          final header = udp.UDPRosHeader.deserialize(reader);
-          if (header == null) {
-            log.dartros.error('Unable to validate connection header $header');
+          final data = socket.read()!;
+          reader.add(data);
+          try {
+            final header = udp.UDPRosHeader.deserialize(reader);
+            log.superdebug.info('Got connection header $header');
+            final connId = header.connectionId;
+            final topic = _subscribers.keys.firstWhereOrNull(
+                (topic) => _subscribers[topic]!.connectionId == connId);
+            if (topic != null) {
+              _subscribers[topic]!.handleMessageChunk(header, reader);
+            } else {
+              log.dartros
+                  .info('Got connection header for unknown topic $topic');
+            }
+          } on Exception catch (e, st) {
+            log.dartros
+                .error('Unable to validate connection header $data $e\n$st');
             await socket.close();
             return;
-          }
-          log.superdebug.info('Got connection header $header');
-          final connId = header.connectionId;
-          final topic = _subscribers.keys.firstWhere(
-              (topic) => _subscribers[topic].connectionId == connId,
-              orElse: () => null);
-          if (topic != null) {
-            _subscribers[topic].handleMessageChunk(header, reader);
-          } else {
-            log.dartros.info('Got connection header for unknown topic $topic');
           }
         }
       },
@@ -276,25 +281,18 @@ class Node extends rpc_server.XmlRpcHandler
             .info('Node $nodeName got connection from ${connection.name}');
 
         final listener = socket.asBroadcastStream();
+        late TCPRosChunk message;
         try {
-          final message = await listener
+          message = await listener
               .transform(TCPRosChunkTransformer().transformer)
               .first;
-
           final header = parseTcpRosHeader(message);
-          if (header == null) {
-            log.dartros.error('Unable to validate connection header $header');
-            socket.add(serializeString(
-                'Unable to validate connection header $message'));
-            await socket.flush();
-            await socket.close();
-            return;
-          }
+
           log.superdebug.info('Got connection header $header');
           if (header.topic.isNotNullOrEmpty) {
             final topic = header.topic;
             if (_publishers.containsKey(topic)) {
-              await _publishers[topic]
+              await _publishers[topic!]!
                   .handleSubscriberConnection(connection, listener, header);
             } else {
               log.dartros
@@ -302,7 +300,7 @@ class Node extends rpc_server.XmlRpcHandler
             }
           } else if (header.service.isNotNullOrEmpty) {
             final service = header.service;
-            final serviceServer = _services[service];
+            final serviceServer = _services[service!];
             if (serviceServer != null) {
               await serviceServer.handleClientConnection(
                   connection, listener, header);
@@ -315,6 +313,12 @@ class Node extends rpc_server.XmlRpcHandler
             await socket.flush();
             await socket.close();
           }
+        } on HeaderParseException catch (e) {
+          log.dartros.error('Unable to validate connection header $e');
+          socket.add(
+              serializeString('Unable to validate connection header $message'));
+          await socket.flush();
+          await socket.close();
         } on StateError catch (e) {
           return;
         }
@@ -458,7 +462,7 @@ class Node extends rpc_server.XmlRpcHandler
     log.superdebug.info(
         'Publisher update from $callerID for topic $topic, with publishers $publishers');
     if (_subscribers.containsKey(topic)) {
-      final sub = _subscribers[topic];
+      final sub = _subscribers[topic]!;
       log.superdebug.info('Got sub for topic $topic');
       sub.handlePublisherUpdate(publishers);
       return XMLRPCResponse(StatusCode.SUCCESS.asInt,
@@ -497,7 +501,7 @@ class Node extends rpc_server.XmlRpcHandler
           ['TCPROS', _ipAddress, tcpRosPort]
         ];
       } else {
-        final pub = _publishers[topic];
+        final pub = _publishers[topic]!;
         final msgCls = pub.messageClass;
         final header = udp.UDPRosHeader.parse(protocols[0][1]);
         assert(header.topic == topic);
@@ -513,8 +517,8 @@ class Node extends rpc_server.XmlRpcHandler
           '',
           ['UDPROS', _ipAddress, port, ++_connections, dgramSize, pubHeader]
         ];
-        _publishers[topic].addUdpSubscriber(_connections,
-            UdpSocketOptions(port, _ipAddress, dgramSize, _connections));
+        _publishers[topic]!.addUdpSubscriber(_connections,
+            UdpSocketOptions(port, _ipAddress!, dgramSize, _connections));
       }
     } else {
       log.dartros.error('Topic $topic does not exist for this ros node');
@@ -534,7 +538,7 @@ class Node extends rpc_server.XmlRpcHandler
   }
 
   @override
-  XmlDocument handleFault(Fault fault, {List<Codec> codecs}) {
+  XmlDocument handleFault(Fault fault, {List<Codec>? codecs}) {
     log.dartros.warn('XMLRPC Server error $fault');
     return super.handleFault(fault);
   }

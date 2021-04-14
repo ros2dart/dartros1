@@ -3,12 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:logger/logger.dart';
 
-import 'log/logger.dart';
-import 'msg_utils.dart';
+import 'error_utils.dart';
 part 'tcpros_utils.freezed.dart';
 
 const callerIdPrefix = 'callerid=';
@@ -23,7 +22,8 @@ const persistentField = 'persistent=1';
 const tcpNoDelayField = 'tcp_nodelay=1';
 
 void serializeStringFields(ByteDataWriter writer, List<String> fields) {
-  final totalLength = IterableNumX(fields.map((f) => f.lenInBytes + 4)).sum();
+  final totalLength =
+      IterableNumSumExtension(fields.map((f) => f.lenInBytes + 4)).sum();
   writer.writeUint32(totalLength, Endian.little);
   fields.forEach(writer.writeString);
 }
@@ -88,7 +88,7 @@ void createServiceServerHeader(
 TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
   final reader = ByteDataReader(endian: Endian.little);
   reader.add(header.buffer);
-  final info = <String, String>{};
+  final Map<String?, String?> info = <String, String?>{};
   final regex = RegExp(r'(\w+)=([\s\S]*)');
   final fields = deserializeStringFields(reader);
   // print(fields);
@@ -96,13 +96,15 @@ TCPRosHeader parseTcpRosHeader(TCPRosChunk header) {
     final hasMatch = regex.hasMatch(field);
     if (!hasMatch) {
       print('Error: Invalid connection header while parsing field $field');
-      return null;
+      throw HeaderParseException(
+          info, 'Error: Invalid connection header while parsing field $field');
     }
     final match = regex.allMatches(field).toList()[0];
+    // TODO: Assert group not empty
     info[match.group(1)] = match.group(2);
   }
   // print(info);
-  return TCPRosHeader.fromMap(info);
+  return TCPRosHeader.fromMap(info as Map<String, String?>);
 }
 
 bool validateSubHeader(ByteDataWriter writer, TCPRosHeader header, String topic,
@@ -189,7 +191,7 @@ Uint8List serializeString(String message) {
   return writer.toBytes();
 }
 
-Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
+Uint8List serializeMessage(ByteDataWriter writer, RosMessage message,
     {bool prependMessageLength = true}) {
   final msgSize = message.getMessageSize();
   if (prependMessageLength) {
@@ -200,7 +202,7 @@ Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
 }
 
 Uint8List serializeServiceResponse(
-    ByteDataWriter writer, dynamic message, bool success,
+    ByteDataWriter writer, RosMessage message, bool success,
     {bool prependResponseInfo = true}) {
   final msgSize = message.getMessageSize();
   if (prependResponseInfo) {
@@ -221,7 +223,7 @@ T deserializeMessage<T extends RosMessage>(
     messageClass.deserialize(reader);
 
 Uint8List serializeResponse(
-  dynamic response,
+  RosMessage response,
   bool success, {
   bool prependResponseInfo = true,
 }) {
@@ -258,7 +260,7 @@ class TCPRosHeader<T> {
       this.tcpNoDelay,
       this.latching);
 
-  factory TCPRosHeader.fromMap(Map<String, String> info) => TCPRosHeader(
+  factory TCPRosHeader.fromMap(Map<String, String?> info) => TCPRosHeader(
       info['topic'],
       info['type'],
       info['md5sum'],
@@ -269,13 +271,13 @@ class TCPRosHeader<T> {
       (info['persistent'] ?? '0') != '0',
       (info['tcp_nodelay'] ?? '0') != '0',
       (info['latching'] ?? '0') != '0');
-  final String topic;
-  final String type;
-  final String md5sum;
-  final String service;
-  final String callerId;
-  final String messageDefinition;
-  final String error;
+  final String? topic;
+  final String? type;
+  final String? md5sum;
+  final String? service;
+  final String? callerId;
+  final String? messageDefinition;
+  final String? error;
   final bool persistent;
   final bool tcpNoDelay;
   final bool latching;
@@ -290,9 +292,9 @@ class TCPRosChunkTransformer {
   int _messageLen = -1;
   List<int> _buffer = [];
   bool deserializeServiceResponse = false;
-  bool _serviceRespSuccess;
+  bool? _serviceRespSuccess;
 
-  StreamTransformer<Uint8List, TCPRosChunk> _transformer;
+  late StreamTransformer<Uint8List, TCPRosChunk> _transformer;
   StreamTransformer<Uint8List, TCPRosChunk> get transformer => _transformer;
 
   void _handleData(Uint8List data, sink) {
@@ -360,8 +362,8 @@ class TCPRosChunkTransformer {
 @freezed
 abstract class TCPRosChunk with _$TCPRosChunk {
   factory TCPRosChunk(List<int> buffer,
-      {@Default(false) bool serviceResponse,
-      bool serviceResponseSuccess}) = _TcpRosChunk;
+      {@Default(false) bool? serviceResponse,
+      bool? serviceResponseSuccess}) = _TcpRosChunk;
 }
 
 class TcpConnection {

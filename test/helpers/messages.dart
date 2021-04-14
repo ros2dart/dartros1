@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 import 'package:buffer/buffer.dart';
-import 'package:dartros/msg_utils.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 
 //-----------------------------------------------------------
 
@@ -17,14 +17,14 @@ class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
 
   static MoveBlockRequest empty$ = MoveBlockRequest();
   MoveBlockRequest({
-    int color,
-    int shape,
+    int? color,
+    int? shape,
   })  : this.color = color ?? 0,
         this.shape = shape ?? 0;
 
   MoveBlockRequest call({
-    int color,
-    int shape,
+    int? color,
+    int? shape,
   }) =>
       MoveBlockRequest(
         color: color,
@@ -97,14 +97,14 @@ class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
 
   static MoveBlockResponse empty$ = MoveBlockResponse();
   MoveBlockResponse({
-    bool wasSuccessful,
-    bool outOfReach,
+    bool? wasSuccessful,
+    bool? outOfReach,
   })  : this.wasSuccessful = wasSuccessful ?? false,
         this.outOfReach = outOfReach ?? false;
 
   MoveBlockResponse call({
-    bool wasSuccessful,
-    bool outOfReach,
+    bool? wasSuccessful,
+    bool? outOfReach,
   }) =>
       MoveBlockResponse(
         wasSuccessful: wasSuccessful,

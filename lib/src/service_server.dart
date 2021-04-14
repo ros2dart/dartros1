@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 
 import '../dartros.dart';
-import '../msg_utils.dart';
 import 'utils/client_states.dart';
 import 'utils/log/logger.dart';
 import 'utils/network_utils.dart';

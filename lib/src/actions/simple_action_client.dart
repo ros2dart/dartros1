@@ -1,8 +1,8 @@
 import 'package:actionlib_msgs/msgs.dart';
 import 'package:dartros/src/utils/log/logger.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import '../node_handle.dart';
-import '../utils/msg_utils.dart';
 import 'action_client.dart';
 import 'client_goal_handle.dart';
 import 'client_states.dart';
@@ -19,10 +19,13 @@ class SimpleActionClient<
       RosActionMessage<G, AG, F, AF, R, AR> actionClass)
       : super(actionServer, node, actionClass);
   SimpleGoalState _state = SimpleGoalState.PENDING;
-  ClientGoalHandle _handle;
-  void Function(AF) _feedbackCallback;
-  void Function() _activeCallback;
-  void Function(SimpleGoalState, R) _doneCallback;
+  ClientGoalHandle<G, AG, F, AF, R, AR>? _handle;
+  // ignore: prefer_function_declarations_over_variables
+  void Function(AF) _feedbackCallback = (_) {};
+  // ignore: prefer_function_declarations_over_variables
+  void Function() _activeCallback = () {};
+  // ignore: prefer_function_declarations_over_variables
+  void Function(SimpleGoalState, R?) _doneCallback = (_, __) {};
 
   Future<bool> waitForServer([int timeoutMs = 0]) =>
       waitForActionServerToStart(timeoutMs);
@@ -31,25 +34,24 @@ class SimpleActionClient<
       G goal,
       void Function(AF) feedbackCallback,
       void Function() activeCallback,
-      void Function(SimpleGoalState, R) doneCallback) {
+      void Function(SimpleGoalState, R?) doneCallback) {
     if (_handle != null) {
-      _handle.reset();
+      _handle!.reset();
     }
     _state = SimpleGoalState.PENDING;
     _feedbackCallback = feedbackCallback;
     _activeCallback = activeCallback;
     _doneCallback = doneCallback;
-    final gh = sendGoal(goal, _handleFeedback, _handleTransition);
-    _handle = gh;
+    _handle = sendGoal(goal, _handleFeedback, _handleTransition);
   }
 
-  Future<void> sendGoalAndWait(
+  Future<SimpleClientGoalState> sendGoalAndWait(
       G goal,
       RosTime execTimeout,
       RosTime preemptTimeout,
       void Function(AF) feedbackCallback,
       void Function() activeCallback,
-      void Function(SimpleGoalState, R) doneCallback) async {
+      void Function(SimpleGoalState, R?) doneCallback) async {
     sendSimpleGoal(goal, feedbackCallback, activeCallback, doneCallback);
 
     final finished = await waitForResult(execTimeout);
@@ -77,7 +79,7 @@ class SimpleActionClient<
   }
 
   Future<bool> waitForResult(RosTime timeout) async {
-    if (_handle == null || _handle.isExpired()) {
+    if (_handle == null || _handle!.isExpired()) {
       log.dartros.error('Trying to waitForResult() when no goal is running');
       return false;
     }
@@ -108,23 +110,23 @@ class SimpleActionClient<
         WAIT_TIME_MS.milliseconds, () => _waitForResult(timeoutTime));
   }
 
-  R getResult() {
-    if (_handle == null || _handle.isExpired()) {
+  R? getResult() {
+    if (_handle == null || _handle!.isExpired()) {
       log.dartros.error('Trying to getResult() when no goal is running.');
       return null;
     } else {
-      return _handle.getResult();
+      return _handle!.getResult();
     }
   }
 
   SimpleClientGoalState get state {
-    if (_handle == null || _handle.isExpired()) {
+    if (_handle == null || _handle!.isExpired()) {
       log.dartros.error(
           'Trying to getState() when no goal is running. You are incorrectly using SimpleActionClient');
       return SimpleClientGoalState.LOST;
     }
 
-    final commState = _handle.getCommState();
+    final commState = _handle!.getCommState();
 
     switch (commState) {
       case CommState.WAITING_FOR_GOAL_ACK:
@@ -135,7 +137,7 @@ class SimpleActionClient<
       case CommState.PREEMPTING:
         return SimpleClientGoalState.ACTIVE;
       case CommState.DONE:
-        final termState = _handle.getTerminalState();
+        final termState = _handle!.getTerminalState();
         switch (termState) {
           case GoalStatus.RECALLED:
             return SimpleClientGoalState.RECALLED;
@@ -174,23 +176,23 @@ class SimpleActionClient<
   }
 
   void cancelGoal() {
-    if (_handle != null || _handle.isExpired()) {
+    if (_handle != null || _handle!.isExpired()) {
       log.dartros.error('Trying to cancelGoal() when no goal is running');
     } else {
-      _handle.cancel();
+      _handle!.cancel();
     }
   }
 
   void stopTrackingGoal() {
-    if (_handle == null || _handle.isExpired()) {
+    if (_handle == null || _handle!.isExpired()) {
       log.dartros.error('Trying to stopTrackingGoal() when no goal is running');
     } else {
-      _handle.reset();
+      _handle!.reset();
     }
   }
 
   void _handleTransition() {
-    final commState = _handle.getCommState();
+    final commState = _handle!.getCommState();
 
     switch (commState) {
       case CommState.WAITING_FOR_GOAL_ACK:
@@ -208,9 +210,8 @@ class SimpleActionClient<
           case SimpleGoalState.PENDING:
             _setSimpleState(SimpleGoalState.ACTIVE);
 
-            if (_activeCallback != null) {
-              _activeCallback();
-            }
+            _activeCallback();
+
             break;
           case SimpleGoalState.ACTIVE:
             break;
@@ -237,9 +238,8 @@ class SimpleActionClient<
         switch (_state) {
           case SimpleGoalState.PENDING:
             _setSimpleState(SimpleGoalState.ACTIVE);
-            if (_activeCallback != null) {
-              _activeCallback();
-            }
+            _activeCallback();
+
             break;
           case SimpleGoalState.ACTIVE:
             break;
@@ -258,9 +258,8 @@ class SimpleActionClient<
           case SimpleGoalState.PENDING:
           case SimpleGoalState.ACTIVE:
             _setSimpleState(SimpleGoalState.DONE);
-            if (_doneCallback != null) {
-              _doneCallback(_state, _handle.getResult());
-            }
+            _doneCallback(_state, _handle!.getResult());
+
             break;
           case SimpleGoalState.DONE:
             log.dartros.error('BUG: Got a second transition to DONE');
@@ -276,9 +275,7 @@ class SimpleActionClient<
   }
 
   void _handleFeedback(AF feedback) {
-    if (_feedbackCallback != null) {
-      _feedbackCallback(feedback);
-    }
+    _feedbackCallback(feedback);
   }
 
   void _setSimpleState(SimpleGoalState newState) {

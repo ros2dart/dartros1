@@ -9,8 +9,8 @@ import 'helpers/messages.dart';
 import 'helpers/python_runner.dart';
 
 void main() {
-  Process roscore;
-  NodeHandle nh;
+  late Process roscore;
+  late NodeHandle nh;
 
   group('Different MASTER URI', () {
     const rosMasterURI = 'http://localhost:6001';
@@ -72,8 +72,8 @@ void main() {
     group('Service Tests', () {
       test('ServerClient Works', () async {
         var first = true;
-        final server =
-            nh.advertiseService('/move_bloc', MoveBlock.empty$, (req) {
+        final server = nh.advertiseService<MoveBlockRequest, MoveBlockResponse>(
+            '/move_bloc', MoveBlock.empty$, (req) {
           if (first) {
             expect(req.color, 0);
             expect(req.shape, 1);

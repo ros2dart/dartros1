@@ -3,7 +3,6 @@ import 'package:dartx/dartx.dart';
 import 'package:sensor_msgs/msgs.dart';
 
 Future<void> main(List<String> args) async {
-  //TODO: Change to node handle
   final node = await initNode('test_node', args);
   final img_msg = Image(
       header: null,

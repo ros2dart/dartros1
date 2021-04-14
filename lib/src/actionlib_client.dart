@@ -1,9 +1,9 @@
 import 'package:actionlib_msgs/msgs.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import '../dartros.dart';
 import 'actions/goal_id_generator.dart';
 import 'node_handle.dart';
-import 'utils/msg_utils.dart';
 
 abstract class ActionLibClient<
     G extends RosMessage<G>,
@@ -15,7 +15,8 @@ abstract class ActionLibClient<
   ActionLibClient(this.actionServer, this.node, this.actionClass) {
     _goalPub = node.advertise<AG>('$actionServer/goal', actionClass.actionGoal,
         queueSize: 10, latching: false);
-    _cancelPub = node.advertise('$actionServer/cancel', GoalID.$prototype,
+    _cancelPub = node.advertise<GoalID>(
+        '$actionServer/cancel', GoalID.$prototype,
         queueSize: 10, latching: false);
     _statusSub = node.subscribe(
         '$actionServer/status', GoalStatusArray.$prototype, _handleStatus,
@@ -28,17 +29,17 @@ abstract class ActionLibClient<
         queueSize: 1);
   }
   final RosActionMessage<G, AG, F, AF, R, AR> actionClass;
-  Publisher<AG> _goalPub;
-  Publisher<GoalID> _cancelPub;
-  Subscriber<GoalStatusArray> _statusSub;
-  Subscriber<AF> _feedbackSub;
-  Subscriber<AR> _resultSub;
+  late final Publisher<AG> _goalPub;
+  late final Publisher<GoalID> _cancelPub;
+  late final Subscriber<GoalStatusArray> _statusSub;
+  late final Subscriber<AF> _feedbackSub;
+  late final Subscriber<AR> _resultSub;
   NodeHandle node;
   final String actionServer;
   bool hasStatus = false;
 
   String get type => actionClass.fullType;
-  void cancel(String id, [RosTime stamp]) {
+  void cancel(String? id, [RosTime? stamp]) {
     stamp ??= RosTime.now();
     final cancelGoal = GoalID(stamp: stamp);
     cancelGoal.id = id ?? cancelGoal.id;
@@ -93,5 +94,5 @@ abstract class ActionLibClient<
     return false;
   }
 
-  String generateGoalID([RosTime now]) => GoalIDGenerator.generateGoalID(now);
+  String generateGoalID([RosTime? now]) => GoalIDGenerator.generateGoalID(now);
 }

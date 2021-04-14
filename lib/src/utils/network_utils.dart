@@ -6,11 +6,11 @@ final _NetworkUtils NetworkUtils = _NetworkUtils();
 
 class _NetworkUtils {
   _NetworkUtils();
-  String _ip;
-  String _hostname;
-  String _ros_ip;
-  String _ros_hostname;
-  String _host;
+  String? _ip;
+  String? _hostname;
+  String? _ros_ip;
+  String? _ros_hostname;
+  late String _host;
   String get host => _host;
 
   void init(Map<String, String> remappings) {
@@ -32,14 +32,14 @@ class _NetworkUtils {
       'rosrpc://$ipAddress:$port';
 
   Future<String> getIPAddress({
-    String interface,
+    String? interface,
     InternetAddressType type = InternetAddressType.IPv4,
   }) async {
     if (_ip != null) {
-      return _ip;
+      return _ip!;
     }
     if (_ros_ip != null) {
-      return _ros_ip;
+      return _ros_ip!;
     }
     final ifaces = await NetworkInterface.list(type: type);
 

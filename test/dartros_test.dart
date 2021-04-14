@@ -9,8 +9,8 @@ import 'helpers/messages.dart';
 import 'helpers/python_runner.dart';
 
 void main() {
-  Process roscore;
-  NodeHandle nh;
+  late Process roscore;
+  late NodeHandle nh;
   group('Regular Master URI', () {
     setUpAll(() async {
       roscore = await startRosCore();
@@ -68,8 +68,8 @@ void main() {
     group('Service Tests', () {
       test('ServerClient Works', () async {
         var first = true;
-        final server =
-            nh.advertiseService('/move_bloc', MoveBlock.empty$, (req) {
+        final server = nh.advertiseService<MoveBlockRequest, MoveBlockResponse>(
+            '/move_bloc', MoveBlock.empty$, (req) {
           if (first) {
             expect(req.color, 0);
             expect(req.shape, 1);
@@ -98,7 +98,8 @@ void main() {
 
       test('Rosservice call', () async {
         var first = true;
-        final _ = nh.advertiseService('/move_bloc_2', MoveBlock.empty$, (req) {
+        final _ = nh.advertiseService<MoveBlockRequest, MoveBlockResponse>(
+            '/move_bloc_2', MoveBlock.empty$, (req) {
           if (first) {
             expect(req.color, 0);
             expect(req.shape, 1);

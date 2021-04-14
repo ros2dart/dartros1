@@ -3,9 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dartros/src/utils/tcpros_utils.dart' as tcp;
+import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
 import 'package:buffer/buffer.dart';
 
+import 'error_utils.dart';
 import 'msg_utils.dart';
 
 const callerIdPrefix = 'callerid=';
@@ -117,7 +119,7 @@ Uint8List serializeString(String message) {
   return writer.toBytes();
 }
 
-Uint8List serializeMessage(ByteDataWriter writer, dynamic message,
+Uint8List serializeMessage(ByteDataWriter writer, RosMessage message,
     {bool prependMessageLength = true}) {
   final msgSize = message.getMessageSize();
   if (prependMessageLength) {
@@ -135,12 +137,14 @@ void createTcpRosError(ByteDataWriter writer, String str) {
   writer.writeString(str);
 }
 
+// TODO: Separate this out from header vs recv header fields
 class UDPRosHeader<T> {
   const UDPRosHeader(this.opCode, this.connectionId, this.msgId, this.blkN,
       this.callerId, this.md5, this.topic, this.type, this.messageDefinition);
   factory UDPRosHeader.deserialize(ByteDataReader reader) {
     if (reader.remainingLength < 8) {
-      return null;
+      throw HeaderParseException(
+          {}, 'Invalid UDPRosHeader remainingLength < 8');
     } else {
       final conId = reader.readUint32();
       final op = reader.readUint8();
@@ -152,7 +156,7 @@ class UDPRosHeader<T> {
   factory UDPRosHeader.parse(String header) {
     final reader = ByteDataReader(endian: Endian.little);
     reader.add(header.toUtf8());
-    final info = <String, String>{};
+    final Map<String?, String?> info = <String, String?>{};
     final regex = RegExp(r'(\w+)=([\s\S]*)');
     final fields = deserializeStringFields(reader);
     // print(fields);
@@ -160,7 +164,8 @@ class UDPRosHeader<T> {
       final hasMatch = regex.hasMatch(field);
       if (!hasMatch) {
         print('Error: Invalid connection header while parsing field $field');
-        return null;
+        throw HeaderParseException(info,
+            'Error: Invalid connection header while parsing field $field');
       }
       final match = regex.allMatches(field).toList()[0];
       info[match.group(1)] = match.group(2);
@@ -178,21 +183,21 @@ class UDPRosHeader<T> {
       info['message_definition'],
     );
   }
-  final String callerId;
-  final String md5;
-  final String topic;
-  final String type;
-  final String messageDefinition;
-  final int opCode;
-  final int connectionId;
-  final int msgId;
-  final int blkN;
+  final String? callerId;
+  final String? md5;
+  final String? topic;
+  final String? type;
+  final String? messageDefinition;
+  final int? opCode;
+  final int? connectionId;
+  final int? msgId;
+  final int? blkN;
 
   void serialize(ByteDataWriter writer) {
-    writer.writeUint32(connectionId);
-    writer.writeUint8(opCode);
-    writer.writeUint8(msgId);
-    writer.writeUint16(blkN);
+    writer.writeUint32(connectionId!);
+    writer.writeUint8(opCode!);
+    writer.writeUint8(msgId!);
+    writer.writeUint16(blkN!);
   }
 }
 

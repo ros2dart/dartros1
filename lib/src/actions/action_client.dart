@@ -1,7 +1,7 @@
 import 'package:actionlib_msgs/msgs.dart';
 import 'package:dartros/src/utils/log/logger.dart';
+import 'package:dartros_msgutils/msg_utils.dart';
 
-import '../../msg_utils.dart';
 import '../actionlib_client.dart';
 import '../node_handle.dart';
 import 'client_goal_handle.dart';
@@ -64,7 +64,7 @@ class ActionClient<
 
   ClientGoalHandle<G, AG, F, AF, R, AR> sendGoal(G goal,
       void Function(AF) feedbackCallback, void Function() transitionCallback) {
-    final ag = actionClass.actionGoal();
+    final AG ag = actionClass.actionGoal();
     final now = RosTime.now();
     final idStr = GoalIDGenerator.generateGoalID(now);
     ag.header.stamp = now;
