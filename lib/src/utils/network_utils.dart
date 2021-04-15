@@ -19,7 +19,7 @@ class _NetworkUtils {
     _ros_ip = Platform.environment['ROS_IP'];
     _ros_hostname = Platform.environment['ROS_HOSTNAME'];
     _host =
-        _ip ?? _hostname ?? _ros_ip ?? _ros_hostname ?? Platform.localHostname;
+        _hostname ?? _ip ?? _ros_hostname ?? _ros_ip ?? Platform.localHostname;
   }
 
   String getAddressFromUri(String uriString) => Uri.parse(uriString).host;
