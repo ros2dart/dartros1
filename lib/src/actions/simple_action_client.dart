@@ -18,7 +18,7 @@ class SimpleActionClient<
   SimpleActionClient(String actionServer, NodeHandle node,
       RosActionMessage<G, AG, F, AF, R, AR> actionClass)
       : super(actionServer, node, actionClass);
-  SimpleGoalState _state = SimpleGoalState.PENDING;
+  SimpleGoalState _simpleState = SimpleGoalState.PENDING;
   ClientGoalHandle<G, AG, F, AF, R, AR>? _handle;
   // ignore: prefer_function_declarations_over_variables
   void Function(AF) _feedbackCallback = (_) {};
@@ -38,7 +38,7 @@ class SimpleActionClient<
     if (_handle != null) {
       _handle!.reset();
     }
-    _state = SimpleGoalState.PENDING;
+    _simpleState = SimpleGoalState.PENDING;
     _feedbackCallback = feedbackCallback;
     _activeCallback = activeCallback;
     _doneCallback = doneCallback;
@@ -101,8 +101,8 @@ class SimpleActionClient<
 
     final now = RosTime.now();
     if (timeoutTime < now) {
-      return _state == SimpleGoalState.DONE;
-    } else if (_state == SimpleGoalState.DONE) {
+      return _simpleState == SimpleGoalState.DONE;
+    } else if (_simpleState == SimpleGoalState.DONE) {
       return true;
     }
     // else
@@ -158,7 +158,7 @@ class SimpleActionClient<
         return SimpleClientGoalState.LOST;
       case CommState.WAITING_FOR_RESULT:
       case CommState.WAITING_FOR_CANCEL_ACK:
-        switch (_state) {
+        switch (_simpleState) {
           case SimpleGoalState.PENDING:
             return SimpleClientGoalState.PENDING;
           case SimpleGoalState.ACTIVE:
@@ -200,13 +200,13 @@ class SimpleActionClient<
             'BUG: shouldn\'t ever get a transition callback for WAITING_FOR_GOAL_ACK');
         break;
       case CommState.PENDING:
-        if (_state != SimpleGoalState.PENDING) {
+        if (_simpleState != SimpleGoalState.PENDING) {
           log.dartros.error(
-              'BUG: Got a transition to CommState [$commState] when our SimpleGoalState is [$_state]');
+              'BUG: Got a transition to CommState [$commState] when our SimpleGoalState is [$_simpleState]');
         }
         break;
       case CommState.ACTIVE:
-        switch (_state) {
+        switch (_simpleState) {
           case SimpleGoalState.PENDING:
             _setSimpleState(SimpleGoalState.ACTIVE);
 
@@ -217,10 +217,10 @@ class SimpleActionClient<
             break;
           case SimpleGoalState.DONE:
             log.dartros.error(
-                'BUG: Got a transition to CommState [$commState] when in SimpleGoalState [$_state]');
+                'BUG: Got a transition to CommState [$commState] when in SimpleGoalState [$_simpleState]');
             break;
           default:
-            log.dartros.error('Unknown SimpleGoalState $_state');
+            log.dartros.error('Unknown SimpleGoalState $_simpleState');
             break;
         }
         break;
@@ -229,13 +229,13 @@ class SimpleActionClient<
       case CommState.WAITING_FOR_CANCEL_ACK:
         break;
       case CommState.RECALLING:
-        if (_state != SimpleGoalState.PENDING) {
+        if (_simpleState != SimpleGoalState.PENDING) {
           log.dartros.error(
-              'BUG: Got a transition to CommState [$commState] when in SimpleGoalState [$_state]');
+              'BUG: Got a transition to CommState [$commState] when in SimpleGoalState [$_simpleState]');
         }
         break;
       case CommState.PREEMPTING:
-        switch (_state) {
+        switch (_simpleState) {
           case SimpleGoalState.PENDING:
             _setSimpleState(SimpleGoalState.ACTIVE);
             _activeCallback();
@@ -245,27 +245,27 @@ class SimpleActionClient<
             break;
           case SimpleGoalState.DONE:
             log.dartros.error(
-              'BUG: Got a transition to CommState [$commState] when in SimpleGoalState [$_state]',
+              'BUG: Got a transition to CommState [$commState] when in SimpleGoalState [$_simpleState]',
             );
             break;
           default:
-            log.dartros.error('Unknown SimpleGoalState $_state');
+            log.dartros.error('Unknown SimpleGoalState $_simpleState');
             break;
         }
         break;
       case CommState.DONE:
-        switch (_state) {
+        switch (_simpleState) {
           case SimpleGoalState.PENDING:
           case SimpleGoalState.ACTIVE:
             _setSimpleState(SimpleGoalState.DONE);
-            _doneCallback(_state, _handle!.getResult());
+            _doneCallback(_simpleState, _handle!.getResult());
 
             break;
           case SimpleGoalState.DONE:
             log.dartros.error('BUG: Got a second transition to DONE');
             break;
           default:
-            log.dartros.error('Unknown SimpleGoalState $_state');
+            log.dartros.error('Unknown SimpleGoalState $_simpleState');
             break;
         }
         break;
@@ -280,7 +280,7 @@ class SimpleActionClient<
 
   void _setSimpleState(SimpleGoalState newState) {
     log.dartros
-        .debug('Transitioning SimpleState from [$_state] to [$newState]');
-    _state = newState;
+        .debug('Transitioning SimpleState from [$_simpleState] to [$newState]');
+    _simpleState = newState;
   }
 }
