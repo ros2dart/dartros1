@@ -1,3 +1,7 @@
+## 0.1.1
+- Prioritize ROS_HOSTNAME over ROS_IP: Thanks @knuesel
+- Align SimpleActionClient with other ROS implementations: Thanks @knuesel
+
 ## 0.1.0+1
 - Allow setting manual ROS_IP
 
