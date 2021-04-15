@@ -25,7 +25,7 @@ class SimpleActionClient<
   // ignore: prefer_function_declarations_over_variables
   void Function() _activeCallback = () {};
   // ignore: prefer_function_declarations_over_variables
-  void Function(SimpleGoalState, R?) _doneCallback = (_, __) {};
+  void Function(SimpleClientGoalState, R?) _doneCallback = (_, __) {};
 
   Future<bool> waitForServer([int timeoutMs = 0]) =>
       waitForActionServerToStart(timeoutMs);
@@ -34,7 +34,7 @@ class SimpleActionClient<
       G goal,
       void Function(AF) feedbackCallback,
       void Function() activeCallback,
-      void Function(SimpleGoalState, R?) doneCallback) {
+      void Function(SimpleClientGoalState, R?) doneCallback) {
     if (_handle != null) {
       _handle!.reset();
     }
@@ -51,7 +51,7 @@ class SimpleActionClient<
       RosTime preemptTimeout,
       void Function(AF) feedbackCallback,
       void Function() activeCallback,
-      void Function(SimpleGoalState, R?) doneCallback) async {
+      void Function(SimpleClientGoalState, R?) doneCallback) async {
     sendSimpleGoal(goal, feedbackCallback, activeCallback, doneCallback);
 
     final finished = await waitForResult(execTimeout);
@@ -258,7 +258,7 @@ class SimpleActionClient<
           case SimpleGoalState.PENDING:
           case SimpleGoalState.ACTIVE:
             _setSimpleState(SimpleGoalState.DONE);
-            _doneCallback(_simpleState, _handle!.getResult());
+            _doneCallback(state, _handle!.getResult());
 
             break;
           case SimpleGoalState.DONE:
