@@ -1,3 +1,6 @@
+## 0.1.2
+- Fix endian issue in service client
+
 ## 0.1.1
 - Prioritize ROS_HOSTNAME over ROS_IP: Thanks @knuesel
 - Align SimpleActionClient with other ROS implementations: Thanks @knuesel

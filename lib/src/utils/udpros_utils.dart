@@ -113,12 +113,6 @@ bool validatePubHeader(ByteDataWriter writer, tcp.TCPRosHeader header,
   return true;
 }
 
-Uint8List serializeString(String message) {
-  final writer = ByteDataWriter();
-  writer.writeString(message);
-  return writer.toBytes();
-}
-
 Uint8List serializeMessage(ByteDataWriter writer, RosMessage message,
     {bool prependMessageLength = true}) {
   final msgSize = message.getMessageSize();

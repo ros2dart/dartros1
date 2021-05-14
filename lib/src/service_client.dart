@@ -125,7 +125,8 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
     try {
       final result = await _call._clientStream!.first;
       if (result.serviceResponseSuccess!) {
-        final reader = ByteDataReader()..add(result.buffer);
+        final reader = ByteDataReader(endian: Endian.little)
+          ..add(result.buffer);
 
         return serviceClass.response.deserialize(reader);
       } else {
