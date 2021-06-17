@@ -17,3 +17,4 @@ export 'src/service_client.dart';
 export 'src/service_server.dart';
 export 'src/subscriber.dart';
 export 'src/time.dart';
+export 'src/utils/log/logger.dart';
