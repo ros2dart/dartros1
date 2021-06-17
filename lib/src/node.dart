@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -10,10 +9,11 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
 import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
-import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 import 'package:xml_rpc/client.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
+
 import 'impl/publisher_impl.dart';
 import 'impl/subscriber_impl.dart';
 import 'ros_xmlrpc_common.dart';
@@ -319,7 +319,9 @@ class Node extends rpc_server.XmlRpcHandler
               serializeString('Unable to validate connection header $message'));
           await socket.flush();
           await socket.close();
-        } on StateError catch (e) {
+          // ignore: avoid_catching_errors
+        } on StateError catch (e, st) {
+          log.dartros.error('$e\n$st');
           return;
         }
       },
@@ -397,7 +399,7 @@ class Node extends rpc_server.XmlRpcHandler
   ///
   /// [message] A message describing why the node is being shutdown
   XMLRPCResponse _handleShutdown(String callerID, [String message = '']) {
-    if (message != null && message.isNotEmpty) {
+    if (message.isNotEmpty) {
       log.dartros.warn('Shutdown request: $message');
     } else {
       log.dartros.warn('Shutdown request');

@@ -17,6 +17,7 @@ class ServiceCall<C extends RosMessage<C>, R extends RosMessage<R>,
   ServiceCall(this.request, this.completer);
   final C request;
   final Completer<R> completer;
+  // ignore: close_sinks
   Socket? _client;
   Stream<TCPRosChunk>? _clientStream;
 }
@@ -40,6 +41,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
   String get type => serviceClass.fullType;
   void close() {
     if (!_callInProgress) {
+      _client?.close();
       _client = null;
     }
   }
@@ -132,8 +134,8 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
       } else {
         throw Exception('$result');
       }
-    } on Exception catch (e) {
-      log.dartros.error('Error in sending service request');
+    } on Exception catch (e, st) {
+      log.dartros.error('Error in sending service request $e\n$st');
       rethrow;
     }
   }
@@ -158,9 +160,11 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
         _client = _call._client;
       }
       _call._clientStream!.listen((_) {}, onDone: () {
+        _call._client?.close();
         _call._client = null;
         _call._clientStream = null;
         if (persist) {
+          _client?.close();
           _client = null;
           _clientStream = null;
         }
@@ -173,8 +177,9 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
         }
         transformer.deserializeServiceResponse = true;
       }
-    } on Exception catch (e) {
-      log.dartros.error('Error connecting to service $service at $uri');
+    } on Exception catch (e, st) {
+      log.dartros
+          .error('Error connecting to service $service at $uri, $e\n$st');
       rethrow;
     }
   }

@@ -21,7 +21,7 @@ class Time {
           throttleMs: -1,
         );
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       rethrow;
     }
   }

@@ -116,9 +116,9 @@ class Names {
   String _remap(name) => remappings[name] ?? name;
 
   List<Object> _parseResolveArgs(List<Object> args) {
-    String name = namespace;
-    String ns = namespace;
-    bool remap = true;
+    var name = namespace;
+    var ns = namespace;
+    var remap = true;
     switch (args.length) {
       case 0:
         name = '';
@@ -137,7 +137,6 @@ class Names {
         break;
       default:
         return args;
-        break;
     }
 
     return [ns, name, remap];

@@ -7,6 +7,7 @@ import '../../publisher.dart';
 export 'package:logger/logger.dart';
 
 enum Level { trace, debug, info, warn, error, fatal }
+Level? logLevelOverride;
 
 class RosFilter extends logging.LogFilter {
   RosFilter(this.logger);
@@ -16,6 +17,10 @@ class RosFilter extends logging.LogFilter {
   bool shouldLog(logging.LogEvent event) {
     if (event.level.index >=
         Logger._loggers[logger]!.logLevel.loggingLevel.index) {
+      return true;
+    }
+    if (logLevelOverride != null &&
+        event.level.index > logLevelOverride!.index) {
       return true;
     }
     return false;
@@ -156,7 +161,6 @@ extension LevelToLoggingLevel on Level {
       case Level.fatal:
         return logging.Level.wtf;
     }
-    return logging.Level.nothing;
   }
 }
 
@@ -178,6 +182,5 @@ extension LoggingLevelToString on logging.Level {
       case logging.Level.nothing:
         return Log.FATAL;
     }
-    return Log.FATAL;
   }
 }

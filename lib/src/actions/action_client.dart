@@ -64,7 +64,7 @@ class ActionClient<
 
   ClientGoalHandle<G, AG, F, AF, R, AR> sendGoal(G goal,
       void Function(AF) feedbackCallback, void Function() transitionCallback) {
-    final AG ag = actionClass.actionGoal();
+    final ag = actionClass.actionGoal();
     final now = RosTime.now();
     final idStr = GoalIDGenerator.generateGoalID(now);
     ag.header.stamp = now;

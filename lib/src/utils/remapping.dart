@@ -1,3 +1,4 @@
+// ignore: camel_case_types
 class SPECIAL_KEYS {
   static const name = '__name';
   static const log = '__log';

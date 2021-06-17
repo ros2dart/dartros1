@@ -53,8 +53,6 @@ class SubscriberImpl<T extends RosMessage<T>> {
   final Map<String, TcpConnection> pendingClients = {};
   State _state = State.REGISTERING;
 
-  String get spinnerId => 'Subscriber://$topic';
-
   final BehaviorSubject<T> _streamController = BehaviorSubject();
   Stream<T> get stream => _streamController.stream;
 
@@ -70,7 +68,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
   Future<void> shutdown() async {
     _state = State.SHUTDOWN;
-    //TODO: log some things
+    log.dartros.info('Subscriber $topic with type $type is shutting down');
     // Iterate on copy of keys so we can remove items during the iteration
     for (final client in [...pubClients.keys, ...pendingClients.keys]) {
       await _disconnectClient(client);
@@ -100,7 +98,8 @@ class SubscriberImpl<T extends RosMessage<T>> {
 
   Future<void> _requestTopicFromPublisher(String uri) async {
     final info = NetworkUtils.getAddressAndPortFromUri(uri);
-    //TODO: log
+    log.dartros.info(
+        'Subscriber $topic with type $type is requesting topic from publisher at $uri');
     try {
       final w = ByteDataWriter(endian: Endian.little);
       udp.createSubHeader(w, node.nodeName, messageClass.md5sum, topic, type);
@@ -122,8 +121,9 @@ class SubscriberImpl<T extends RosMessage<T>> {
       final resp = await node.requestTopic(
           'http://${info.host}', info.port, topic, protocols);
       await _handleTopicRequestResponse(resp, uri);
-    } on Exception catch (e) {
-      //TODO: Log
+    } on Exception catch (e, st) {
+      log.dartros.error(
+          'Subscriber $topic with type $type caught error $e during requesting topic from $uri\n$st');
     }
   }
 
@@ -146,9 +146,9 @@ class SubscriberImpl<T extends RosMessage<T>> {
       if (resp.isNotEmpty) {
         requestTopicFromPubs(resp);
       }
-    } on Exception catch (e, trace) {
-      print(e);
-      print(trace);
+    } on Exception catch (e, st) {
+      log.dartros.error(
+          'Subscriber $topic with type $type caught error $e while registering with the roscore\n$st');
     }
   }
 
