@@ -4,7 +4,7 @@ Heavily inspired by the cpp and especially [nodejs](https://github.com/RethinkRo
 
 See the examples folder for examples, until I have time to create a better Readme and documentation.
 
-I will be starting to add some more documentation on [this website](https://timwhiting.github.io/dartros/) as I have time.
+I will be starting to add some more documentation on [this website](https://docs.page/TimWhiting/dartros) as I have time.
 
 ## Message Generation
 Message generation is implemented for dartros. You will need to clone [this ROS package](https://github.com/TimWhiting/gendart)
