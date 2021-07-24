@@ -1,0 +1,12 @@
+{
+  "name": "dartros",
+  "theme": "#ab47bc",
+  "favicon": "/docs/icon.svg",
+  "logo": "/docs/icon.svg",
+  "sidebar": [
+    [
+      "Overview",
+      "/"
+    ]
+  ]
+}
