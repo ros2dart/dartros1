@@ -2,25 +2,21 @@ import 'dart:io';
 
 import 'remapping.dart';
 
-final _NetworkUtils NetworkUtils = _NetworkUtils();
-
-class _NetworkUtils {
-  _NetworkUtils();
-  String? _ip;
-  String? _hostname;
-  String? _ros_ip;
-  String? _ros_hostname;
-  late String _host;
-  String get host => _host;
-
-  void init(Map<String, String> remappings) {
-    _ip = remappings[SPECIAL_KEYS.ip];
-    _hostname = remappings[SPECIAL_KEYS.hostname];
-    _ros_ip = Platform.environment['ROS_IP'];
-    _ros_hostname = Platform.environment['ROS_HOSTNAME'];
+class NetworkUtils {
+  NetworkUtils(Map<String, String> remappings)
+      : _ip = remappings[SPECIAL_KEYS.ip],
+        _hostname = remappings[SPECIAL_KEYS.hostname],
+        _ros_ip = Platform.environment['ROS_IP'],
+        _ros_hostname = Platform.environment['ROS_HOSTNAME'] {
     _host =
         _hostname ?? _ip ?? _ros_hostname ?? _ros_ip ?? Platform.localHostname;
   }
+  final String? _ip;
+  final String? _hostname;
+  final String? _ros_ip;
+  final String? _ros_hostname;
+  late String _host;
+  String get host => _host;
 
   String getAddressFromUri(String uriString) => Uri.parse(uriString).host;
 

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:dartros/src/names.dart';
 import 'package:dartros/src/publisher.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
@@ -27,20 +28,28 @@ import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
-  factory Node(String name, String rosMasterURI, {InternetAddress? rosIP}) =>
-      _node ??= Node._(name, rosMasterURI, rosIP);
-  Node._(this.nodeName, this.rosMasterURI, InternetAddress? rosIP)
+  factory Node(
+    String name,
+    String rosMasterURI, {
+    required NetworkUtils netUtils,
+    required NameRemapping nameRemappings,
+    InternetAddress? rosIP,
+  }) =>
+      Node._(name, rosMasterURI, rosIP, netUtils, nameRemappings);
+  Node._(this.nodeName, this.rosMasterURI, InternetAddress? rosIP,
+      this.netUtils, this.nameRemappings)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
     _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
     init(rosIP: rosIP);
   }
   Future<void> init({InternetAddress? rosIP}) async {
-    _ipAddress = rosIP?.address ?? await NetworkUtils.getIPAddress();
+    _ipAddress = rosIP?.address ?? await netUtils.getIPAddress();
   }
 
-  static Node? _node;
-  static Node? get singleton => _node;
+  @override
+  final NetworkUtils netUtils;
+  final NameRemapping nameRemappings;
   String? _ipAddress;
   @override
   String get ipAddress => _ipAddress!;

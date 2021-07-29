@@ -118,6 +118,7 @@ mixin XmlRpcClient {
   int get tcpRosPort;
   String get xmlRpcUri;
   String get ipAddress;
+  NetworkUtils get netUtils;
 
   Future<T> _call<T extends Object>(
     String methodName,
@@ -170,7 +171,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
     await _call('registerService', [
       nodeName,
       service,
-      NetworkUtils.formatServiceUri(ipAddress, tcpRosPort),
+      netUtils.formatServiceUri(ipAddress, tcpRosPort),
       xmlRpcUri
     ]);
   }
@@ -186,11 +187,8 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<void> unregisterService(
     String service,
   ) async {
-    await _call('unregisterService', [
-      nodeName,
-      service,
-      NetworkUtils.formatServiceUri(ipAddress, tcpRosPort)
-    ]);
+    await _call('unregisterService',
+        [nodeName, service, netUtils.formatServiceUri(ipAddress, tcpRosPort)]);
   }
 
   /// Subscribe the node by [nodeName] to the specified [topic].

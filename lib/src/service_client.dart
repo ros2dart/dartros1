@@ -108,7 +108,7 @@ class ServiceClient<C extends RosMessage<C>, R extends RosMessage<R>> {
       try {
         final serv = await node.lookupService(service);
         _throwIfShutdown();
-        final serviceHost = NetworkUtils.getAddressAndPortFromUri(serv);
+        final serviceHost = node.netUtils.getAddressAndPortFromUri(serv);
         await _connectToService(serviceHost, _call);
       } on Exception catch (e) {
         log.dartros.error('Failure in service lookup $e');

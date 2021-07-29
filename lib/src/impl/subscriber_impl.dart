@@ -97,7 +97,7 @@ class SubscriberImpl<T extends RosMessage<T>> {
   }
 
   Future<void> _requestTopicFromPublisher(String uri) async {
-    final info = NetworkUtils.getAddressAndPortFromUri(uri);
+    final info = node.netUtils.getAddressAndPortFromUri(uri);
     log.dartros.info(
         'Subscriber $topic with type $type is requesting topic from publisher at $uri');
     try {
