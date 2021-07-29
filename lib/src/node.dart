@@ -107,7 +107,6 @@ class Node extends rpc_server.XmlRpcHandler
     await _stopXmlRpcServer();
     log.dartros.info('Shutdown XMLRPC server...done');
     log.dartros.info('Shutting $nodeName down completed at ${DateTime.now()}');
-    exit(0);
   }
 
   void processJobs() {}

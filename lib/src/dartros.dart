@@ -28,6 +28,9 @@ Future<NodeHandle> initNode(
   if (name.isEmpty) {
     throw Exception('Name must not be empty.');
   }
+  if (_nodes.containsKey(name)) {
+    return NodeHandle(_nodes[name]!);
+  }
   // Process command line remappings
   final remappings = processRemapping(args);
   // Initializes the network utils from the remappings
@@ -46,14 +49,18 @@ Future<NodeHandle> initNode(
   final node = Node(nodeName.name, masterUri,
       rosIP: rosIP, netUtils: netUtils, nameRemappings: nameRemappings);
   await node.nodeReady.future;
+  _nodes[name] = node;
   await Logger.initializeRosLogger();
   await Time.initializeRosTime();
   return NodeHandle(node);
 }
 
-Node? _node;
-NodeHandle get nh => NodeHandle(_node!);
-NodeHandle getNodeHandle(String namespace) => NodeHandle(_node!, namespace);
+Map<String, Node> _nodes = {};
+NodeHandle get nh => NodeHandle(_nodes.values.first);
+NodeHandle getNodeHandle(String namespace) =>
+    NodeHandle(_nodes.values.first, namespace);
+NodeHandle getNodeHandleForNode(Node node, String namespace) =>
+    NodeHandle(node, namespace);
 
 NodeName _resolveNodeName(
     String nodeName, Map<String, String> remappings, bool anonymize) {

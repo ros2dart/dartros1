@@ -126,4 +126,5 @@ class NodeHandle {
 
   // A helper function to remap the name
   String _remapName(String name) => node.nameRemappings.remap(name);
+  Future<void> shutdown() => node.shutdown();
 }
