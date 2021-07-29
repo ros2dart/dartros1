@@ -39,12 +39,12 @@ class Node extends rpc_server.XmlRpcHandler
   Node._(this.nodeName, this.rosMasterURI, InternetAddress? rosIP,
       this.netUtils, this.nameRemappings)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
-    _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
-    init(rosIP: rosIP);
+    _init(rosIP: rosIP);
   }
-  Future<void> init({InternetAddress? rosIP}) async {
+  Future<void> _init({InternetAddress? rosIP}) async {
     _ipAddress = rosIP?.address ?? await netUtils.getIPAddress();
+    await start();
   }
 
   @override
@@ -79,10 +79,15 @@ class Node extends rpc_server.XmlRpcHandler
   int get udpRosPort => _udpRosServer.port;
   int _connections = 0;
 
-  Future<void> _startServers() async {
+  Future<void> start() async {
+    if (ok) {
+      log.dartros.warn(
+          'Node already started, only call `start` when the node has been shutdown (it is initialized automatically on node creation)');
+    }
     await _startTcpRosServer();
     await _startXmlRpcServer();
     await _startUdpRosServer();
+    log.dartros.info('Node completed startup');
     nodeReady.complete(true);
   }
 

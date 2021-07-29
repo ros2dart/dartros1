@@ -46,12 +46,17 @@ Future<NodeHandle> initNode(
       remappings['__master'] ??
       Platform.environment['ROS_MASTER_URI'] ??
       'http://localhost:11311';
+
   final node = Node(nodeName.name, masterUri,
       rosIP: rosIP, netUtils: netUtils, nameRemappings: nameRemappings);
   await node.nodeReady.future;
   _nodes[name] = node;
-  await Logger.initializeRosLogger();
-  await Time.initializeRosTime();
+  if (_nodes.length == 1) {
+    // Logger and time are only initialized for the first node for now
+    await Logger.initializeRosLogger();
+    await Time.initializeRosTime();
+  }
+
   return NodeHandle(node);
 }
 
