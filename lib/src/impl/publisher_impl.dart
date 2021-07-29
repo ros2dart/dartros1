@@ -128,6 +128,10 @@ class PublisherImpl<T extends RosMessage> {
         validateSubHeader(writer, header, topic, type, messageClass.md5sum);
 
     if (!validated) {
+      final reader = ByteDataReader(endian: Endian.little);
+      reader.add(writer.toBytes());
+      log.dartros.error(
+          'Subscriber connection header invalid ${deserializeStringFields(reader)}');
       socket.add(writer.toBytes());
       await socket.flush();
       await socket.close();
