@@ -1,6 +1,6 @@
 name: dartros
 description: A Dart implementation of a ROS 1 Client Library
-version: 0.1.2
+version: 0.1.3
 repository: https://github.com/TimWhiting/dartros
 
 environment:
@@ -18,7 +18,7 @@ dependencies:
   meta: ^1.3.0
   path: ^1.8.0
   rosgraph_msgs: ">=0.1.0 < 0.2.0"
-  rxdart: ^0.26.0
+  rxdart: ^0.27.2
   std_msgs: ">=0.1.0 < 0.2.0"
   string_validator: ^0.3.0
   xml: ^5.0.0
