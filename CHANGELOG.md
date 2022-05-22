@@ -1,3 +1,6 @@
+## 0.1.5+1
+- Revert 0.1.5, but keep updated dependencies
+
 ## 0.1.4
 - Update dependencies
 
