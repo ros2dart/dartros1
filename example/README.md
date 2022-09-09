@@ -1,7 +1,7 @@
 # Overview of dartros flutter examples
 
 ## Hardware setup
-In order to test the example code inside this folder you need to setup your network communication. There are quite a few situations when this can go wrong. It is not an issue with this dart package but most likely with the used hardware. You can learn from the issues by other users to avoid these situations. For example, in issue #39
+In order to test the example code inside this folder you need to setup your network communication. There are quite a few situations when this can go wrong. It is not an issue with this dart package but most likely with the used hardware. You can learn from the issues by other users to avoid these situations. For example, in issue #39 it was important to set the ROS_HOSTNAME to the loopback ip address (127.0.0.1) instead of using "localhost". And in issue #46 the communication was blocked when a WIFI hotspot was used but did work with a dedicated WIFI router.
 
 
 ## Example code
