@@ -326,7 +326,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
           SubscriberInfo(subInfo[0] as String,
               [
                 for (final subscriber in subInfo[1])
-                  subsciber as String
+                  subscriber as String
               ])
       ],
       [
