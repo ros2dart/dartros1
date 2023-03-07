@@ -9,7 +9,6 @@ import 'package:dartx/dartx.dart';
 import 'node.dart';
 import 'utils/client_states.dart';
 import 'utils/log/logger.dart';
-import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
 
 class ServiceCall<C extends RosMessage<C>, R extends RosMessage<R>,

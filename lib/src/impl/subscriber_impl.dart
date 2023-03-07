@@ -11,7 +11,6 @@ import 'package:rxdart/rxdart.dart';
 
 import '../node.dart';
 import '../utils/client_states.dart';
-import '../utils/network_utils.dart';
 import '../utils/tcpros_utils.dart';
 
 const protocols = [

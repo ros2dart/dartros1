@@ -2,11 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
-import 'package:dartros_msgutils/msg_utils.dart';
 
 import '../dartros.dart';
 import 'utils/client_states.dart';
-import 'utils/log/logger.dart';
 import 'utils/tcpros_utils.dart';
 
 class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>> {

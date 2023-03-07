@@ -2,7 +2,8 @@
 
 // (in-package common_msgs.srv)
 
-import 'dart:convert';
+// ignore_for_file: prefer_expression_function_bodies
+
 import 'package:buffer/buffer.dart';
 import 'package:dartros_msgutils/msg_utils.dart';
 
@@ -11,16 +12,16 @@ import 'package:dartros_msgutils/msg_utils.dart';
 //-----------------------------------------------------------
 
 class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
-  int color;
-
-  int shape;
-
-  static MoveBlockRequest empty$ = MoveBlockRequest();
   MoveBlockRequest({
     int? color,
     int? shape,
   })  : color = color ?? 0,
         shape = shape ?? 0;
+  int color;
+
+  int shape;
+
+  static MoveBlockRequest empty$ = MoveBlockRequest();
 
   @override
   MoveBlockRequest call({
@@ -53,9 +54,7 @@ class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
   }
 
   @override
-  int getMessageSize() {
-    return 2;
-  }
+  int getMessageSize() => 2;
 
   @override
   String get fullType {
@@ -94,16 +93,16 @@ string circle = "c"
 }
 
 class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
-  bool wasSuccessful;
-
-  bool outOfReach;
-
-  static MoveBlockResponse empty$ = MoveBlockResponse();
   MoveBlockResponse({
     bool? wasSuccessful,
     bool? outOfReach,
   })  : wasSuccessful = wasSuccessful ?? false,
         outOfReach = outOfReach ?? false;
+  bool wasSuccessful;
+
+  bool outOfReach;
+
+  static MoveBlockResponse empty$ = MoveBlockResponse();
 
   @override
   MoveBlockResponse call({
@@ -136,9 +135,7 @@ class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
   }
 
   @override
-  int getMessageSize() {
-    return 2;
-  }
+  int getMessageSize() => 2;
 
   @override
   String get fullType {
