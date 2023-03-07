@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -10,10 +9,11 @@ import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
 import 'package:dartros_msgutils/msg_utils.dart';
 import 'package:dartx/dartx.dart';
-import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 import 'package:xml_rpc/client.dart';
 import 'package:xml_rpc/simple_server.dart' as rpc_server;
+
 import 'impl/publisher_impl.dart';
 import 'impl/subscriber_impl.dart';
 import 'ros_xmlrpc_common.dart';
@@ -139,7 +139,7 @@ class Node extends rpc_server.XmlRpcHandler
       advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
           String service,
           RosServiceMessage<C, R> messageClass,
-          R Function(C) callback) {
+          FutureOr<R> Function(C) callback) {
     if (_services.containsKey(service)) {
       log.dartros.warn(
           'Tried to advertise a service that is already advertised in this node [$service]');

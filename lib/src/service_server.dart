@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
@@ -21,7 +22,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>> {
   Map<String, TcpConnection> _clients = {};
   final bool persist;
   final int port = 0;
-  final R Function(C) requestCallback;
+  final FutureOr<R> Function(C) requestCallback;
   State _state = State.REGISTERING;
   List<String> get clientUris => _clients.keys.toList();
   String get serviceUri => NetworkUtils.formatServiceUri(node.ipAddress, port);
@@ -65,7 +66,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>> {
         log.dartros.trace('Service $service got message! $data');
         final reader = ByteDataReader(endian: Endian.little)..add(data.buffer);
         final req = messageClass.request.deserialize(reader);
-        final result = requestCallback(req);
+        final result = await requestCallback(req);
         if (isShutdown) {
           return;
         }
