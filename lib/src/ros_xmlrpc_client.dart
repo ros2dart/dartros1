@@ -315,15 +315,27 @@ mixin RosXmlRpcClient on XmlRpcClient {
     return SystemState(
       [
         for (final pubInfo in resp[0])
-          PublisherInfo(pubInfo[0] as String, pubInfo[1] as List<String>)
+          PublisherInfo(pubInfo[0] as String,
+              [
+                for (final publisher in pubInfo[1])
+                  publisher as String
+              ])
       ],
       [
         for (final subInfo in resp[1])
-          SubscriberInfo(subInfo[0] as String, subInfo[1] as List<String>)
+          SubscriberInfo(subInfo[0] as String,
+              [
+                for (final subscriber in subInfo[1])
+                  subscriber as String
+              ])
       ],
       [
         for (final servInfo in resp[2])
-          ServiceInfo(servInfo[0] as String, servInfo[1] as List<String>)
+          ServiceInfo(servInfo[0] as String,
+              [
+                for (final serviceProvider in servInfo[1])
+                  serviceProvider as String
+              ])
       ],
     );
   }
