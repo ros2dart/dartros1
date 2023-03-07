@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartros/src/names.dart';
 import 'package:dartros_msgutils/msg_utils.dart';
 
@@ -73,7 +75,7 @@ class NodeHandle {
       advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
               String service,
               RosServiceMessage<C, R> messageClass,
-              R Function(C) callback) =>
+              FutureOr<R> Function(C) callback) =>
           node.advertiseService(_resolveName(service), messageClass, callback);
 
   ServiceClient<C, R>

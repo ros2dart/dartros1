@@ -152,7 +152,7 @@ class Node extends rpc_server.XmlRpcHandler
       advertiseService<C extends RosMessage<C>, R extends RosMessage<R>>(
           String service,
           RosServiceMessage<C, R> messageClass,
-          R Function(C) callback) {
+          FutureOr<R> Function(C) callback) {
     if (_services.containsKey(service)) {
       log.dartros.warn(
           'Tried to advertise a service that is already advertised in this node [$service]');
