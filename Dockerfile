@@ -12,6 +12,6 @@ RUN  apt-get update && \
 RUN echo 'RUN tests'
 
 COPY . .
-RUN export PATH="$PATH:/usr/lib/dart/bin" && dart pub get
-
-# RUN export PATH="$PATH:/usr/lib/dart/bin" && dart pub run test
+RUN echo 'PATH="\$PATH:/usr/lib/dart/bin"' >> ~/.bash_profile
+RUN export PATH="$PATH:/usr/lib/dart/bin"  && dart pub get
+RUN export PATH="$PATH:/usr/lib/dart/bin"  && dart --disable-analytics

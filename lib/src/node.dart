@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:dartros/src/names.dart';
 import 'package:dartros/src/publisher.dart';
 import 'package:dartros/src/ros_xmlrpc_client.dart';
 import 'package:dartros/src/subscriber.dart';
@@ -27,20 +28,28 @@ import 'utils/udpros_utils.dart' as udp;
 
 class Node extends rpc_server.XmlRpcHandler
     with XmlRpcClient, RosParamServerClient, RosXmlRpcClient {
-  factory Node(String name, String rosMasterURI, {InternetAddress? rosIP}) =>
-      _node ??= Node._(name, rosMasterURI, rosIP);
-  Node._(this.nodeName, this.rosMasterURI, InternetAddress? rosIP)
+  factory Node(
+    String name,
+    String rosMasterURI, {
+    required NetworkUtils netUtils,
+    required NameRemapping nameRemappings,
+    InternetAddress? rosIP,
+  }) =>
+      Node._(name, rosMasterURI, rosIP, netUtils, nameRemappings);
+  Node._(this.nodeName, this.rosMasterURI, InternetAddress? rosIP,
+      this.netUtils, this.nameRemappings)
       : super(methods: {}, codecs: [...standardCodecs, xmlRpcResponseCodec]) {
-    _startServers();
     ProcessSignal.sigint.watch().listen((sig) => shutdown());
-    init(rosIP: rosIP);
+    _init(rosIP: rosIP);
   }
-  Future<void> init({InternetAddress? rosIP}) async {
-    _ipAddress = rosIP?.address ?? await NetworkUtils.getIPAddress();
+  Future<void> _init({InternetAddress? rosIP}) async {
+    _ipAddress = rosIP?.address ?? await netUtils.getIPAddress();
+    await start();
   }
 
-  static Node? _node;
-  static Node? get singleton => _node;
+  @override
+  final NetworkUtils netUtils;
+  final NameRemapping nameRemappings;
   String? _ipAddress;
   @override
   String get ipAddress => _ipAddress!;
@@ -70,10 +79,15 @@ class Node extends rpc_server.XmlRpcHandler
   int get udpRosPort => _udpRosServer.port;
   int _connections = 0;
 
-  Future<void> _startServers() async {
+  Future<void> start() async {
+    if (ok) {
+      log.dartros.warn(
+          'Node already started, only call `start` when the node has been shutdown (it is initialized automatically on node creation)');
+    }
     await _startTcpRosServer();
     await _startXmlRpcServer();
     await _startUdpRosServer();
+    log.dartros.info('Node completed startup');
     nodeReady.complete(true);
   }
 
@@ -98,7 +112,6 @@ class Node extends rpc_server.XmlRpcHandler
     await _stopXmlRpcServer();
     log.dartros.info('Shutdown XMLRPC server...done');
     log.dartros.info('Shutting $nodeName down completed at ${DateTime.now()}');
-    exit(0);
   }
 
   void processJobs() {}
@@ -319,7 +332,9 @@ class Node extends rpc_server.XmlRpcHandler
               serializeString('Unable to validate connection header $message'));
           await socket.flush();
           await socket.close();
-        } on StateError catch (e) {
+          // ignore: avoid_catching_errors
+        } on StateError catch (e, st) {
+          log.dartros.error('$e\n$st');
           return;
         }
       },
@@ -397,7 +412,7 @@ class Node extends rpc_server.XmlRpcHandler
   ///
   /// [message] A message describing why the node is being shutdown
   XMLRPCResponse _handleShutdown(String callerID, [String message = '']) {
-    if (message != null && message.isNotEmpty) {
+    if (message.isNotEmpty) {
       log.dartros.warn('Shutdown request: $message');
     } else {
       log.dartros.warn('Shutdown request');

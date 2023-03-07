@@ -10,8 +10,8 @@ Future<T> listenRandomPort<T>(int limit, Future<T> Function(int) create) async {
       final port = random.nextInt(65535 - 1024) + 1024;
       final result = await create(port);
       return result;
-    } on Exception catch (e) {
-      // Do nothing
+    } on Exception catch (_) {
+      // Do nothing because we do a manual retry
     }
   }
   throw Exception("Couldn't find a port to listen on");

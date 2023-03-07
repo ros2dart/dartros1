@@ -1,3 +1,19 @@
+## 0.1.5+1
+- Revert 0.1.5, but keep updated dependencies
+
+## 0.1.4
+- Update dependencies
+
+## 0.1.3
+- Update dependencies
+
+## 0.1.2
+- Fix endian issue in service client
+
+## 0.1.1
+- Prioritize ROS_HOSTNAME over ROS_IP: Thanks @knuesel
+- Align SimpleActionClient with other ROS implementations: Thanks @knuesel
+
 ## 0.1.0+1
 - Allow setting manual ROS_IP
 

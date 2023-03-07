@@ -1,24 +1,19 @@
 import 'package:string_validator/string_validator.dart';
 
-final Names names = Names();
-
-class Names {
-  Names();
-  Map<String, String> remappings = {};
-  String namespace = '';
-  void init(Map<String, String> remaps, String namespace) {
-    this.namespace = namespace;
-    for (final left in remaps.keys) {
-      if (!left.startsWith('_')) {
-        final right = remaps[left];
-        final resolvedLeft = resolve([left, false]);
-        final resolvedRight = resolve([right!, false]);
-        remappings[resolvedLeft] = resolvedRight;
-      }
+class NameUtils {
+  static String clean(String name) {
+    final n = name.replaceAll('//', '/');
+    if (n.endsWith('/')) {
+      return n.substring(0, n.length - 1);
     }
+    return n;
   }
 
-  bool validate(String name, {bool throwError = false}) {
+  static String append(String left, String right) => clean('$left/$right');
+  static bool _isValidCharInName(String char) =>
+      isAlphanumeric(char) || char == '/' || char == '_';
+
+  static bool validate(String name, {bool throwError = false}) {
     if (name.isEmpty) {
       return true;
     }
@@ -36,89 +31,16 @@ class Names {
           throw Exception(
               'Character [$c] at element [$i] is not valid in Graph Resource Name [$name].  Valid characters are a-z, A-Z, 0-9, / and _.');
         }
-        // else
         return false;
       }
     }
     return true;
   }
 
-  String clean(String name) {
-    final n = name.replaceAll('//', '/');
-    if (n.endsWith('/')) {
-      return n.substring(0, n.length - 1);
-    }
-    return n;
-  }
-
-  String append(String left, String right) => clean('$left/$right');
-
-  String remap(String name) => resolve([name, true]);
-
-  String resolve(List<Object> args) {
-    final a = _parseResolveArgs(args);
-    final ns = a[0] as String;
-    var name = a[1] as String;
-    final remap = a[2] as bool;
-
-    validate(name, throwError: true);
-
-    if (name.isEmpty) {
-      if (ns.isEmpty) {
-        return '/';
-      } else if (ns[0] == '/') {
-        return ns;
-      }
-      // else
-      return '/$namespace';
-    }
-
-    if (name.startsWith('~')) {
-      name = name.replaceAll('~', '$namespace/');
-    }
-
-    if (!name.startsWith('/')) {
-      name = '$namespace/$name';
-    }
-
-    name = clean(name);
-
-    if (remap) {
-      name = _remap(name);
-    }
-
-    return name;
-  }
-
-  String parentNamespace(String name) {
-    validate(name, throwError: true);
-
-    if (name.isEmpty) {
-      return '';
-    } else if (name == '/') {
-      return '/';
-    }
-
-    var p = name.lastIndexOf('/');
-    if (p == name.length - 1) {
-      p = name.lastIndexOf('/', p - 1);
-    }
-
-    if (p < 0) {
-      return '';
-    } else if (p == 0) {
-      return '/';
-    }
-    // else
-    return name.substring(0, p);
-  }
-
-  String _remap(name) => remappings[name] ?? name;
-
-  List<Object> _parseResolveArgs(List<Object> args) {
-    String name = namespace;
-    String ns = namespace;
-    bool remap = true;
+  static List<Object> _parseResolveArgs(String namespace, List<Object> args) {
+    var name = namespace;
+    var ns = namespace;
+    var remap = true;
     switch (args.length) {
       case 0:
         name = '';
@@ -137,12 +59,87 @@ class Names {
         break;
       default:
         return args;
-        break;
     }
 
     return [ns, name, remap];
   }
 
-  static bool _isValidCharInName(String char) =>
-      isAlphanumeric(char) || char == '/' || char == '_';
+  static String remap(Map<String, String> remappings, String name) =>
+      remappings[name] ?? name;
+
+  static String parentNamespace(String name) {
+    NameUtils.validate(name, throwError: true);
+
+    if (name.isEmpty) {
+      return '';
+    } else if (name == '/') {
+      return '/';
+    }
+
+    var p = name.lastIndexOf('/');
+    if (p == name.length - 1) {
+      p = name.lastIndexOf('/', p - 1);
+    }
+
+    if (p < 0) {
+      return '';
+    } else if (p == 0) {
+      return '/';
+    }
+    return name.substring(0, p);
+  }
+
+  static String resolve(
+      List<Object> args, Map<String, String> remappings, String namespace) {
+    final a = _parseResolveArgs(namespace, args);
+    final ns = a[0] as String;
+    var name = a[1] as String;
+    final remap = a[2] as bool;
+
+    validate(name, throwError: true);
+
+    if (name.isEmpty) {
+      if (ns.isEmpty) {
+        return '/';
+      } else if (ns[0] == '/') {
+        return ns;
+      }
+      return '/$namespace';
+    }
+
+    if (name.startsWith('~')) {
+      name = name.replaceAll('~', '$namespace/');
+    }
+
+    if (!name.startsWith('/')) {
+      name = '$namespace/$name';
+    }
+
+    name = clean(name);
+
+    if (remap) {
+      name = NameUtils.remap(remappings, name);
+    }
+
+    return name;
+  }
+}
+
+class NameRemapping {
+  NameRemapping(Map<String, String> remaps, this.namespace) {
+    for (final left in remaps.keys) {
+      if (!left.startsWith('_')) {
+        final right = remaps[left];
+        final resolvedLeft = resolve([left, false]);
+        final resolvedRight = resolve([right!, false]);
+        remappings[resolvedLeft] = resolvedRight;
+      }
+    }
+  }
+  Map<String, String> remappings = {};
+  final String namespace;
+
+  String remap(String name) => resolve([name, true]);
+  String resolve(List<Object> args) =>
+      NameUtils.resolve(args, remappings, namespace);
 }

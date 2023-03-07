@@ -7,7 +7,6 @@ import 'package:dartros_msgutils/msg_utils.dart';
 import '../dartros.dart';
 import 'utils/client_states.dart';
 import 'utils/log/logger.dart';
-import 'utils/network_utils.dart';
 import 'utils/tcpros_utils.dart';
 
 class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>> {
@@ -25,7 +24,7 @@ class ServiceServer<C extends RosMessage<C>, R extends RosMessage<R>> {
   final FutureOr<R> Function(C) requestCallback;
   State _state = State.REGISTERING;
   List<String> get clientUris => _clients.keys.toList();
-  String get serviceUri => NetworkUtils.formatServiceUri(node.ipAddress, port);
+  String get serviceUri => node.netUtils.formatServiceUri(node.ipAddress, port);
 
   void shutdown() {
     node.unregisterService(service);

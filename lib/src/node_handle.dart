@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:dartros/src/names.dart';
 import 'package:dartros_msgutils/msg_utils.dart';
 
-import 'names.dart';
 import 'node.dart';
 import 'publisher.dart';
 import 'ros_xmlrpc_client.dart';
@@ -21,7 +21,7 @@ class NodeHandle {
   set namespace(String ns) {
     var newNs = ns;
     if (newNs.startsWith('~')) {
-      newNs = names.resolve([ns]);
+      newNs = node.nameRemappings.resolve([ns]);
     }
     _namespace = _resolveName(newNs, remap: true);
   }
@@ -101,7 +101,7 @@ class NodeHandle {
   String _resolveName(String name,
       {bool remap = true, bool noValidate = false}) {
     if (!noValidate) {
-      names.validate(name, throwError: true);
+      NameUtils.validate(name, throwError: true);
     }
     if (name.isEmpty) {
       return namespace;
@@ -110,14 +110,14 @@ class NodeHandle {
     if (newName.startsWith('~')) {
       throw Exception('Using ~ names with NodeHandle methods is not allowed');
     } else if (!newName.startsWith('/') && newName.isNotEmpty) {
-      newName = names.append(namespace, newName);
+      newName = NameUtils.append(namespace, newName);
     } else {
-      newName = names.clean(newName);
+      newName = NameUtils.clean(newName);
     }
     if (remap) {
       return _remapName(newName);
     } else {
-      return names.resolve([newName, false]);
+      return node.nameRemappings.resolve([newName, false]);
     }
   }
 
@@ -127,5 +127,6 @@ class NodeHandle {
   String remapName(String name) => _remapName(_resolveName(name));
 
   // A helper function to remap the name
-  String _remapName(String name) => names.remap(name);
+  String _remapName(String name) => node.nameRemappings.remap(name);
+  Future<void> shutdown() => node.shutdown();
 }

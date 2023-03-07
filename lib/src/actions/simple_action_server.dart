@@ -119,7 +119,7 @@ class SimpleActionServer<
 
     if (acceptGoal) {
       if (_nextGoal != null) {
-        final R result = actionClass.result();
+        final result = actionClass.result();
         _nextGoal!.setCanceled(result,
             text:
                 'This goal was canceled because another goal was received by the simple action server');

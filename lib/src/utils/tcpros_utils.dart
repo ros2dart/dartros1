@@ -222,27 +222,6 @@ T deserializeMessage<T extends RosMessage>(
         ByteDataReader reader, T messageClass) =>
     messageClass.deserialize(reader);
 
-Uint8List serializeResponse(
-  RosMessage response,
-  bool success, {
-  bool prependResponseInfo = true,
-}) {
-  final writer = ByteDataWriter();
-  if (prependResponseInfo) {
-    if (success) {
-      final size = response.getMessageSize();
-      writer.writeUint8(1);
-      writer.writeUint32(size);
-      response.serialize(writer);
-    } else {
-      const errorMessage = 'Unable to handle service call';
-      writer.writeUint8(0);
-      writer.writeString(errorMessage);
-    }
-  }
-  return writer.toBytes();
-}
-
 void createTcpRosError(ByteDataWriter writer, String str) {
   writer.writeString(str);
 }

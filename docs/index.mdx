@@ -9,7 +9,6 @@ Use at your own risk.
 
 It is an open-source project, so treat it as such. Feel free to make pull requests.
 
-
 ## Message Generation
 
 Message generation is implemented for dartros. You will need to clone [this ROS package](https://github.com/TimWhiting/gendart)
@@ -21,6 +20,7 @@ The generated messages will be in the devel folder of your workspace more specif
 
 You can depend on this in your dart node via a path dependency.
 Assuming your dart node is in the src folder this would look like this:
+
 ```yaml
 # pubspec.yaml
 dependencies:
@@ -29,6 +29,7 @@ dependencies:
 ```
 
 Then to use it to publish an image you might do something like this:
+
 ```dart
 import 'package:dartros/dartros.dart';
 import 'package:dartx/dartx.dart';
@@ -54,35 +55,36 @@ Future<void> main(List<String> args) async {
 ```
 
 However, the following message packages are published to `pub.dev` for a better experience creating libraries around them, or they are part of the dartros implementation and therefore needed to be published to `pub.dev`:
-* std_msgs
-* sensor_msgs
-* rosgraph_msgs
-* geometry_msgs
-* actionlib_msgs
+
+- std_msgs
+- sensor_msgs
+- rosgraph_msgs
+- geometry_msgs
+- actionlib_msgs
 
 Depend on them through a regular pub dependency to ensure no conflicts with the message versions.
-
 
 ## Feature Status
 
 At a high level the things that have been tested are:
-* Publish and Subscribe (TCP)
-* Services
-* Message Generation for messages and services
-* Connecting to a ROS master that is not localhost
+
+- Publish and Subscribe (TCP)
+- Services
+- Message Generation for messages and services
+- Connecting to a ROS master that is not localhost
 
 Not tested:
-* Publish and Subscribe (UDP)
+
+- Publish and Subscribe (UDP)
 
 Still in the works:
-* Actions and ActionServers, needs action message generation work, and then some updates to the action server implementation.
 
+- Actions and ActionServers, needs action message generation work, and then some updates to the action server implementation.
 
 ### Notes
 
 Heavily inspired by the cpp and especially [nodejs](https://github.com/RethinkRobotics-opensource/rosnodejs) implementation
 
-
-* I did not directly use any of the nodejs source code since this is an implementation in a different language using different libraries.
-However, I want to make sure I attribute them properly, since a large portion of the code is structured similarly, and I used their
-implementation as a reference. You can find their license included in the source code of this library.
+- I did not directly use any of the nodejs source code since this is an implementation in a different language using different libraries.
+  However, I want to make sure I attribute them properly, since a large portion of the code is structured similarly, and I used their
+  implementation as a reference. You can find their license included in the source code of this library.

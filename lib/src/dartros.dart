@@ -28,53 +28,58 @@ Future<NodeHandle> initNode(
   if (name.isEmpty) {
     throw Exception('Name must not be empty.');
   }
+  if (_nodes.containsKey(name)) {
+    return NodeHandle(_nodes[name]!);
+  }
   // Process command line remappings
   final remappings = processRemapping(args);
   // Initializes the network utils from the remappings
-  NetworkUtils.init(remappings);
+  final netUtils = NetworkUtils(remappings);
   // Figures out the node name
   final nodeName = _resolveNodeName(name, remappings, anonymize);
   // Initializes the names in the namespace
-  names.init(remappings, nodeName.namespace);
+  final nameRemappings = NameRemapping(remappings, nodeName.namespace);
   // If the node has already been created return that node or an error
-  if (Node.singleton != null) {
-    if (nodeName.name == (Node.singleton!.nodeName)) {
-      return nh;
-    } else {
-      // Node name doesn't match, can't init another node with a different name in the same process
-      throw Exception(
-          'Unable to initialize ${nodeName.name} - node ${Node.singleton!.nodeName} already exists');
-    }
-  }
+
   log.initializeNodeLogger(nodeName.name);
   final masterUri = rosMasterUri ??
       remappings['__master'] ??
       Platform.environment['ROS_MASTER_URI'] ??
       'http://localhost:11311';
-  final node = Node(nodeName.name, masterUri, rosIP: rosIP);
+
+  final node = Node(nodeName.name, masterUri,
+      rosIP: rosIP, netUtils: netUtils, nameRemappings: nameRemappings);
   await node.nodeReady.future;
-  await Logger.initializeRosLogger();
-  await Time.initializeRosTime();
+  _nodes[name] = node;
+  if (_nodes.length == 1) {
+    // Logger and time are only initialized for the first node for now
+    await Logger.initializeRosLogger();
+    await Time.initializeRosTime();
+  }
+
   return NodeHandle(node);
 }
 
-NodeHandle get nh => NodeHandle(Node.singleton!);
+Map<String, Node> _nodes = {};
+NodeHandle get nh => NodeHandle(_nodes.values.first);
 NodeHandle getNodeHandle(String namespace) =>
-    NodeHandle(Node.singleton!, namespace);
+    NodeHandle(_nodes.values.first, namespace);
+NodeHandle getNodeHandleForNode(Node node, String namespace) =>
+    NodeHandle(node, namespace);
 
 NodeName _resolveNodeName(
     String nodeName, Map<String, String> remappings, bool anonymize) {
   var namespace =
       remappings['__ns'] ?? Platform.environment['ROS_NAMESPACE'] ?? '';
-  namespace = names.clean(namespace);
+  namespace = NameUtils.clean(namespace);
   if (namespace.isEmpty || !namespace.startsWith('/')) {
     namespace = '/$namespace';
   }
 
-  names.validate(namespace, throwError: true);
+  NameUtils.validate(namespace, throwError: true);
 
   var name = remappings['__name'] ?? nodeName;
-  name = names.resolve([namespace, name]);
+  name = NameUtils.resolve([namespace, name], {}, '');
 
   // only anonymize node name if they didn't remap from the command line
   if (anonymize && remappings['__name'] == null) {

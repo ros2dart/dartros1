@@ -19,9 +19,10 @@ class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
   MoveBlockRequest({
     int? color,
     int? shape,
-  })  : this.color = color ?? 0,
-        this.shape = shape ?? 0;
+  })  : color = color ?? 0,
+        shape = shape ?? 0;
 
+  @override
   MoveBlockRequest call({
     int? color,
     int? shape,
@@ -31,6 +32,7 @@ class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
         shape: shape,
       );
 
+  @override
   void serialize(ByteDataWriter writer) {
     // Serializes a message object of type MoveBlockRequest
     // Serialize message field [color]
@@ -50,6 +52,7 @@ class MoveBlockRequest extends RosMessage<MoveBlockRequest> {
     return data;
   }
 
+  @override
   int getMessageSize() {
     return 2;
   }
@@ -99,9 +102,10 @@ class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
   MoveBlockResponse({
     bool? wasSuccessful,
     bool? outOfReach,
-  })  : this.wasSuccessful = wasSuccessful ?? false,
-        this.outOfReach = outOfReach ?? false;
+  })  : wasSuccessful = wasSuccessful ?? false,
+        outOfReach = outOfReach ?? false;
 
+  @override
   MoveBlockResponse call({
     bool? wasSuccessful,
     bool? outOfReach,
@@ -111,6 +115,7 @@ class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
         outOfReach: outOfReach,
       );
 
+  @override
   void serialize(ByteDataWriter writer) {
     // Serializes a message object of type MoveBlockResponse
     // Serialize message field [wasSuccessful]
@@ -130,6 +135,7 @@ class MoveBlockResponse extends RosMessage<MoveBlockResponse> {
     return data;
   }
 
+  @override
   int getMessageSize() {
     return 2;
   }
@@ -166,4 +172,8 @@ class MoveBlock extends RosServiceMessage<MoveBlockRequest, MoveBlockResponse> {
   String get md5sum => '5674452fd9a3e6471d92b38af266a35b';
   @override
   String get fullType => 'common_msgs/MoveBlock';
+
+  @override
+  // TODO: implement messageDefinition
+  String get messageDefinition => throw UnimplementedError();
 }

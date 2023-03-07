@@ -1,10 +1,14 @@
 import 'dart:convert';
+
+import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
-import 'package:xml_rpc/client.dart' as rpc;
 import 'package:xml/xml.dart';
+import 'package:xml_rpc/client.dart' as rpc;
+
 import 'ros_xmlrpc_common.dart';
 import 'utils/network_utils.dart';
+
 part 'ros_paramserver_client.dart';
 part 'ros_xmlrpc_client.freezed.dart';
 
@@ -115,6 +119,7 @@ mixin XmlRpcClient {
   int get tcpRosPort;
   String get xmlRpcUri;
   String get ipAddress;
+  NetworkUtils get netUtils;
 
   Future<T> _call<T extends Object>(
     String methodName,
@@ -167,7 +172,7 @@ mixin RosXmlRpcClient on XmlRpcClient {
     await _call('registerService', [
       nodeName,
       service,
-      NetworkUtils.formatServiceUri(ipAddress, tcpRosPort),
+      netUtils.formatServiceUri(ipAddress, tcpRosPort),
       xmlRpcUri
     ]);
   }
@@ -183,11 +188,8 @@ mixin RosXmlRpcClient on XmlRpcClient {
   Future<void> unregisterService(
     String service,
   ) async {
-    await _call('unregisterService', [
-      nodeName,
-      service,
-      NetworkUtils.formatServiceUri(ipAddress, tcpRosPort)
-    ]);
+    await _call('unregisterService',
+        [nodeName, service, netUtils.formatServiceUri(ipAddress, tcpRosPort)]);
   }
 
   /// Subscribe the node by [nodeName] to the specified [topic].

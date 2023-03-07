@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:dartros/dartros.dart';
-import 'package:test/test.dart';
-import 'package:dartx/dartx.dart';
 
+import 'package:dartros/dartros.dart';
+import 'package:dartx/dartx.dart';
 import 'package:std_msgs/msgs.dart' hide Duration;
+import 'package:test/test.dart';
+
 import 'helpers/messages.dart';
 import 'helpers/python_runner.dart';
 
@@ -68,7 +69,7 @@ void main() {
     group('Service Tests', () {
       test('ServerClient Works', () async {
         var first = true;
-        final server = nh.advertiseService<MoveBlockRequest, MoveBlockResponse>(
+        final _ = nh.advertiseService<MoveBlockRequest, MoveBlockResponse>(
             '/move_bloc', MoveBlock.empty$, (req) {
           if (first) {
             expect(req.color, 0);
@@ -126,7 +127,7 @@ void main() {
               reason: response.stderr.toString());
           expect(response.stderr, '');
         }
-      }, skip: true);
+      }, skip: true); // Doesn't work on CI because of message generation
     });
   });
 }
