@@ -1,35 +1,35 @@
 name: dartros
 description: A Dart implementation of a ROS 1 Client Library
-version: 0.1.6
+version: 0.1.7
 repository: https://github.com/TimWhiting/dartros
 
 environment:
-  sdk: '>=2.12.0 <3.1.0'
+  sdk: '>=2.12.0 <3.3.0'
 
 dependencies:
   actionlib_msgs: ">=0.1.0 <0.2.0"
-  buffer: ^1.1.0
-  collection: ^1.15.0
+  buffer: ^1.2.0
+  collection: ^1.18.0
   dartros_msgutils: ">=0.1.0+1 <0.2.0"
   dartx: ^1.1.0
   freezed_annotation: ^2.0.3
-  http: ^0.13.0
+  http: ^1.1.0
   logger: ^1.0.0
   meta: ^1.3.0
   path: ^1.8.0
   rosgraph_msgs: ">=0.1.0 <0.2.0"
   rxdart: ^0.27.2
   std_msgs: ">=0.1.0 <0.2.0"
-  string_validator: ^0.3.0
-  xml: ^5.0.0
-  xml_rpc: ^0.4.0
+  string_validator: ^1.0.0
+  xml: ^6.4.2
+  xml_rpc: ^0.5.0
 
 dev_dependencies:
-  async: ^2.5.0
-  build_runner: any
-  freezed: any
+  async: ^2.11.0
+  build_runner: ^2.4.6
+  freezed: ^2.4.2
   sensor_msgs: ">=0.1.0 <0.2.0"
-  test: ^1.16.5
+  test: ^1.24.6
 
 scripts:
   gen: pub run build_runner build --delete-conflicting-outputs

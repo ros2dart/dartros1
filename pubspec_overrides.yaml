@@ -1,0 +1,14 @@
+# melos_managed_dependency_overrides: actionlib_msgs,dartros_msgutils,geometry_msgs,rosgraph_msgs,sensor_msgs,std_msgs
+dependency_overrides:
+  actionlib_msgs:
+    path: ../actionlib_msgs
+  dartros_msgutils:
+    path: ../dartros_msgutils
+  geometry_msgs:
+    path: ../geometry_msgs
+  rosgraph_msgs:
+    path: ../rosgraph_msgs
+  sensor_msgs:
+    path: ../sensor_msgs
+  std_msgs:
+    path: ../std_msgs
