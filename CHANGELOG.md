@@ -1,3 +1,6 @@
+## 0.1.7
+- Update SDK constraints and dependencies: Thanks @charly1!
+
 ## 0.1.6
 - Fix a few issues: Thanks @charly1 and @codehasbug
 
