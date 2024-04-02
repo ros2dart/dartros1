@@ -1,3 +1,6 @@
+## 0.1.8
+- Transferring repository and ownership of the pub package to the github ros2dart organization, as they have more time and reason to maintain this package, and ecosystem
+
 ## 0.1.7
 - Update SDK constraints and dependencies: Thanks @charly1!
 

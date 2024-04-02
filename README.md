@@ -1,3 +1,8 @@
+> [!IMPORTANT] 
+> This repository and associated ecosystem packages are in the process of being transferred to the ros2dart organization on github and pub.dev
+> I do not have the time or reason to continue maintaining this package myself, and need to focus on other things. 
+> Please make new contributions there.
+
 A ROS Client Library implementation in Dart
 
 Heavily inspired by the cpp and especially [nodejs](https://github.com/RethinkRobotics-opensource/rosnodejs) implementations (see footnote)
