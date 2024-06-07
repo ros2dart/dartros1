@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.3, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="737px" height="472.333px" viewBox="0 0 737 472.333" enable-background="new 0 0 737 472.333" xml:space="preserve">
+<text transform="matrix(1 0 0 1 12.9521 237.333)" font-family="'Arial-BoldMT'" font-size="18">Flutter App (Android)</text>
+<text transform="matrix(1 0 0 1 508.666 216.4834)" font-family="'Arial-BoldMT'" font-size="18">Laptop (Linux + ROS)</text>
+<text transform="matrix(1 0 0 1 224 432)" font-family="'Arial-BoldMT'" font-size="18">Dedicated Wifi Router</text>
+<text transform="matrix(1 0 0 1 51.0479 254.999)" font-family="'Arial-BoldMT'" font-size="18">192.168.0.10</text>
+<text transform="matrix(1 0 0 1 569.5186 234.1494)" font-family="'Arial-BoldMT'" font-size="18">192.168.0.20</text>
+<text transform="matrix(1 0 0 1 269.999 449.666)" font-family="'Arial-BoldMT'" font-size="18">192.168.0.1</text>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M456.776,224.444
+	c-15.598,0-28.219-12.921-28.219-28.889"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M460,234.816
+	c-22.478,0-40.666-18.621-40.666-41.633"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M452.667,212.167
+	c-7.738,0-14-6.411-14-14.334"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M234.112,196.89
+	c0,15.598-12.921,28.219-28.889,28.219"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M244.484,193.667
+	c0,22.478-18.621,40.666-41.633,40.666"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M221.834,201
+	c0,7.738-6.411,14-14.334,14"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M290.338,282.256
+	c14.367-14.367,37.893-14.091,52.601,0.617"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M277.816,275.672
+	c20.704-20.703,54.608-20.306,75.803,0.891"/>
+<path fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" d="M305.432,289.779
+	c7.127-7.128,18.8-6.99,26.098,0.308"/>
+<path fill="none" stroke="#000000" stroke-width="8" stroke-miterlimit="10" d="M407,398.138c0,3.511-7.34,9.862-19.483,9.862
+	H248.26c-12.143,0-24.26-6.352-24.26-9.862v-40.259c0-3.511,12.117-3.879,24.26-3.879h139.257c12.144,0,19.483,0.368,19.483,3.879
+	V398.138z"/>
+<circle cx="328.493" cy="376.707" r="7.475"/>
+<circle cx="354.67" cy="376.707" r="7.475"/>
+<circle cx="380.846" cy="376.707" r="7.475"/>
+<line fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" x1="310.219" y1="351.089" x2="283.903" y2="303.486"/>
+<line fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" x1="319.94" y1="352.392" x2="347.632" y2="302.184"/>
+<path fill="none" stroke="#000000" stroke-width="3" stroke-miterlimit="10" d="M149.5,184.417c0,10.54-8.786,19.083-19.325,19.083
+	H74.583c-10.539,0-19.083-8.543-19.083-19.083V52.583c0-10.539,8.544-19.083,19.083-19.083h55.592
+	c10.539,0,19.325,8.544,19.325,19.083V184.417z"/>
+<path d="M115,192.443c0,0.836-1.849,2.557-4.809,2.557H94.562c-2.959,0-6.562-1.721-6.562-2.557v-10.486
+	c0-0.837,3.602-1.957,6.562-1.957h15.629c2.96,0,4.809,1.12,4.809,1.957V192.443z"/>
+<rect x="61" y="52" width="83" height="123"/>
+<rect x="90" y="40" width="25" height="5"/>
+<rect x="506" y="23" fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" width="183" height="109"/>
+<line fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" x1="475.483" y1="192.25" x2="506" y2="132"/>
+<line fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" x1="475" y1="192" x2="719" y2="192"/>
+<line fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-miterlimit="10" x1="719" y1="192" x2="689" y2="132"/>
+<polygon points="682,166 513,166 520,142 675,142 "/>
+<polygon points="616.75,182 578.25,182 579.845,170 615.155,170 "/>
+</svg>
